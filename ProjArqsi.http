@@ -1,0 +1,6 @@
+@ProjArqsi_HostAddress = http://localhost:5218
+
+GET {{ProjArqsi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

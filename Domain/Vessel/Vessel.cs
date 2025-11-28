@@ -22,6 +22,7 @@ namespace ProjArqsi.Domain.VesselAggregate
         public Vessel(IMO imo, Guid ownerId, Guid vesselTypeId, VesselName vesselName, 
                      MaxTeu maxTeu, Size size, CargoCapacity cargoCapacity)
         {
+            Id = imo ?? throw new ArgumentNullException(nameof(imo));
             OwnerId = ownerId;
             VesselTypeId = vesselTypeId;
             VesselName = vesselName ?? throw new ArgumentNullException(nameof(vesselName));

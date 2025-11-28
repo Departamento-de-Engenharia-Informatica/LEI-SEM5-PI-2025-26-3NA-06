@@ -1,8 +1,10 @@
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjArqsi", "ProjArqsi.csproj", "{7421A090-7CA2-F178-3811-C7B120BF3256}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjArqsi.Tests", "ProjArqsi.Tests\ProjArqsi.Tests.csproj", "{EEA554E8-C37A-49E6-8D18-B74F8943FD14}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -14,6 +16,10 @@ Global
 		{7421A090-7CA2-F178-3811-C7B120BF3256}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7421A090-7CA2-F178-3811-C7B120BF3256}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7421A090-7CA2-F178-3811-C7B120BF3256}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EEA554E8-C37A-49E6-8D18-B74F8943FD14}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EEA554E8-C37A-49E6-8D18-B74F8943FD14}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EEA554E8-C37A-49E6-8D18-B74F8943FD14}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EEA554E8-C37A-49E6-8D18-B74F8943FD14}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -58,5 +58,19 @@ namespace ProjArqsi.Tests.Domain
             Assert.NotNull(vesselName);
             Assert.Equal(name, vesselName.Name);
         }
+
+        [Fact]
+        public void MaxTeu_ShouldStorePositiveValue()
+        {
+            // Arrange
+            int teuValue = 5000;
+
+            // Act
+            var maxTeu = new MaxTeu(teuValue);
+
+            // Assert
+            Assert.NotNull(maxTeu);
+            Assert.Equal(teuValue, maxTeu.Value);
+        }
     }
 }

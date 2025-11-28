@@ -1,0 +1,251 @@
+INTEGRATIVE PROJECT OF THE 5TH SEMESTER OF LEI-ISEP 2025-2026 (version II.a)
+PART II – System Specification
+1. Preamble
+
+In the academic year 2025-2026, the fifth semester (i.e., the 3rd year, 1st semester) of the Bachelor's Degree in Informatics Engineering (LEI) at the Instituto Superior de Engenharia do Porto (ISEP) adopts a teaching-learning process based on the development of a single project, enhancing the integration and application of knowledge, skills and competences of all course units (UCs) taught throughout the semester: Administração de Sistemas (ASIST), Arquitetura de Sistemas (ARQSI), Gestão (GESTA), Inteligência Artificial (IART), Laboratório e Projeto V (LAPR5) e Sistemas Gráficos e Interação (SGRAI).
+
+The project, common to all course units, consists of developing the system described in this document in accordance with the general procedures described earlier in the document with the same designation, whose subtitle is “PART I – Context and Operation”.
+
+2. Context
+
+The present document simulates a Request for Proposal (RFP) issued by a company specialized in port management and logistics innovation. The company seeks to identify and select a technological (IT) partner capable of developing a new-generation information system to support sustainable and intelligent port operations.
+
+As part of the selection process, interested IT companies are expected to participate by developing an initial, simplified prototype of the intended system over a period of 14 weeks, organized into three sprints. In this academic exercise, it is assumed that each student team represents a different IT company, submitting a proposal and prototype as if competing in a real-world selection process.
+
+This prototype will serve as a proof of concept, demonstrating the integration of multiple technologies, the feasibility of the proposed architecture, and the ability of the team to address both the functional and non-functional requirements described in this RFP. It is important to emphasize that the selection criteria extend beyond purely technical aspects, also considering professionalism, demonstrated adaptability, quality of delivery, and a solid understanding of the port logistics domain and its business context.
+
+To reinforce this last dimension, each team must select a real European company in the field of port management, whose analysis allows for a deeper understanding not only of the functioning of this business sector but also of the main concepts of organizational management, thereby contributing to the development of a more consistent proposal aligned with the client’s needs.
+
+3. System Description
+
+The system aims to support sustainable and intelligent port logistics, providing tools for planning, scheduling, and monitoring vessel visits, cargo handling, and the allocation of logistic resources.
+
+Modern ports are complex environments — as the study (to be carried out) of the selected company in the ports management sector will help to better understand — where multiple actors, including port authorities, shipping agents, and logistics operators, must coordinate efficiently to ensure timely vessel turnaround, optimal resource usage, and compliance with safety and environmental standards.
+
+By addressing these challenges, the system contributes to improved operational efficiency and more sustainable management practices. Furthermore, GDPR compliance must be addressed, ensuring the system meets data protection and consent management requirements of all individuals involved in port operations.
+
+Focusing on port operations, the system manages vessels, their scheduled visits, associated cargo, and the execution of loading and unloading tasks. Each visit involves coordination of limited resources such as docks, cranes, trucks, and warehouses, and requires careful sequencing to maintain smooth operations. The system must not only manage the basic registration and validation of vessel visits but also provide intelligent support for dock assignment, task sequencing, and resource allocation, ensuring that port operations remain feasible and well-coordinated across stakeholders.
+
+Additionally, 3D visualization and interaction features are included, allowing users to observe vessel positions, container locations, and resource allocations in a realistic and interactive digital representation of the port. The system design should also consider disaster recovery and business continuity, ensuring that operations can be restored quickly in case of failures or emergencies.
+
+The prototype must be a modular web-based system, integrating all core functionalities in a way that demonstrates the feasibility of the system in a simplified but realistic context. It should support both traditional management operations and innovative aspects, such as employing advanced scheduling algorithms and leveraging visualization and interactive tools to enhance operational decision-making.
+
+3.1 Business Overview
+
+For clarity, the business is described by introducing the main areas/concerns of the business throughout the next subsections.
+
+3.1.1 Port Structure and Facilities
+
+A modern port is organized into distinct areas to facilitate the arrival, (un)loading, storage, and departure of vessels efficiently. The main components include docks (or quays) where vessels berth for loading and unloading operations, container yards for temporary storage of containers, and warehouses for cargo requiring additional handling or inspection.
+
+The Port Authority is responsible for managing these facilities, ensuring that docks are allocated appropriately, yard capacity is monitored, and warehouses are operated according to port regulations and safety standards. These facilities form the backbone of port operations and serve as the primary locations where resources and tasks are coordinated, making them central to any system designed to support port logistics.
+
+Note: The system described next is a big simplification of what is traditionally a port logistics management system. Simplifications are made, on one hand, to turn the project feasible within the scope of the LEI semester and, on the other hand, to focus on some innovative aspects. As such, you should pay attention to the simplifications and assumptions presented throughout the system description.
+
+3.1.2 Logistic Resources
+
+Efficient port operations depend both on physical resources (cf. 3.1.2.1) and on human resources (cf. 3.1.2.2).
+
+3.1.2.1 Physical Resources
+
+Efficient operation of a port relies on a variety of logistic resources used to move cargo between vessels, yards, and warehouses. Among the most critical are ship-to-shore (STS) cranes, which are large fixed cranes permanently installed at the docks and used to lift containers directly on and off vessels. Each dock has its own number of STS cranes — for instance, one dock might have a single crane, another might have two, and a larger dock could be equipped with five or more. When a vessel is assigned to a dock, the maximum number of STS cranes available for its operations is defined by that dock’s infrastructure.
+
+In addition to these fixed cranes, ports rely on mobile resources such as yard gantry cranes (for stacking and moving containers within yards) and trucks or terminal tractors (for transporting containers between docks, yards, and warehouses). These mobile resources are managed by the Logistics Operator, who is responsible for allocating them to specific tasks during a vessel visit. Since their availability is limited and they are shared across all operations in the port, their allocation must be carefully planned and coordinated. For example, while multiple STS cranes may unload containers in parallel, trucks must be scheduled to immediately transfer them to the yard to prevent congestion at the dock. The system must therefore consider both the fixed constraints of dock infrastructure and the flexible allocation of mobile resources to ensure smooth port operations.
+
+Resource characteristics directly affect the planning and execution of loading and unloading tasks. Each resource registered in the system must capture a set of standardized attributes that allow both day-to-day management and the later application of intelligent scheduling and planning algorithms, such as:
+
+Operational Window (weekly basis):
+Each resource (crane, truck, or other equipment) has defined periods of availability across the week, reflecting shifts, maintenance periods, or contractual usage limits. For example, a truck may be available Monday to Friday from 08:00 to 20:00, while a crane may operate in continuous 24/7 shifts.
+
+Operational Capacity (type-dependent):
+
+Cranes: Measured in average containers per hour, depending on the type (STS cranes usually achieve higher throughput than yard cranes).
+
+Trucks: Measured in containers per trip and average speed per hour.
+
+Current Availability Status:
+Resources can be marked as available, unavailable (maintenance), or temporarily out of service.
+
+Operating Staff Requirements:
+Some resources require dedicated staff. For example, each STS crane must be operated by a certified crane operator, while each truck requires a driver.
+
+Setup Time:
+Certain resources need preparation before becoming operational. For example, a crane may require calibration, while trucks may need refueling or repositioning. Setup time must be accounted for when planning task sequences.
+
+3.1.2.2 Human Resources (Operating Staff)
+
+As stated, efficient port operations not only depend on physical resources but also on the availability and proper assignment of qualified staff (human resources). Since many resources cannot function autonomously, the system must incorporate operating staff management information to support realistic scheduling and allocation.
+
+In addition to their identification and contact data, such as mecanographic number, short name, email and phone, it is necessary to capture:
+
+Operational Window:
+Like physical resources, operating staff have weekly schedules that define their availability (e.g., “Monday–Friday, 08:00–16:00”).
+
+Qualification:
+Each staff member is registered with the qualifications they hold (e.g., STS crane operator, yard gantry crane operator, truck driver, yard planner). Certain resources may only be operated by staff with matching qualifications (e.g., an STS crane requires a certified STS crane operator).
+
+Current Status:
+Staff may be marked as available, unavailable (on leave, training), or temporarily reassigned.
+
+By capturing these (and possibly other) details, the system may be able to prevent unrealistic plans (e.g., assigning five cranes when only three certified crane operators are available). This also provides flexibility for exploring scenarios where human resources are the actual bottleneck, not equipment, which is often the case in real port operations.
+
+3.1.3 Vessels
+
+Ports receive a wide variety of vessels, ranging from small feeder ships to large ocean-going container vessels. Each vessel is uniquely identified by an IMO (International Maritime Organization) number, which serves as its international registration and is linked to national or regional maritime authorities. The size, type, and cargo capacity of a vessel strongly influence its operational needs at the port, such as the length of dock required, the number of STS cranes that can be engaged, and the volume of containers to be handled.
+
+Although ports handle many vessel categories, the system will focus mainly on container-carrying vessels, since they are the most common in modern commercial ports. Examples include feeder vessels (small ships serving regional routes and connecting to larger ports), Panamax vessels (the maximum size that fits through the old Panama Canal locks, typically carrying around 5,000 containers), Post-Panamax vessels (larger, requiring deeper berths and more cranes), and Ultra Large Container Vessels (ULCVs) (capable of carrying 18,000+ containers, requiring extensive dock space and simultaneous use of multiple cranes).
+
+Cargo on these vessels is stored in containers, which may vary in size (e.g., 20-foot, 40-foot). To simplify, the prototype will adopt the TEU (Twenty-foot Equivalent Unit) as the standard measurement, assuming all containers have the same dimension. Containers are organized into a grid-like structure on board, divided into bays (lengthwise sections of the ship), rows (across the width), and tiers (vertical stacks above and below deck). The type of vessel determines the maximum number of rows, bays, and tiers, and therefore its maximum TEU capacity. For example, a feeder vessel may only support a small grid, while a ULCV may span dozens of bays and rows with multiple tiers.
+
+This structure directly affects loading and unloading operations, since containers in lower tiers or inner rows cannot be accessed until those above or outside them are removed.
+
+3.1.4 Shipping Agents
+
+Shipping agents are organizations that represent vessel owners or operators in port operations. Their primary responsibility is to coordinate administrative and operational tasks associated with a vessel visit, including submitting Vessel Visit notifications and providing cargo information in compliance with port regulations. Each shipping agent organization may have multiple representatives authorized to interact with the system on its behalf.
+
+The registration of shipping agent organizations and their representatives is handled by the Port Authority, which validates their credentials before they can submit Vessel Visit notifications. To be authorized to act on behalf of a vessel, a shipping agent must submit a simple request to the Port Authority along with the proper documentation. This request is then either accepted or rejected.
+
+Currently, a vessel can be represented by only one shipping agent organization at a time. This ensures accountability and compliance with official maritime records while granting representatives the ability to submit Vessel Visit notifications for their assigned vessels.
+
+3.1.5 Vessel Visits
+
+A Vessel Visit represents the planned arrival and departure of a vessel at the port, including associated operations such as cargo loading and unloading. The process begins when a shipping agent representative submits a Vessel Visit notification for an authorized vessel, providing key information such as expected arrival (ETA), expected departure (ETD), cargo type and volume, and any special handling requirements.
+
+Additionally, a Vessel Visit notification may also include basic crew information to support regulatory and operational needs. For most visits, this information is limited to the captain’s name and the total number of crew members on board. However, when the vessel carries dangerous cargo, the notification must explicitly identify the designated crew safety officers, as their presence is a prerequisite for port operations involving hazardous materials.
+
+The Port Authority reviews the notification and decides to approve or reject it. If the visit is rejected, a reason must be provided to the agent, such as missing documentation or dock unavailability. If the visit is approved, a dock is assigned, potentially with support from an intelligent algorithm that considers pending visits, vessel type, dock capacity, and other operational constraints.
+
+Once a dock is assigned, operational tasks — such as unloading containers, moving cargo to yards, and allocating cranes and trucks — are defined and scheduled by the Logistics Operator. For example, if a feeder vessel is approved and assigned to Dock A, the tasks of unloading containers with the available STS crane and transporting them to the yard are planned in sequence, taking into account parallelization rules and resource availability.
+
+Operational conditions may change (e.g., a dock becomes unavailable due to maintenance or the arrival of a priority vessel). In such cases, the visit may be rescheduled to another dock, or its planned tasks adjusted, while maintaining the overall integrity of port operations. For instance, a feeder vessel expected at Dock A with a single STS crane may be reassigned to Dock B if Dock A undergoes unexpected maintenance, ensuring that unloading and loading operations can continue with minimal disruption.
+
+3.1.6 Cargo and Cargo Manifest
+
+Cargo Manifests are submitted by the shipping agent together with the Vessel Visit notification and serve as the primary input for the Logistics Operator when defining operational tasks. Each manifest provides structured information about the containers involved, including their number, contents (e.g., description and cargo type), and positions on the vessel (organized by bays, rows, and tiers). Typical cargo types include refrigerated goods (reefers), general consumer products, electronics, hazardous materials (HAZMAT), and oversized industrial equipment.
+
+To ensure global interoperability and accuracy in cargo handling, containers are identified using the ISO 6346:2022 standard. This standard defines a unique identifier composed of an owner code (three letters), an equipment category identifier (one letter, such as “U” for freight containers), a six-digit serial number, and a single check digit for validation. These globally recognized codes serve as the key reference for all container-related operations, including manifests, yard storage, and vessel loading/unloading.
+
+Cargo manifests can take two forms:
+
+Unloading Manifest – lists all containers to be offloaded from the vessel upon arrival. For example, a manifest entry might specify container ID MSKU3881445, located at bay 5, row 8, tier 3, containing refrigerated fruit destined for Warehouse A. This information allows the operator to plan unloading sequences and allocate cranes and trucks efficiently.
+
+Loading Manifest – lists all containers to be loaded onto the vessel for departure. For instance, an entry could indicate container ID CMAU1234567, currently at Yard B, containing electronics, to be loaded at bay 6, row 12, tier 2. This ensures proper sequencing, vessel stability, and efficient resource allocation.
+
+A Vessel Visit may include one cargo manifest (either unloading or loading), two cargo manifests (both unloading and loading), or none (e.g., maintenance calls).
+
+3.1.7 Scheduling and Planning Operations
+
+Efficient port operations require careful scheduling and planning to coordinate vessels, docks, cargo handling, and logistic resources. This involves two complementary levels of planning:
+
+Port Authority Level – Dock Assignment Algorithm
+Once a Vessel Visit is approved, the Port Authority assigns a dock to the vessel. As previously stated, this process can be supported by an intelligent algorithm that considers pending visits, vessel type, expected cargo volume, dock capacity, and other constraints. The algorithm helps optimize dock usage, prevent conflicts, and ensure timely vessel turnaround.
+
+For example, if two vessels of similar size but carrying different volumes of cargo are scheduled to arrive at overlapping times, the algorithm may assign the vessel with more cargo to a dock equipped with more STS cranes, while directing the other vessel to a different suitable dock to optimize unloading efficiency.
+
+Logistics Operator Level – Resource Allocation and Task Sequencing Algorithm
+After a dock is assigned and cargo manifests are available, the Logistics Operator defines operational tasks such as unloading containers, moving them to yards or warehouses, and loading outbound containers. An intelligent scheduling algorithm supports this process by sequencing tasks and allocating limited resources — cranes, trucks, yard equipment, operating staff — while respecting dependencies (e.g., containers in lower tiers cannot be unloaded until those above are removed). This ensures efficient parallelization of operations and minimizes delays.
+
+During scheduling, the binding between staff and resources is a critical constraint. The system must therefore ensure that each resource (e.g., a crane or a truck) is matched with the required number of qualified staff members whose availability overlaps with the resource’s operational window.
+
+In short, the step-by-step unloading process is as follows:
+
+From Vessel to Dockside
+
+STS cranes lift containers from the vessel.
+
+Each crane is operated by a crane operator.
+
+Containers are placed on terminal trucks waiting dockside.
+
+From Dockside to Yard
+
+Trucks transport containers from the dock edge to the container yard.
+
+Containers are stacked in the yard using yard gantry cranes.
+
+From Yard to Warehouse / Outside Port
+Depending on the cargo, containers may:
+
+Stay in the yard until picked up by external trucks or trains.
+
+Be moved to a warehouse inside the port for customs inspection, consolidation, or unpacking.
+
+Be sent directly to hinterland transportation (rail or long-haul trucks).
+
+The loading process is similar to this, but in the reverse order — containers move from yard or warehouse to the dockside, are loaded onto the vessel according to the loading manifest, and placed in the assigned bays, rows, and tiers.
+
+By combining these two algorithms, the system ensures that dock assignments and resource scheduling are coordinated, that cargo is handled in the correct order, and that port operations remain feasible and efficient under both normal and dynamic conditions.
+
+3.2 Actors and Roles
+
+The system to be developed must support different user profiles, with the features available to each user depending on their profile. The main profiles and their responsibilities are:
+
+Port Authority Officer:
+Responsible for reviewing and approving or rejecting Vessel Visit notifications submitted by shipping agents, assigning docks to approved visits (potentially with algorithmic support), and overseeing port operations for compliance with safety, environmental, and operational regulations. Officers can also manage shipping agent registrations and vessel authorizations.
+
+Shipping Agent Representative:
+Responsible for submitting Vessel Visit notifications and associated Cargo Manifests for vessels they are authorized to represent. They can update or cancel notifications before approval, provide required documentation, and monitor the status of approved visits.
+
+Logistics Operator:
+Responsible for defining and scheduling operational tasks for approved Vessel Visits, including unloading, loading, and resource allocation (cranes, trucks, yard equipment). Operators monitor the execution of tasks, handle adjustments due to changing operational conditions, and ensure that cargo moves efficiently through docks, yards, and warehouses.
+
+Administrator:
+Responsible for managing user accounts and permissions, ensuring that each profile has access only to the functions appropriate to their role. Administrators also configure general system parameters and maintain the integrity of operational data.
+
+Each user profile interacts with the system through a Single Page Application (SPA), with access and features adapted to their responsibilities. Moreover, it is expected that:
+
+User authentication relies on an external Identity and Access Management (IAM) provider (e.g., Google, Microsoft, Facebook), ensuring secure and centralized user verification; while
+
+User authorization, i.e., determining which features and data each user can access, is managed internally by the system according to their profile and assigned permissions, enforcing role-based access control across all modules.
+
+3.3 Other Requirements
+
+Beyond functional features, the system to be developed must also comply with a set of cross-cutting requirements aiming to ensure its quality, sustainability, and alignment with real-world expectations.
+
+Usability is a primary concern: the web interface should provide a consistent, intuitive, and responsive user experience, enabling different actors to accomplish their tasks efficiently with minimal training. Since the port context is inherently international, the system must support multilingual operation, at least in English and Portuguese, and be easily extendable to other languages if needed.
+
+All user interactions must be carefully logged, producing detailed records of every significant action performed in the system. These logs are not only essential for auditing and traceability but also serve as an important tool for diagnosing issues and analyzing user behavior. Communication and integration must follow well-established standards, with the adoption of RESTful APIs and other industry best practices that guarantee interoperability with external and internal systems/applications and services.
+
+Likewise, documentation is expected to be up-to-date and aligned with recognized models (e.g., C4 model) and notations (e.g., UML, OpenAPI), ensuring clarity and maintainability. In this respect, particular care must be given to documenting the high-level system architecture and the exposed APIs.
+
+Security and compliance are also crucial. To achieve this, the team is expected to identify and mitigate risks such as unauthorized access, data breaches, or denial-of-service attacks from the earliest stages of system development, ideally starting at the design level. Compliance with applicable laws and regulations, particularly the GDPR, must be ensured, which implies careful management of personal data, minimizing its collection and guaranteeing proper access control, encryption, and retention policies.
+
+Finally, the system must be designed for performance and scalability, as port operations involve large volumes of data that must be processed in real time. This includes ensuring low latency in scheduling algorithms, efficient database queries, and the ability to handle concurrent access by multiple users without degradation of service. Combined, these non-functional requirements establish the foundations for a robust, professional-grade prototype reflecting standards and expectations of real-world software development in mission-critical domains.
+
+4. General Project Workflow
+
+A scrum-based agile methodology will be used for this project, promoting a dynamic, iterative, and responsive development process. The project's workflow centers on the project backlog, a list of user stories sourced from the system description (cf. section 3). The Product Owner is responsible for continuously maintaining and prioritizing this backlog.
+
+Each sprint begins with a dedicated sprint backlog, provided on a separate document to the team, which contains a prioritized subset of items from the main project backlog.
+
+In each sprint, every team must follow a structured, seven-step process to ensure a consistent and productive workflow:
+
+Sprint Planning:
+At the start of each sprint, the team should meet to:
+a. Review and refine user stories and tasks from the sprint backlog.
+b. Discuss priorities and dependencies to ensure a clear path forward.
+c. Define the sprint goal and commit to a set of user stories that the team can realistically complete.
+d. Break down each user story into actionable tasks and assign ownership.
+
+Daily Standups / Weekly Meetings:
+The team should hold brief, regular meetings to quickly share progress, identify any roadblocks, and ensure everyone is aligned and aware of dependencies. These meetings are crucial for maintaining momentum and collaborative synergy. Use the lab classes dedicated to the project.
+
+Code Reviews:
+Peer code reviews should be conducted regularly to maintain code quality and proactively catch issues. This practice fosters knowledge sharing between team members.
+
+Continuous Integration (CI/CD):
+A CI/CD pipeline should be used to automate testing (and deployment). This ensures that new features are integrated seamlessly and that the project remains stable without compromising existing functionality.
+
+Customer Feedback:
+After each sprint, present completed work to the "customer" (lab class instructors) for feedback. This provides an opportunity to validate progress and make necessary adjustments before proceeding to the next sprint.
+
+Sprint Retrospective:
+After each sprint, the team should hold a retrospective meeting to reflect on the process. The focus should be on:
+a. Reflecting on what went well, what could have gone better, and any challenges encountered during the sprint.
+b. Identifying areas for improvement (both in this workflow and in the technical implementation).
+c. Adjusting workflows, tools, or processes to boost productivity and collaboration.
+
+Documentation:
+Each sprint should end with an update to the project's documentation. This includes a summary of progress, key changes, and the testing results, ensuring all project knowledge is preserved and easily accessible.
+
+This iterative approach allows for continuous improvement, adaptability, and high-quality deliverables throughout the project lifecycle.

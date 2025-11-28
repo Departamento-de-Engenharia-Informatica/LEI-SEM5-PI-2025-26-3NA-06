@@ -1,0 +1,483 @@
+SPRINT B OVERVIEW
+Sprint B focuses on extending the prototype into a modular, integrated, and operationally viable system. 
+Work is structured around seven key areas: 
+(i) developing a unified Front-end Application (SPA); 
+(ii) enforcing secure Authentication and Authorization across both front-end and back-end components; 
+(iii) introducing a 3D Visualization module synchronized with live system data; 
+(iv) initiating the Scheduling and Planning engine to support operational decision-making; 
+(v) exploiting some Systems Administration best practices and establishing some Business Continuity (BC) foundations; 
+(vi) reinforcing GDPR awareness and data protection responsibility; 
+(vii) extending the Project Client Analysis with deeper insights into managerial, operational, and sustainability practices.
+
+Together, these efforts aim to deliver not only functional capabilities, but also security, resilience, compliance, and contextual understanding of the target business environment.
+
+================================================================================
+3.1. FRONT-END APPLICATION
+================================================================================
+
+The front-end must be developed as a Single Page Application (SPA), providing a unified interface for all user roles. It must dynamically adapt navigation and available features based on each user's internal authorization, while consuming the REST APIs provided by the back-end module(s) in accordance with the (general) system architecture.
+
+US 3.1.1 - Set Up SPA Framework
+As a Project Manager, I want the team to set up the SPA using a modern framework, so that future features can be developed in a maintainable way.
+
+Acceptance Criteria / Comments:
+• SPA must be built using a framework such as Angular, React or Vue.
+• A modular folder structure (e.g., components, services, pages, routing) is required.
+• The SPA must adopt a well-founded HTTP client (e.g., Axios/Fetch) for REST API consumption.
+
+--------------------------------------------------------------------------------
+
+US 3.1.2 - Unified Layout
+As a System User, I want the SPA to provide a unified layout, so that navigation is consistent across the application.
+
+Acceptance Criteria / Comments:
+• The application layout must include at minimum:
+  o A header bar containing the system/company logo and name.
+  o A designated area for primary navigation (e.g., top menu, side menu, or equivalent).
+  o These two elements must always be visible, in any circumstance.
+• The layout may optionally include:
+  o Secondary navigation elements, such as submenus or breadcrumbs.
+  o A sidebar, footer, or other auxiliary interface sections to enhance usability.
+• Menu options must be rendered dynamically based on the logged-authenticated user's role.
+• UI styling must follow a consistent design system/component library.
+• It must have multilingual support (e.g.: English and Portuguese).
+• The layout must adapt to different screen sizes (desktop orientation first; tablet/mobile support may be planned).
+
+--------------------------------------------------------------------------------
+
+US 3.1.3 - Role-Based Menu Visibility
+As a System User with a specific role, I want the SPA to show only the menus relevant to my permissions, so that the interface remains clear and I can only access allowed features.
+
+Acceptance Criteria / Comments:
+• Menu options must be rendered dynamically based on the logged-authenticated user's role.
+• Navigation to unauthorized sections must be prevented (even if manually typed in the URL).
+
+--------------------------------------------------------------------------------
+
+US 3.1.4 - User Feedback on Actions
+As a System User, I want to receive clear feedback when actions succeed or fail in the SPA, so that I understand what happened and can react accordingly.
+
+Acceptance Criteria / Comments:
+• Success messages must be shown after completing actions like save, update, or deactivate.
+• Validation errors must be shown near the affected input fields.
+• Loading indicators must be used during asynchronous operations.
+• Errors (e.g. due API calls) must be captured and displayed in a user-friendly format.
+
+--------------------------------------------------------------------------------
+
+US 3.1.5 - Pages/Forms for User Actions
+As a System User, I want the SPA to provide suitable pages/forms to perform the actions I am authorized to, so that I can interact with the system through a graphical interface.
+
+Acceptance Criteria / Comments:
+• Forms must validate required fields before submission.
+• Navigation to these pages must follow the role-based menu rules.
+• Data must be fetched from and persisted to the corresponding REST API.
+• List views must support filtering and searching as defined in Sprint A.
+• Priority should be given to the following (from highest to lowest) functions:
+  o US 2.2.7/8/9/10, related to Vessel Visit Notifications
+  o US 2.2.4, related with Storage Areas
+  o US 2.2.12, related with Physical Resources
+  o US 2.2.3, related with Docks
+  o US 2.2.2, related with Vessels
+  o US 2.2.5, related with Shipping Agent Organizations and Representatives
+
+================================================================================
+3.2. AUTHENTICATION & AUTHORIZATION
+================================================================================
+
+US 3.2.1 - External IAM Authentication
+As a (Non-Authenticated) System User, I want to authenticate using the external IAM provider, so that I can securely access the system without managing separate credentials.
+
+Acceptance Criteria / Comments:
+• The SPA must integrate with the selected IAM (e.g., via OAuth2/OpenID Connect).
+• Unauthenticated users must be redirected to the IAM login page.
+• The system must not handle the password storage.
+• After successful authentication, a valid access token must be available to the front-end.
+• Logout must also be supported, clearing tokens/session data.
+
+--------------------------------------------------------------------------------
+
+US 3.2.2 - Load Internal Authorization Role
+As a System User, I want the system to automatically load my internal authorization role after authentication, so that I gain access only to my permitted features.
+
+Acceptance Criteria / Comments:
+• After IAM login, the SPA must call a backend endpoint to retrieve the user's assigned role and render the respective menu options.
+• If the user has no assigned role or it is inactive, access must be denied with an appropriate message.
+
+--------------------------------------------------------------------------------
+
+US 3.2.3 - Maintain Secure Session
+As a System User, I want my authenticated session to be maintained securely, so that I don't need to re-login frequently while using the SPA.
+
+Acceptance Criteria / Comments:
+• Access tokens must be securely stored.
+• Token expiration must be handled (e.g., silent refresh or forced re-login when invalid).
+• The SPA must try to avoid unauthorized API calls by, for instance, attaching the user access token to requests.
+• Back-end module(s) must also validate tokens on each request.
+
+--------------------------------------------------------------------------------
+
+US 3.2.4 - Role-Based Access Control
+As a System User, I want the system to restrict access to actions and features based on my role, so that I cannot perform unauthorized operations.
+
+Acceptance Criteria / Comments:
+• On the back-end side:
+  o Each REST API route must enforce role-based access control (RBAC) and/or attribute-based access control (ABAC) as needed to enforce the applicable business rules.
+  o Unauthorized requests must return proper HTTP status codes (e.g., 403 Forbidden).
+  o Logs must record unauthorized attempts.
+• On the front-end side:
+  o Front-end routes must check for the user's authorization before rendering pages.
+  o Direct URL access to unauthorized pages must be prevented.
+  o A default "Access Denied" or "Not Authorized" page must be shown when needed.
+
+--------------------------------------------------------------------------------
+
+US 3.2.5 - Assign Internal Roles
+As an Administrator, I want to assign (or update) the internal role(s) of a given user, so that they can access only the features appropriate to their responsibilities.
+
+Acceptance Criteria / Comments:
+• Users are identified by IAM-provided attributes (userId, email, name).
+• When authorizing a user for the first time:
+  o A unique activation link is sent to their email.
+  o By default, the users are set to a "deactivated" status.
+• Internal roles determine system access level.
+
+--------------------------------------------------------------------------------
+
+US 3.2.6 - User Activation via Link
+As a System User receiving an activation link, I want to complete my first access securely through authentication, so that I can start using the system.
+
+Acceptance Criteria / Comments:
+• The activation link redirects the user to authenticate via IAM.
+• Once authenticated, the system must confirm that the authenticated user data matches the user identity related to the link being used:
+  o In case of success, the system completes the activation process (status update).
+  o Otherwise, an error must be presented, preventing system access.
+• Expired or invalid links must show an error message.
+• After activation, the user gains role-based access.
+
+================================================================================
+3.3. 3D VISUALIZATION
+================================================================================
+
+US 3.3.1 - Develop and Integrate 3D Module
+As a Project Manager, I want the team to develop and integrate a 3D visualization module into the SPA, so that users can begin interacting with a visual representation of the port environment.
+
+Acceptance Criteria / Comments:
+• The 3D engine (e.g., Three.js, WebGL) must be embedded, as a component, in the SPA.
+• The 3D module must load as part of the existing SPA routing and layout (cf. US 3.1.2).
+• The integration must not break the existing UI or authentication flow.
+• The source code of the 3D module must be integrated into the existing repository structure.
+
+--------------------------------------------------------------------------------
+
+US 3.3.2 - 3D Representation of Port Structure
+As a System User, I want to see a 3D representation of the port structure (docks, container yards and warehouses) based on real data, so that I can visualize the physical layout accurately.
+
+Acceptance Criteria / Comments:
+• The 3D module must retrieve the port layout from the backend as JSON-formatted content. Tip: the layout may use placeholders for positioning the port facilities as well as to map this information to the one retrieved from the existing REST APIs.
+• Models representing docks, container yards and warehouses can either be procedurally created or imported.
+
+--------------------------------------------------------------------------------
+
+US 3.3.3 - Display Vessels and Major Resources
+As a Logistics Operator or Port Authority Officer, I want to see vessels and major resources (e.g., ship-to-shore cranes, yard gantry cranes) displayed in the 3D environment, so that I can visualize operational elements.
+
+Acceptance Criteria / Comments:
+• Items must appear in default or assigned positions (e.g., docked vessel on its berth).
+• The system must fetch required data from the existing REST APIs.
+• Regarding resources, consider only those that have an assigned area (e.g. dock A, Yard B).
+• Regarding vessels, consider the information on the approved vessel visit notifications only.
+• Models representing items can either be procedurally created or imported.
+
+--------------------------------------------------------------------------------
+
+US 3.3.4 - Visual Styling with Textures
+As a System User, I want 3D models to be rendered with appropriate textures or visual styling, so that different port elements (e.g., docks, vessels, storage areas, cranes) are easily distinguishable.
+
+Acceptance Criteria / Comments:
+• Each category of 3D object (e.g., vessels, docks, storage areas, cranes) must have distinct textures and materials.
+• Regarding procedurally created models, texture and material properties and locations must be retrieved from the backend as JSON-formatted content. Additionally, textures must include at least two maps: a color map and either a roughness map, a bump map, or a normal map.
+• Textures or materials must not significantly degrade performance or loading time.
+
+--------------------------------------------------------------------------------
+
+US 3.3.5 - Appropriate Lighting
+As a System User, I want the 3D scene to have appropriate lighting, so that objects are clearly visible, realistically rendered, and easy to interpret in different viewing conditions.
+
+Acceptance Criteria / Comments:
+• The scene must include at least ambient and directional lighting to ensure visibility of all 3D objects.
+• Lighting should enhance depth perception and object contours without causing overexposure or darkness.
+• Shadows or highlights must be used without causing significant performance degradation.
+• The illumination setup must work consistently across zoom levels and camera angles.
+
+--------------------------------------------------------------------------------
+
+US 3.3.6 - Perspective Camera Control
+As a System User, I want to control a perspective camera using the mouse, so that I can freely explore the scene and inspect objects from different angles.
+
+Acceptance Criteria / Comments:
+• Mouse right-click-and-drag allows orbiting the camera around the scene's current target.
+• Mouse wheel allows dollying-in and -out within safe limits.
+• Movements must feel responsive and smooth, without jitter or excessive sensitivity.
+
+================================================================================
+3.4. SCHEDULING & PLANNING
+================================================================================
+
+US 3.4.1 - Dedicated Planning Module
+As a Project Manager, I want the team to develop a dedicated back-end module that provides planning and scheduling algorithms through a REST-based API, consuming information from the existing back-end modules, so that operational plans can be computed dynamically and consistently without duplicating data.
+
+Acceptance Criteria / Comments:
+• The module must expose its algorithms / functionalities through a REST-based API.
+• The module must consume existing data from other back-end services via their exposed APIs (e.g., staff, resources).
+• The module must not persist operational data — it only computes and returns scheduling results upon request.
+• Input and output payloads must follow JSON format and use consistent identifiers with other modules (e.g., resource IDs).
+• The module API must be properly documented (e.g. via OpenAPI/Swagger) and accessible.
+
+--------------------------------------------------------------------------------
+
+US 3.4.2 - Generate Daily Schedule
+As a Logistics Operator, I want to generate a daily schedule for the loading and unloading operations of vessels arriving at the port on a given day, so that delays relative to desired departure times are minimized.
+
+Acceptance Criteria / Comments:
+• The objective of the scheduling algorithm is to minimize total delay between the actual completion and desired departure times of vessels.
+• Currently, the scheduling algorithm must only consider:
+  a. One vessel per dock at a time.
+  b. One crane (system) per unloading/loading operation.
+  c. One storage location for the unloading/loading operations.
+  d. Availability of physical resources (crane) and qualified staff within their operational windows.
+• The scheduling computation must be executed through the Planning & Scheduling back-end module, which consumes the required data (e.g., vessel arrivals/departures, resources, staff data) from other APIs.
+• The scheduling process must be initiated through a dedicated interface on the SPA. This UI must:
+  a. Allow the operator to specify the target date (day).
+  b. Display the results in a summary table (e.g., vessel, start/end time, assigned crane, staff) and, if feasible, through a timeline approach.
+  c. Provide feedback on progress and completion, including warnings about infeasibility (e.g., lack of resources or staff).
+• At this stage, results do not need to be persisted anywhere— they can be recomputed on demand.
+
+--------------------------------------------------------------------------------
+
+US 3.4.3 - Analyze Algorithm Complexity
+As a Logistics Operator, I want the team to analyze the computational complexity of the scheduling algorithm, so that I can understand its scalability, feasibility and efficiency.
+
+Acceptance Criteria / Comments:
+• The team must assess performance under different problem sizes (e.g., number of vessels, cranes, staff) when computing the optimal solution.
+• The algorithm's complexity class must be explained and justified.
+• The findings must be summarized in a short technical report to support further optimization or heuristic development.
+
+--------------------------------------------------------------------------------
+
+US 3.4.4 - Alternative Heuristic Algorithm
+As a Logistics Operator, I want an alternative scheduling algorithm for the loading and unloading operations of vessels arriving at the port on a given day, that produces a good (but not necessarily optimal) solution efficiently, so that the system can handle larger problem instances or time-constrained planning scenarios.
+
+Acceptance Criteria / Comments:
+• This algorithm must be available for selection on the dedicated interface of the SPA and reuse the same data inputs and interfaces defined for the existing scheduling module.
+• This algorithm must aim to minimize vessel departure delays but prioritize computational efficiency over optimality. Suitable approaches may include greedy strategies, local search, or other informed heuristics.
+• Results must be comparable (e.g., total delay, computation time) against the previous algorithm using summary metrics.
+• At this stage, results do not need to be persisted anywhere— they can be recomputed on demand.
+
+--------------------------------------------------------------------------------
+
+US 3.4.5 - Multi-Crane Support
+As a Logistics Operator, I want the scheduling module to support the use of multiple cranes when a single-crane solution cannot eliminate vessel departure delays, so that total delay is minimized while using additional cranes only when strictly necessary.
+
+Acceptance Criteria / Comments:
+• The system must first attempt to generate a schedule using a single-crane allocation strategy.
+• If the computed schedule still results in non-zero departure delays, the module must (automatically or optionally) re-evaluate the plan allowing multiple cranes per vessel.
+• The multi-crane scheduling approach must aim to:
+  o Minimize the total sum of vessel departure delays.
+  o Minimize the additional time windows where more than one crane is required (i.e., minimize multi-crane usage intensity).
+• The output must clearly indicate where and when additional cranes were allocated to meet schedule objectives.
+• The operator must be able to compare results between single-crane and multi-crane strategies via summary metrics (e.g., total delay, number of crane-hours used).
+• At this stage, results do not need to be persisted anywhere— they can be recomputed on demand.
+
+================================================================================
+3.5. SYSTEMS ADMINISTRATION & BUSINESS CONTINUITY
+================================================================================
+
+US 3.5.1 - Automated Deployment Process
+As a System Administrator, I want a systematic and automated deployment process for one of the system modules to a controlled DEI environment (e.g., VM or containerized setup), so that deployments can be validated regularly using the test plan.
+
+Acceptance Criteria / Comments:
+• Deployment must be executed through an automated pipeline.
+• The process must include automated validation steps using the project's defined test plan.
+• Deployment logs and test results must be archived for traceability.
+• The environment (e.g., VM or container) must be reproducible and isolated.
+• The deployment schedule (e.g., nightly or weekly) must be configurable.
+
+--------------------------------------------------------------------------------
+
+US 3.5.2 - Restrict Access to DEI Network
+As a System Administrator, I want access to the solution to be restricted to clients connected to the DEI internal network (wired or via VPN), so that the system remains secure and compliant with institutional access policies.
+
+Acceptance Criteria / Comments:
+• Network access must be enforced through, for instance, VPN or IP whitelisting, configured at the host or proxy level.
+• Authentication must still be handled by the external IAM, but authorization is only granted if the client is within the approved network context.
+• Unauthorized external access attempts must be logged and denied.
+• This restriction applies to the development and staging environments.
+
+--------------------------------------------------------------------------------
+
+US 3.5.3 - Configurable Allowed Endpoints
+As a System Administrator, I want the list of allowed client endpoints (as defined in US 3.5.2) to be configurable by editing a simple text or configuration file, so that access control remains easy to maintain without redeployment.
+
+Acceptance Criteria / Comments:
+• The file format must be simple and well-documented.
+• Changes to the list must take effect without requiring a system restart.
+• Invalid configurations must be detected and logged.
+
+--------------------------------------------------------------------------------
+
+US 3.5.4 - Public Folder for Shared Resources
+As a System Administrator, I want to define a public folder accessible to all registered users, where they can view shared resources such as port regulations, reports, and statistics.
+
+Acceptance Criteria / Comments:
+• The folder must be readable by all authenticated users but writable only by authorized administrators.
+• The location and access permissions must be clearly documented.
+• Access must be audited to ensure integrity and controlled distribution.
+
+--------------------------------------------------------------------------------
+
+US 3.5.5 - Control Remote Shell Logins
+As a System Administrator, I want to control and monitor logins to the remote shells of Linux-based systems, so that I can prevent and report potential unauthorized access or misuse.
+
+Acceptance Criteria / Comments:
+• User authentication shall be permitted only between 08:00 and 22:00 local time. Access attempts outside this period must be denied.
+• Following any failed authentication attempt, the system shall require Google Authenticator for multi-factor authentication before allowing subsequent login attempts.
+• In the event of more than three consecutive failed authentication attempts, the system shall automatically generate an email alert to the system administrator.
+
+--------------------------------------------------------------------------------
+
+US 3.5.6 - Identify and Quantify Risks
+As a System Administrator, I want to identify and quantify the risks associated with the developed solution, so that mitigation measures can be proposed to ensure operational resilience.
+
+Acceptance Criteria / Comments:
+• Risks must be categorized (e.g., technical, operational, security-related).
+• Each risk must be assigned likelihood and impact ratings.
+• Mitigation strategies and residual risk levels must be included.
+
+--------------------------------------------------------------------------------
+
+US 3.5.7 - Define MBCO
+As a System Administrator, I want to define the Minimum Business Continuity Objective (MBCO) for the system and propose it to stakeholders, so that acceptable downtime and service degradation thresholds are formally established.
+
+Acceptance Criteria / Comments:
+• The MBCO must be defined in measurable terms (e.g., maximum downtime, minimum service capacity).
+• The proposal must align with identified risks and backup/recovery capabilities.
+• The defined MBCO must be reviewed and approved by project stakeholders.
+
+--------------------------------------------------------------------------------
+
+US 3.5.8 - Backup Strategy
+As a System Administrator, I want a backup strategy to be proposed, justified, and implemented that minimizes RPO (Recovery Point Objective) and WRT (Work Recovery Time), so that the system can be rapidly restored after a failure with minimal data loss.
+
+Acceptance Criteria / Comments:
+• The backup strategy must specify backup frequency, retention policy, and storage location (on-site/off-site).
+• RPO and WRT values must be defined, justified, and achievable with the chosen approach.
+• Backup and restore procedures must be documented and validated through test recovery runs.
+
+================================================================================
+3.6. GDPR AWARENESS & DATA IMPACT UNDERSTANDING
+================================================================================
+
+This section focuses on ensuring GDPR compliance by clarifying how personal data is processed within the project and how the team must respond to potential data breaches.
+
+US 3.6.1 - Personal Data Processing Understanding
+As a Project Manager, I want to ensure the team understands how the project handles personal data and how that processing may affect the different actors involved, so that all data operations comply with applicable data protection laws.
+
+Acceptance Criteria / Comments:
+• The team must clearly explain the project scope and its core functionalities in a brief and engaging way.
+• The team must identify which personal data will be processed.
+• The team must describe how that personal data will be processed.
+• The team must identify the legal basis (or bases) for each type of personal data processing.
+
+--------------------------------------------------------------------------------
+
+US 3.6.2 - Data Breach Handling
+As a Project Manager, I want the team to understand how to handle a personal data breach, so that any incident is assessed, documented, and notified in accordance with legal requirements.
+
+Acceptance Criteria / Comments:
+• The team must define what constitutes a personal data breach.
+• The team must understand and document the notification requirements involving both the competent supervisory authority and the affected data subjects, as well as what information those notifications must contain.
+• The team must identify the deadline for notifying a data breach that poses a risk to individuals' rights and freedoms.
+
+================================================================================
+3.7. PROJECT CLIENT ANALYSIS
+================================================================================
+
+US 3.7.1 - Management Control Instruments
+As a Project Manager, I want the team to describe the main management control instruments used by the organization, so that we can understand how they support decision-making and monitoring of the company's activities.
+
+Acceptance Criteria / Comments:
+• The team must identify and describe at least two management control instruments used in the organization, explaining their purpose and scope.
+• The advantages, limitations and possible improvement opportunities of each instrument must be briefly discussed.
+
+--------------------------------------------------------------------------------
+
+US 3.7.2 - Identify KPIs
+As a Project Manager, I want the team to identify some KPI used at different management levels and justify their adequacy, so that we can understand how performance is measured and managed in relation to the organization's objectives and activities.
+
+Acceptance Criteria / Comments:
+• At least one KPI per management level must be documented, justifying why it belongs to that level and indicating whether each one monitors an objective or an activity/process.
+• Each KPI must include its purpose, calculation logic, and relevance in relation to the organization's objectives or activities.
+
+--------------------------------------------------------------------------------
+
+US 3.7.3 - Management Information Systems
+As a Project Manager, I want the team to identify whether the organization uses management information systems and analyze their implications for management and decision-making.
+
+Acceptance Criteria / Comments:
+• The team must identify the existence (or absence) of management information systems used in the organization (e.g., ERP, CRM, SCM, etc.).
+• The implications or consequences of system use (or non-use) must be described.
+
+--------------------------------------------------------------------------------
+
+US 3.7.4 - Leadership Styles Analysis
+As a Project Manager, I want the team to analyze the leadership styles present in the organization and their impact on organizational culture and performance, so that we can evaluate managerial dynamics.
+
+Acceptance Criteria / Comments:
+• The team must identify at least one leadership style in use, justifying.
+• The implications of that leadership style on communication, motivation, decision-making and performance must be described.
+
+--------------------------------------------------------------------------------
+
+US 3.7.5 - Motivational Practices
+As a Project Manager, I want the team to identify motivational practices used by the organization, relating them to employee needs and reward mechanisms, so that we can understand how engagement is fostered.
+
+Acceptance Criteria / Comments:
+• Identified motivational practices must be categorized.
+• Discuss the implications of identified motivational practices for the organization, considering their impact on performance, retention, organizational culture, and overall effectiveness.
+
+--------------------------------------------------------------------------------
+
+US 3.7.6 - HR Policies and Practices
+As a Project Manager, I want the team to document the organization's HR policies and practices, so that we can assess the maturity of its HR management model.
+
+Acceptance Criteria / Comments:
+• Identify human resource management policies.
+• Describe briefly the human resource management process (recruitment, selection, integration, etc.).
+
+--------------------------------------------------------------------------------
+
+US 3.7.7 - UN Sustainable Development Goals
+As a Project Manager, I want the team to identify examples of how the organization contributes (or could contribute) to the United Nations (UN) Sustainable Development Goals (SDG), justifying their relevance, so that we can evaluate its social and environmental responsibility.
+
+Acceptance Criteria / Comments:
+• At least two SDGs must be identified, duly indicated by their respective designations, to which the organization contributes or could contribute, justifying.
+
+--------------------------------------------------------------------------------
+
+US 3.7.8 - Productivity Practices
+As a Project Manager, I want the team to provide examples of practices that promote productivity within the organization, justifying their impact, so that we can identify efficiency enablers.
+
+Acceptance Criteria / Comments:
+• Productivity practices may refer to process optimization, automation, incentives, or cultural aspects.
+• Each practice must be linked to a concrete effect.
+• If no formal practices are identified, recommendations must be made.
+
+--------------------------------------------------------------------------------
+
+US 3.7.9 - Circular Economy Practices
+As a Project Manager, I want the team to identify existing (or potential) circular economy practices within the organization and relate them to the ReSOLVE strategies (Regenerate, Share, Optimize, Loop, Virtualize, Exchange), so that we can assess how circular economy principles are integrated into its operations.
+
+Acceptance Criteria / Comments:
+• Each identified practice must be mapped to ReSOLVE strategies, briefly indicating its environmental, operational, or economic benefits.
+• If no practices are identified, feasible actions or strategies should be suggested to support the organization's transition towards circularity.

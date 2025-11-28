@@ -1,0 +1,359 @@
+@startuml conceptualModel
+
+'=======================
+' PORT & STRUCTURES
+'=======================
+class Port {
+}
+
+class Dock {
+}
+
+class Length {
+}
+
+class MaxCraneSlots {
+}
+
+class ContainerYard {
+}
+
+class Warehouse {
+}
+
+Port -> Dock 
+Port -> ContainerYard 
+Port -> Warehouse 
+Dock -> STSCranes
+Dock -> Length
+Dock -> MaxCraneSlots
+
+'=======================
+' PHYSICAL RESOURCES
+'=======================
+class STSCranes {
+}
+
+class YardGantryCranes {
+}
+
+class Trucks {
+}
+
+class OperationalWindow {
+}
+
+class OperationalCapacity {
+}
+
+class CurrentAvailabilityStatus {
+}
+
+class OperatingStaffRequirements {
+}
+
+class SetupTime {
+}
+
+Port  --> Trucks
+Port  --> YardGantryCranes
+
+STSCranes --> OperationalWindow
+YardGantryCranes --> OperationalWindow
+Trucks --> OperationalWindow
+
+
+STSCranes --> OperationalCapacity
+YardGantryCranes --> OperationalCapacity
+Trucks --> OperationalCapacity
+
+
+STSCranes --> CurrentAvailabilityStatus
+YardGantryCranes --> CurrentAvailabilityStatus
+Trucks --> CurrentAvailabilityStatus
+
+
+STSCranes --> OperatingStaffRequirements
+YardGantryCranes --> OperatingStaffRequirements
+Trucks --> OperatingStaffRequirements
+
+
+STSCranes --> SetupTime
+YardGantryCranes --> SetupTime
+Trucks --> SetupTime
+
+
+
+'=======================
+' HUMAN RESOURCES
+'=======================
+class Staff{ 
+}
+class MechaNumber {
+}
+class Name{
+}
+class Email{
+}
+class PhoneNumber{
+}
+
+class Qualification {
+  + (STS crane operator, yard gantry cranes operator, truck driver, yard planner)
+}
+
+class CurrentStatus {
+  + (available, unavailable, on leave, training, temporarily reassigned)
+}
+
+Staff --> MechaNumber
+Staff --> Name
+Staff --> Email
+Staff --> PhoneNumber
+Staff --> Qualification
+Staff --> CurrentStatus
+Staff --> OperationalWindow
+
+
+'=======================
+' VESSELS
+'=======================
+class Vessel {
+}
+
+class VesselName {
+}
+
+class maxTeu {
+}
+
+class IMO {
+  + uniquely identifier
+  + is linked to national or regional maritimes authorities
+}
+
+class MaritimeAuthorities {
+  + can be regional or national
+}
+
+class VesselType {
+    + feeder / Panamax / Post-Panamax / ULCV
+    + determines max rows / bays / tiers
+}
+
+class Size {
+}
+
+class CargoCapacity {
+}
+
+class Bays {
+}
+
+class Rows {
+}
+
+class Tiers {
+}
+
+Vessel --> IMO
+Vessel --> VesselType
+Vessel --> Bays
+Vessel --> Rows
+Vessel --> Tiers
+Vessel --> MaritimeAuthorities
+Vessel --> Size
+Vessel --> CargoCapacity
+Vessel --> maxTeu
+Vessel --> VesselName
+
+
+'=======================
+' SHIPPING AGENTS
+'=======================
+class ShippingAgentOrg {
+  + must have 1...n ShippingAgentReps
+}
+
+class ShippingAgentRep {
+  + interacts with the system in behalf of the ShippingAgentOrg
+}
+
+class RequestStatus {
+  + Status: Submitted, Approved, Rejected
+}
+
+class ShippingAgentOrgRequest {
+}
+
+class VesselAuthorization {
+}
+
+class isActive {
+}
+
+class ValidFrom {
+}
+
+class ValidTo {
+}
+
+ShippingAgentOrg --> ShippingAgentRep
+User --> ShippingAgentRep
+ShippingAgentOrg  -->  Vessel 
+
+ShippingAgentOrgRequest --> ShippingAgentOrg 
+ShippingAgentOrgRequest --> Vessel
+ShippingAgentOrgRequest --> RequestStatus
+
+VesselAuthorization --> ShippingAgentOrg
+VesselAuthorization --> Vessel
+VesselAuthorization --> isActive
+VesselAuthorization --> ValidFrom
+VesselAuthorization --> ValidTo
+
+
+'=======================
+' VESSEL VISITS
+'=======================
+class VesselVisit {
+    + May include crew info
+    + safety officers if hazardous
+    
+}
+
+class CrewInfo {
+  + captainName
+  + crewCount
+}
+
+class SafetyOfficersNames {
+}
+
+class ExpectedTimeOfArrival {
+}
+
+class ExpectedTimeOfDeparture {
+}
+
+class isHazardousFlag {
+}
+
+class visitStatus {
+  + Status: Accepted, Rejected, Pending
+}
+
+class DockAssignment {
+}
+
+class RejectionReason {
+}
+
+VesselVisit --> RejectionReason
+VesselVisit --> ExpectedTimeOfArrival
+VesselVisit --> ExpectedTimeOfDeparture
+VesselVisit --> isHazardousFlag
+VesselVisit --> visitStatus
+DockAssignment --> Dock
+VesselVisit -> DockAssignment
+VesselVisit  -->  Vessel 
+VesselVisit --> CrewInfo
+CrewInfo --> SafetyOfficersNames
+ShippingAgentOrg --> VesselVisit
+ShippingAgentRep --> VesselVisit 
+
+'=======================
+' CARGO & MANIFESTS
+'=======================
+class CargoManifest {
+    + all containers Number
+    + all containers Content
+    + manifestType (Load/Unload)
+}
+
+class ManifestEntry {
+    + position on vessel (bay, row, tier)
+}
+
+class OriginLocation {
+}
+
+class DestinationLocation {
+}
+
+class ContainersContent {
+}
+
+class CargoType {
+    + examples: reefer, general, electronics, HAZMAT, oversized
+}
+
+class Description {
+}
+
+class Container {
+  + isoCode
+  + hazmat
+  + sizeTeu
+}
+
+VesselVisit --> CargoManifest 
+CargoManifest --> ManifestEntry
+ManifestEntry --> Container
+ManifestEntry --> Bays
+ManifestEntry --> Rows
+ManifestEntry --> Tiers
+ManifestEntry --> OriginLocation
+ManifestEntry --> DestinationLocation
+Container --> CargoType
+Container --> ContainersContent
+ContainersContent --> Description
+
+
+'=======================
+' USERS & ACCESS CONTROL
+'=======================
+class User {
+  + externalAuthProvider (Google/Microsoft/Facebook)
+  + externalUserId
+  + displayName
+  + email
+}
+
+class Role {
+  + Can be:
+  + Port Authority Officer
+  + Shipping Agent Representative
+  + Logistics Operator
+  + Administrator
+
+}
+
+note right of Role
+  Port Authority Officer:
+    - Review and approve/reject VesselVisit notifications
+    - Review and approve/reject ShippingAgentOrgRequest
+    - Assign docks to approved visits
+    - Monitor port operations for compliance
+  
+  Shipping Agent Representative:
+    - Submit VesselVisit notifications
+    - Provide cargo manifests
+    - Update/cancel notifications before approval
+    - Monitor status of visits
+  
+  Logistics Operator:
+    - Define and schedule operational tasks for approved visits
+    - Allocate resources (cranes, trucks, yard equipment, staff)
+    - Monitor task execution
+    - Handle operational adjustments
+  
+  Administrator:
+    - Manage user accounts and permissions
+    - Configure system parameters
+    - Maintain operational data integrity
+end note
+
+User --> Role
+
+@enduml

@@ -1,0 +1,32 @@
+using ProjArqsi.Domain.Shared;
+
+namespace ProjArqsi.Domain.VesselTypeAggregate
+{
+    public class VesselTypeId : EntityId
+    {
+        private VesselTypeId() : base(Guid.Empty)
+        {
+        }
+
+        public VesselTypeId(Guid id) : base(id)
+        {
+            if (id == Guid.Empty)
+                throw new ArgumentException("VesselTypeId cannot be empty", nameof(id));
+        }
+
+        protected override object createFromString(string text)
+        {
+            return Guid.Parse(text);
+        }
+
+        public override string AsString()
+        {
+            return ((Guid)ObjValue).ToString();
+        }
+
+        public Guid AsGuid()
+        {
+            return (Guid)ObjValue;
+        }
+    }
+}

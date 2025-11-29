@@ -1,4 +1,3 @@
-using Xunit;
 using ProjArqsi.Domain.VesselAggregate;
 
 namespace ProjArqsi.Tests.Domain

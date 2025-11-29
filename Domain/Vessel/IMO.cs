@@ -16,14 +16,14 @@ namespace ProjArqsi.Domain.VesselAggregate
             Number = number;
         }
 
-        protected override Object createFromString(String text)
+        protected override object createFromString(string text)
         {
             if (string.IsNullOrWhiteSpace(text))
                 throw new ArgumentException("IMO number cannot be empty", nameof(text));
             return text;
         }
 
-        public override String AsString()
+        public override string AsString()
         {
             return (string)ObjValue;
         }

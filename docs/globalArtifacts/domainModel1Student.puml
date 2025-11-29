@@ -1,0 +1,281 @@
+@startuml domainModel
+
+'=======================
+' AGGREGATES
+'=======================
+ package "Dock Aggregate" {
+  ' Value Objects
+  class DockName <<value object>> {
+    -value: string
+  }
+  
+  class Length <<value object>> {
+    -value: double
+  }
+  
+  ' Entities
+  class Dock <<aggregate root>> {
+    -dockId: Guid
+  }
+ }
+
+' --- STORAGE AREA AGGREGATE ---
+package "StorageArea Aggregate" {
+  ' Value Objects
+  class StorageAreaName <<value object>> {
+    -value: string
+  }
+  
+  class StorageAreaType <<enumeration>> {
+    YARD
+    WAREHOUSE
+  }
+  
+  class MaxCapacityTeu <<value object>> {
+    -value: int
+  }
+  
+  class CurrentOccupancy <<value object>> {
+    -value: int
+  }
+  
+  class Location <<value object>> {
+    -value: string
+  }
+  
+  ' Entities
+  class StorageArea <<aggregate root>> {
+    -storageAreaId: Guid
+    -containerIsoCodes: List<string>
+  }
+}
+
+' --- VESSEL TYPE AGGREGATE ---
+package "VesselType Aggregate" {
+  ' Value Objects
+  class TypeName <<value object>> {
+    -value: string
+  }
+  
+  class TypeDescription <<value object>> {
+    -value: string
+  }
+  
+  class TypeCapacity <<value object>> {
+    -value: int
+  }
+  
+  class MaxRows <<value object>> {
+    -value: int
+  }
+  
+  class MaxBays <<value object>> {
+    -value: int
+  }
+  
+  class MaxTiers <<value object>> {
+    -value: int
+  }
+  
+  ' Entities
+  class VesselType <<aggregate root>> {
+    -vesselTypeId: Guid
+  }
+}
+
+' --- VESSEL AGGREGATE ---
+package "Vessel Aggregate" {
+  ' Value Objects
+  class IMO <<id>> {
+    -number: string
+  }
+  
+  class Size <<value object>> {
+    -value: double
+  }
+  
+  class CargoCapacity <<value object>> {
+    -teu: int
+  }
+  
+  class VesselName <<value object>> {
+    -name: string
+  }
+  
+  class MaxTeu <<value object>> {
+    -value: int
+  }
+  
+  ' Entities
+  class Vessel <<aggregate root>> {
+    -vesselTypeId: Guid
+  }
+}
+
+' --- VESSEL VISIT NOTIFICATION AGGREGATE ---
+package "VesselVisitNotification Aggregate" {
+  ' Value Objects
+  class ExpectedTimeOfArrival <<value object>> {
+    -dateTime: DateTime
+  }
+  
+  class ExpectedTimeOfDeparture <<value object>> {
+    -dateTime: DateTime
+  }
+  
+  class isHazardousFlag <<value object>> {
+    -value: bool
+  }
+  
+  class visitStatus <<enumeration>> {
+    PENDING
+    ACCEPTED
+    REJECTED
+  }
+  
+  class RejectionReason <<value object>> {
+    -reason: string
+  }
+  
+  class SafetyOfficersNames <<value object>> {
+    -names: List<string>
+  }
+  
+  class CaptainName <<value object>> {
+    -value: string
+  }
+  
+  class DockToVisit <<value object>> {
+    -assignedDockId: Guid
+  }
+  
+  ' Entities
+  class VesselVisitNotification <<aggregate root>> {
+    -visitId: Guid
+  }
+
+  class CrewInfo <<entity>> {
+    -crewCount: int
+  }
+}
+
+' --- CARGO MANIFEST AGGREGATE ---
+package "CargoManifest Aggregate" {
+  ' Value Objects
+  class ManifestType <<enumeration>> {
+    LOADING
+    UNLOADING
+  }
+  
+  ' Entities
+  class CargoManifest <<aggregate root>> {
+    -manifestId: Guid
+    -visitNotificationId: Guid
+  }
+
+  class ManifestEntry <<entity>> {
+    -entryId: Guid
+    -containerIsoCode: string
+    -storageAreaId: Guid
+  }
+}
+
+' --- CONTAINER AGGREGATE ---
+package "Container Aggregate" {
+  ' Value Objects
+  class IsoCode <<id>> {
+    -value: string
+  }
+  
+  class SizeTeu <<value object>> {
+    -value: int
+  }
+  
+  class Hazmat <<value object>> {
+    -isHazardous: bool
+  }
+  
+  class CargoType <<value object>> {
+    -type: string
+  }
+  
+  class ContainerDescription <<value object>> {
+    -text: string
+  }
+  
+  class ContainerPosition <<value object>> {
+    -bay: int
+    -row: int
+    -tier: int
+  }
+  
+  ' Entities
+  class Container <<aggregate root>> {
+    -currentStorageAreaId: Guid
+  }
+}
+
+'=======================
+' RELATIONSHIPS & CARDINALITIES
+'=======================
+
+Dock "1" *-- "1" DockName
+Dock "1" *-- "1" Length
+
+' STORAGE AREA AGGREGATE
+StorageArea "1" *-- "1" StorageAreaName
+StorageArea "1" *-- "1" StorageAreaType
+StorageArea "1" *-- "1" MaxCapacityTeu
+StorageArea "1" *-- "1" CurrentOccupancy
+StorageArea "1" *-- "1" Location
+
+' VESSEL TYPE AGGREGATE
+VesselType "1" *-- "1" TypeName
+VesselType "1" *-- "1" TypeDescription
+VesselType "1" *-- "1" TypeCapacity
+VesselType "1" *-- "1" MaxRows
+VesselType "1" *-- "1" MaxBays
+VesselType "1" *-- "1" MaxTiers
+
+' VESSEL AGGREGATE
+' Vessel Aggregate - Value Object Relationships
+Vessel "1" *-- "1" IMO
+Vessel "1" *-- "1" VesselName
+Vessel "1" *-- "1" MaxTeu
+Vessel "1" *-- "1" Size
+Vessel "1" *-- "1" CargoCapacity
+Vessel "1" --> "1" VesselType : classified by (by ID) >
+
+' VESSEL VISIT NOTIFICATION AGGREGATE
+VesselVisitNotification "1" *-- "1" CrewInfo : includes >
+VesselVisitNotification "1" *-- "0..1" DockToVisit : has >
+VesselVisitNotification "1" --> "1" Vessel : refers to (by ID) >
+VesselVisitNotification "1" --> "0..2" CargoManifest : references (by ID) >
+VesselVisitNotification "1" --> "0..1" Dock : assigned to (by ID) >
+
+' CARGO MANIFEST AGGREGATE
+CargoManifest "1" *-- "1" ManifestType
+CargoManifest "1" *-- "0..*" ManifestEntry : contains >
+CargoManifest "1" --> "1" VesselVisitNotification : belongs to (by ID) >
+ManifestEntry "1" --> "1" Container : refers to (by ISO Code) >
+ManifestEntry "1" --> "1" StorageArea : refers to (by ID) >
+
+' CONTAINER AGGREGATE
+Container "1" *-- "1" IsoCode
+Container "1" *-- "1" SizeTeu
+Container "1" *-- "1" Hazmat
+Container "1" *-- "1" CargoType
+Container "1" *-- "1" ContainerDescription
+Container "1" *-- "0..1" ContainerPosition
+StorageArea "1" --> "0..*" Container : contains (by ISO Code) >
+
+' VesselVisitNotification Aggregate - Value Object Relationships
+VesselVisitNotification "1" *-- "1" ExpectedTimeOfArrival
+VesselVisitNotification "1" *-- "1" ExpectedTimeOfDeparture
+VesselVisitNotification "1" *-- "1" isHazardousFlag
+VesselVisitNotification "1" *-- "1" visitStatus
+VesselVisitNotification "1" *-- "0..1" RejectionReason
+CrewInfo "1" *-- "1" CaptainName
+CrewInfo "1" *-- "1" SafetyOfficersNames
+
+@enduml

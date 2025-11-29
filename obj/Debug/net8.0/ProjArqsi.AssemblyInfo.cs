@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ProjArqsi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1517687eb150a3690e25408d90d5ca3ebeda63b0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9a4da3c2f910fa269df4c77b8ec5ffbff40a4aa3")]
 [assembly: System.Reflection.AssemblyProductAttribute("ProjArqsi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ProjArqsi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

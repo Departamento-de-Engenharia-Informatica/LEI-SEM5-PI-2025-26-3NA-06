@@ -1,0 +1,27 @@
+@startuml portAuthorityOfficer
+
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Port Authority Officer" as Officer
+
+rectangle "Port Management System" {
+  ' Sprint A - Back-end Module
+  usecase "US 2.2.1\nCreate and Update\nVessel Types" as UC221
+  usecase "US 2.2.2\nRegister and Update\nVessel Records" as UC222
+  usecase "US 2.2.3\nRegister and Update\nDocks" as UC223
+  usecase "US 2.2.4\nRegister and Update\nStorage Areas" as UC224
+  usecase "US 2.2.7\nReview Vessel Visit Notifications\n(Approve/Reject)" as UC227
+  
+  ' Sprint C - OEM Module
+  usecase "US 4.1.12\nManage Incident Types\nCatalog" as UC41012
+}
+
+Officer --> UC221
+Officer --> UC222
+Officer --> UC223
+Officer --> UC224
+Officer --> UC227
+Officer --> UC41012
+
+@enduml

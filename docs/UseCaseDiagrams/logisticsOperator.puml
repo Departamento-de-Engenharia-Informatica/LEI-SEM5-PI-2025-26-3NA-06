@@ -1,0 +1,39 @@
+@startuml logisticsOperator
+
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Logistics Operator - SIMULAÇÃO" as Operator
+
+rectangle "Port Management System" {
+  
+  ' Sprint C - OEM Module
+  usecase "US 4.1.2\nGenerate and Store\nOperation Plans" as UC412
+  usecase "US 4.1.3\nSearch and List\nOperation Plans" as UC413
+  usecase "US 4.1.4\nManually Update\nOperation Plan" as UC414
+  usecase "US 4.1.5\nIdentify VVNs Without\nOperation Plans" as UC415
+  usecase "US 4.1.6\nQuery Resource\nAllocation Time" as UC416
+  usecase "US 4.1.7\nCreate Vessel Visit\nExecution (VVE) Record" as UC417
+  usecase "US 4.1.8\nUpdate VVE with\nBerth Time and Dock" as UC418
+  usecase "US 4.1.9\nUpdate VVE with\nExecuted Operations" as UC419
+  usecase "US 4.1.10\nSearch and List VVEs" as UC4110
+  usecase "US 4.1.11\nMark VVE as Completed" as UC4111
+  usecase "US 4.1.13\nRecord and Manage\nIncidents" as UC4113
+  usecase "US 4.1.15\nRecord and Manage\nComplementary Tasks" as UC4115
+}
+
+' Sprint C connections
+Operator --> UC412
+Operator --> UC413
+Operator --> UC414
+Operator --> UC415
+Operator --> UC416
+Operator --> UC417
+Operator --> UC418
+Operator --> UC419
+Operator --> UC4110
+Operator --> UC4111
+Operator --> UC4113
+Operator --> UC4115
+
+@enduml

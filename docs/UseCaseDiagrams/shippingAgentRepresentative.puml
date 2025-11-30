@@ -1,0 +1,19 @@
+@startuml shippingAgentRepresentative
+
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Shipping Agent Representative" as Agent
+
+rectangle "Port Management System" {
+  ' Sprint A - Back-end Module
+  usecase "US 2.2.8\nCreate/Submit\nVessel Visit Notification" as UC228
+  usecase "US 2.2.9\nChange/Complete\nVessel Visit Notification" as UC229
+  usecase "US 2.2.10\nView Vessel Visit\nNotification Status" as UC2210
+}
+
+Agent --> UC228
+Agent --> UC229
+Agent --> UC2210
+
+@enduml

@@ -1,0 +1,15 @@
+@startuml administrator
+
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Administrator" as Admin
+
+rectangle "Port Management System" {
+  ' Sprint B - Authentication & Authorization
+  usecase "US 3.2.5\nAssign Internal Roles" as UC325
+}
+
+Admin --> UC325
+
+@enduml

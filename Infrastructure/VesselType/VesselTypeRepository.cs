@@ -1,61 +1,62 @@
 using ProjArqsi.Domain.VesselTypeAggregate;
+using Microsoft.EntityFrameworkCore;
 using DomainVesselType = ProjArqsi.Domain.VesselTypeAggregate.VesselType;
 
-namespace ProjArqsi.Infrastructure.VesselType
+namespace ProjArqsi.Infrastructure.Repositories
 {
     public class VesselTypeRepository : IVesselTypeRepository
     {
-        private readonly List<DomainVesselType> _vesselTypes = new();
+        private readonly AppDbContext _context;
+
+        public VesselTypeRepository(AppDbContext context)
+        {
+            _context = context;
+        }
 
         public async Task<DomainVesselType> AddAsync(DomainVesselType entity)
         {
-            _vesselTypes.Add(entity);
-            return await Task.FromResult(entity);
+            _context.VesselTypes.Add(entity);
+            await _context.SaveChangesAsync();
+            return entity;
         }
 
         public async Task DeleteAsync(VesselTypeId id)
         {
-            var vesselType = _vesselTypes.FirstOrDefault(vt => vt.Id.Equals(id));
+            var vesselType = await _context.VesselTypes.FirstOrDefaultAsync(vt => vt.Id.Equals(id));
             if (vesselType != null)
-                _vesselTypes.Remove(vesselType);
-            
-            await Task.CompletedTask;
+            {
+                _context.VesselTypes.Remove(vesselType);
+                await _context.SaveChangesAsync();
+            }
         }
 
         public async Task<List<DomainVesselType>> GetAllAsync()
         {
-            return await Task.FromResult(_vesselTypes.ToList());
+            return await _context.VesselTypes.ToListAsync();
         }
 
         public async Task<DomainVesselType> GetByIdAsync(VesselTypeId id)
         {
-            var vesselType = _vesselTypes.FirstOrDefault(vt => vt.Id.Equals(id));
-            return await Task.FromResult(vesselType!);
+            return await _context.VesselTypes.FirstOrDefaultAsync(vt => vt.Id.Equals(id));
         }
 
         public async Task<DomainVesselType> UpdateAsync(DomainVesselType entity)
         {
-            var index = _vesselTypes.FindIndex(vt => vt.Id.Equals(entity.Id));
-            if (index >= 0)
-                _vesselTypes[index] = entity;
-            
-            return await Task.FromResult(entity);
+            _context.VesselTypes.Update(entity);
+            await _context.SaveChangesAsync();
+            return entity;
         }
 
-        // Custom methods from IVesselTypeRepository
         public async Task<DomainVesselType?> FindByNameAsync(TypeName name)
         {
-            var vesselType = _vesselTypes.FirstOrDefault(vt => vt.TypeName.Value.Equals(name.Value, StringComparison.OrdinalIgnoreCase));
-            return await Task.FromResult(vesselType);
+            return await _context.VesselTypes.FirstOrDefaultAsync(vt => vt.TypeName.Value.ToLower() == name.Value.ToLower());
         }
 
         public async Task<IEnumerable<DomainVesselType>> SearchByNameAsync(string searchTerm)
         {
-            var results = _vesselTypes
-                .Where(vt => vt.TypeName.Value.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-            
-            return await Task.FromResult(results);
+            return await _context.VesselTypes
+                .Where(vt => vt.TypeName.Value.ToLower().Contains(searchTerm.ToLower()))
+                .ToListAsync();
         }
     }
 }

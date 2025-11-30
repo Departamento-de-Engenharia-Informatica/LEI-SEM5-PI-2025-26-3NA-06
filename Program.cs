@@ -1,15 +1,21 @@
 using ProjArqsi.Application.Services;
 using ProjArqsi.Domain.VesselTypeAggregate;
 using ProjArqsi.Domain.Shared;
-using ProjArqsi.Infrastructure.VesselType;
+using ProjArqsi.Infrastructure.Repositories;
 using ProjArqsi.Infrastructure.Shared;
+using ProjArqsi.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+// Add EF Core DbContext for SQL Server
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 // Register repositories
-builder.Services.AddSingleton<IVesselTypeRepository, VesselTypeRepository>();
+builder.Services.AddScoped<IVesselTypeRepository, VesselTypeRepository>();
 builder.Services.AddSingleton<IUnitOfWork, UnitOfWork>();
 
 // Register application services

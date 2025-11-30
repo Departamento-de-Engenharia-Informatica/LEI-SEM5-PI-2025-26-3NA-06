@@ -13,9 +13,23 @@
     -value: double
   }
   
+  class Depth <<value object>> {
+    -value: double
+  }
+  
+  class Draft <<value object>> {
+    -value: double
+  }
+  
+  class Location <<value object>> {
+    -coordinates: string
+    -description: string
+  }
+  
   ' Entities
   class Dock <<aggregate root>> {
     -dockId: Guid
+    -allowedVesselTypeIds: List<Guid>
   }
  }
 
@@ -39,18 +53,25 @@ package "StorageArea Aggregate" {
     -value: int
   }
   
-  class Location <<value object>> {
+  class StorageLocation <<value object>> {
     -value: string
+  }
+  
+  class Distance <<value object>> {
+    -value: double
+    -unit: string
   }
   
   ' Entities
   class StorageArea <<aggregate root>> {
     -storageAreaId: Guid
     -containerIsoCodes: List<string>
+    -servesDocks: List<Guid>
+    -distanceToDocks: Dictionary<Guid, Distance>
   }
-}
+ }
 
-' --- VESSEL TYPE AGGREGATE ---
+ ' --- VESSEL TYPE AGGREGATE ---
 package "VesselType Aggregate" {
   ' Value Objects
   class TypeName <<value object>> {
@@ -131,31 +152,40 @@ package "VesselVisitNotification Aggregate" {
     PENDING
     ACCEPTED
     REJECTED
+    IN_PROGRESS
   }
   
   class RejectionReason <<value object>> {
     -reason: string
   }
   
-  class SafetyOfficersNames <<value object>> {
-    -names: List<string>
-  }
-  
-  class CaptainName <<value object>> {
+  class CrewMemberName <<value object>> {
     -value: string
   }
   
-  class DockToVisit <<value object>> {
-    -assignedDockId: Guid
+  class CitizenId <<value object>> {
+    -value: string
+  }
+  
+  class Nationality <<value object>> {
+    -value: string
+  }
+  
+  class CrewRole <<enumeration>> {
+    CAPTAIN
+    SAFETY_OFFICER
+    CREWMATE
   }
   
   ' Entities
   class VesselVisitNotification <<aggregate root>> {
     -visitId: Guid
+    -assignedVesselImo: string
+    -assignedDockId: Guid
   }
 
-  class CrewInfo <<entity>> {
-    -crewCount: int
+  class CrewMember <<entity>> {
+    -crewMemberId: Guid
   }
 }
 
@@ -165,6 +195,12 @@ package "CargoManifest Aggregate" {
   class ManifestType <<enumeration>> {
     LOADING
     UNLOADING
+  }
+  
+  class VesselPosition <<value object>> {
+    -bay: int
+    -row: int
+    -tier: int
   }
   
   ' Entities
@@ -203,12 +239,6 @@ package "Container Aggregate" {
     -text: string
   }
   
-  class ContainerPosition <<value object>> {
-    -bay: int
-    -row: int
-    -tier: int
-  }
-  
   ' Entities
   class Container <<aggregate root>> {
     -currentStorageAreaId: Guid
@@ -221,13 +251,17 @@ package "Container Aggregate" {
 
 Dock "1" *-- "1" DockName
 Dock "1" *-- "1" Length
+Dock "1" *-- "1" Depth
+Dock "1" *-- "1" Draft
+Dock "1" *-- "1" Location
 
 ' STORAGE AREA AGGREGATE
 StorageArea "1" *-- "1" StorageAreaName
 StorageArea "1" *-- "1" StorageAreaType
 StorageArea "1" *-- "1" MaxCapacityTeu
 StorageArea "1" *-- "1" CurrentOccupancy
-StorageArea "1" *-- "1" Location
+StorageArea "1" *-- "1" StorageLocation
+StorageArea "1" *-- "0..*" Distance : distance to docks >
 
 ' VESSEL TYPE AGGREGATE
 VesselType "1" *-- "1" TypeName
@@ -247,8 +281,7 @@ Vessel "1" *-- "1" CargoCapacity
 Vessel "1" --> "1" VesselType : classified by (by ID) >
 
 ' VESSEL VISIT NOTIFICATION AGGREGATE
-VesselVisitNotification "1" *-- "1" CrewInfo : includes >
-VesselVisitNotification "1" *-- "0..1" DockToVisit : has >
+VesselVisitNotification "1" *-- "0..*" CrewMember : includes >
 VesselVisitNotification "1" --> "1" Vessel : refers to (by ID) >
 VesselVisitNotification "1" --> "0..2" CargoManifest : references (by ID) >
 VesselVisitNotification "1" --> "0..1" Dock : assigned to (by ID) >
@@ -257,6 +290,7 @@ VesselVisitNotification "1" --> "0..1" Dock : assigned to (by ID) >
 CargoManifest "1" *-- "1" ManifestType
 CargoManifest "1" *-- "0..*" ManifestEntry : contains >
 CargoManifest "1" --> "1" VesselVisitNotification : belongs to (by ID) >
+ManifestEntry "1" *-- "1" VesselPosition
 ManifestEntry "1" --> "1" Container : refers to (by ISO Code) >
 ManifestEntry "1" --> "1" StorageArea : refers to (by ID) >
 
@@ -266,7 +300,6 @@ Container "1" *-- "1" SizeTeu
 Container "1" *-- "1" Hazmat
 Container "1" *-- "1" CargoType
 Container "1" *-- "1" ContainerDescription
-Container "1" *-- "0..1" ContainerPosition
 StorageArea "1" --> "0..*" Container : contains (by ISO Code) >
 
 ' VesselVisitNotification Aggregate - Value Object Relationships
@@ -275,7 +308,9 @@ VesselVisitNotification "1" *-- "1" ExpectedTimeOfDeparture
 VesselVisitNotification "1" *-- "1" isHazardousFlag
 VesselVisitNotification "1" *-- "1" visitStatus
 VesselVisitNotification "1" *-- "0..1" RejectionReason
-CrewInfo "1" *-- "1" CaptainName
-CrewInfo "1" *-- "1" SafetyOfficersNames
+CrewMember "1" *-- "1" CrewMemberName
+CrewMember "1" *-- "1" CitizenId
+CrewMember "1" *-- "1" Nationality
+CrewMember "1" *-- "1" CrewRole
 
 @enduml

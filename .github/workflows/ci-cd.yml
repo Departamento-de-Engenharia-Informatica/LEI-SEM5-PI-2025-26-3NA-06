@@ -21,15 +21,15 @@ jobs:
 
       - name: Restore dependencies
         run: dotnet restore
-        working-directory: ./
+        working-directory: ./Backend
 
       - name: Build solution
         run: dotnet build --no-restore --configuration Release
-        working-directory: ./
+        working-directory: ./Backend
 
       - name: Run tests
         run: dotnet test --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx"
-        working-directory: ./
+        working-directory: ./Backend
 
       - name: Publish test results
         uses: dorny/test-reporter@v1
@@ -49,13 +49,13 @@ jobs:
 
       - name: Build artifacts
         run: dotnet publish -c Release -o ./publish
-        working-directory: ./
+        working-directory: ./Backend
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
-          path: ./publish
+          path: ./Backend/publish
           retention-days: 7
 
   code-quality:
@@ -73,4 +73,4 @@ jobs:
 
       - name: Run code analysis
         run: dotnet build --configuration Release /p:TreatWarningsAsErrors=false
-        working-directory: ./
+        working-directory: ./Backend

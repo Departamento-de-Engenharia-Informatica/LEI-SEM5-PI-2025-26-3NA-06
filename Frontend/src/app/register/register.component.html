@@ -1,0 +1,49 @@
+<div class="register-container">
+  <div class="register-card">
+    <h1>Complete Your Registration</h1>
+    <p class="subtitle">Please provide additional information to complete your account setup</p>
+
+    <form *ngIf="!isSuccess" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" [(ngModel)]="email" name="email" readonly required />
+      </div>
+
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input
+          type="text"
+          id="username"
+          [(ngModel)]="username"
+          name="username"
+          placeholder="Enter your username"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="role">Role</label>
+        <select id="role" [(ngModel)]="role" name="role" required>
+          <option value="Admin">Admin</option>
+          <option value="PortAuthorityOfficer">Port Authority Officer</option>
+          <option value="LogisticOperator">Logistic Operator</option>
+          <option value="ShippingAgentRepresentative">Shipping Agent Representative</option>
+        </select>
+      </div>
+
+      <div *ngIf="message && !isSuccess" class="error-message">
+        {{ message }}
+      </div>
+
+      <button type="submit" [disabled]="isLoading" class="submit-btn">
+        {{ isLoading ? 'Registering...' : 'Complete Registration' }}
+      </button>
+    </form>
+
+    <div *ngIf="isSuccess" class="success-container">
+      <div class="success-icon">✓</div>
+      <p class="success-message">{{ message }}</p>
+      <a href="/login" class="back-to-login">Back to Login</a>
+    </div>
+  </div>
+</div>

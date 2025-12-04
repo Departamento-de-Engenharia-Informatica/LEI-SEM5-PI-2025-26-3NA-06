@@ -1,0 +1,10 @@
+<div class="confirm-email-container">
+  <h2>Email Confirmation</h2>
+  <p [ngClass]="{ success: success, error: !success && message !== 'Confirming your email...' }">
+    {{ message }}
+  </p>
+  <div *ngIf="message === 'Confirming your email...'" class="loading-spinner">
+    <div class="spinner"></div>
+  </div>
+  <a *ngIf="success" routerLink="/dashboard" class="login-link">Go to Dashboard</a>
+</div>

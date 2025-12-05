@@ -34,8 +34,8 @@ namespace ProjArqsi.Application.Services
             await _userRepository.AddAsync(user);
             await _unitOfWork.CommitAsync();
 
-            // Send the confirmation email with the token
-            await _emailService.SendConfirmationEmailAsync(user, iamEmail, user.ConfirmationToken);
+            // DO NOT send activation email yet - wait for admin to assign role and approve
+            // Activation email will be sent when admin assigns role via US 3.2.5
         }
         
         public async Task ConfirmEmailAsync(string token)
@@ -52,6 +52,11 @@ namespace ProjArqsi.Application.Services
             user.Activate();
             user.ConfirmationToken = string.Empty;
             await _userRepository.UpdateUserAsync(user);
+        }
+
+        public async Task<User?> GetUserByTokenAsync(string token)
+        {
+            return await _userRepository.GetUserByConfirmationTokenAsync(token);
         }
 
         public async Task RegisterUserAsync(User user)

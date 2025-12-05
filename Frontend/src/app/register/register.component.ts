@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-register',
@@ -18,7 +19,7 @@ export class RegisterComponent implements OnInit {
   isLoading: boolean = false;
   isSuccess: boolean = false;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private router: Router) {}
 
   ngOnInit() {
     // Get email from cookie if available
@@ -58,8 +59,13 @@ export class RegisterComponent implements OnInit {
         next: () => {
           this.isSuccess = true;
           this.message =
-            'Registration successful! Please check your email to confirm your account.';
+            'Registration successful! Please check your email to confirm your account. Redirecting to login...';
           this.isLoading = false;
+
+          // Redirect to login after 3 seconds
+          setTimeout(() => {
+            this.router.navigate(['/login']);
+          }, 3000);
         },
         error: (error) => {
           this.isSuccess = false;

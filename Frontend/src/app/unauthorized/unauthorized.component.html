@@ -1,0 +1,14 @@
+<div class="unauthorized-container">
+  <div class="unauthorized-content">
+    <div class="icon">⛔</div>
+    <h1>Unauthorized Access</h1>
+    <p class="reason">You do not have permission to access this page.</p>
+    <div class="details">
+      <p><strong>Your Role:</strong> {{ userRole }}</p>
+      <p class="info-text">
+        You attempted to access a resource that requires different permissions.
+      </p>
+    </div>
+    <button class="btn-primary" (click)="goToDashboard()">Go to My Dashboard</button>
+  </div>
+</div>

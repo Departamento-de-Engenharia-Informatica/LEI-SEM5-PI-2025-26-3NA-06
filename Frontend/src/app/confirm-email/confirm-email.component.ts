@@ -11,37 +11,22 @@ import { HttpClient } from '@angular/common/http';
   styleUrls: ['./confirm-email.component.css'],
 })
 export class ConfirmEmailComponent implements OnInit {
-  message = 'Confirming your email...';
+  message = 'Redirecting to authentication...';
   success = false;
 
   constructor(private route: ActivatedRoute, private http: HttpClient, private router: Router) {}
 
   ngOnInit(): void {
     const token = this.route.snapshot.queryParamMap.get('token');
-    if (token) {
-      this.http
-        .get(`http://localhost:5218/api/registration/confirm-email?token=${token}`, {
-          responseType: 'text',
-        })
-        .subscribe({
-          next: (response) => {
-            this.message = 'Email confirmed successfully! Redirecting to dashboard...';
-            this.success = true;
+    console.log('Activation token:', token);
 
-            // Redirect to dashboard after 2 seconds
-            setTimeout(() => {
-              this.router.navigate(['/dashboard']);
-            }, 2000);
-          },
-          error: (err) => {
-            console.error('Confirmation error:', err);
-            this.message =
-              'Email confirmation failed: ' + (err.error || err.message || 'Unknown error.');
-            this.success = false;
-          },
-        });
+    if (token) {
+      // Redirect to backend which will initiate Google OAuth
+      // After OAuth, backend will verify the user and activate the account
+      this.message = 'Redirecting to Google for authentication...';
+      window.location.href = `http://localhost:5218/api/registration/confirm-email?token=${token}`;
     } else {
-      this.message = 'Invalid confirmation link.';
+      this.message = 'Invalid activation link. No token provided.';
       this.success = false;
     }
   }

@@ -31,114 +31,24 @@ namespace DDDSample1.Presentation.Controllers
         public IActionResult LoginCallback()
         {
             var needsRegistration = User.FindFirstValue("needs_registration");
+            var role = User.FindFirstValue(ClaimTypes.Role);
+            
             if (needsRegistration == "true")
             {
                 return Redirect("http://localhost:5173/register");
             }
-            return Redirect("http://localhost:5173");
-        }
-
-        [HttpPost("api/weblogin")]
-        public async Task<IActionResult> WebLogin([FromBody] TokenRequest request)
-        {
-            try
+            
+            // Store role in query parameter so frontend can save it
+            var dashboardUrl = role switch
             {
-                var payload = await GoogleJsonWebSignature.ValidateAsync(request.token);
-                var emailGoogle = payload.Email;
-
-                var userDto = await userService.GetUserByUsernameAsync(emailGoogle);
-                                
-                if (userDto == null || !userDto.IsActive)
-                {
-                    Console.WriteLine("IAM email not found or inactive. Checking personal email.");
-                    userDto = await userService.checkIfAccountExists(emailGoogle);
-
-                    if (userDto == null || !userDto.IsActive)
-                    {
-                        Console.WriteLine("Personal email not found or inactive.");
-                        Console.WriteLine("Login failed: email not found.");
-
-                        var dataProtectionProvider = HttpContext.RequestServices.GetRequiredService<IDataProtectionProvider>();
-                        var protector = dataProtectionProvider.CreateProtector("CustomCookieProtector");
-                        var encryptedEmail = protector.Protect(emailGoogle);
-
-                        Console.WriteLine("Creating CustomCookie before any SignInAsync calls.");
-
-                        HttpContext.Response.Cookies.Append(".AspNetCore.CustomCookies", encryptedEmail, new CookieOptions
-                        {
-                            HttpOnly = true,
-                            Secure = true,
-                            Expires = DateTimeOffset.UtcNow.AddMinutes(60),
-                            SameSite = SameSiteMode.None,
-                            Path = "/"
-                        });
-
-                        Console.WriteLine("CustomCookie has been appended to response.");
-
-                        return StatusCode(302, new { 
-                            Message = "This email is not registered in the system."
-                        });
-                    }
-
-                }
-
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Email, emailGoogle),
-                    new Claim(ClaimTypes.Role, userDto.Role.ToString()),
-                    new Claim("Active", userDto.IsActive ? "1" : "0"),
-                    new Claim("UserId", userDto.Id.ToString())
-                };
-
-                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-                Console.WriteLine("Calling SignInAsync for authenticated user.");
-
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity));
-                
-                return Ok(new { 
-                    Message = "Login successful"
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Message = "Token validation error", Error = ex.Message });
-            }
-        }
-
-
-        [HttpGet("api/claims")]
-        public IActionResult GetClaims()
-        {
-            if(User.Identity == null)
-            {
-                return Unauthorized(new { Message = "Usuário não autenticado" });
-            }
-            if (User.Identity.IsAuthenticated)
-            {
-                var claims = User.Claims;
-
-                var claimsData = new List<object>();
-                foreach (var claim in claims)
-                {
-                    claimsData.Add(new
-                    {
-                        claim.Type,
-                        claim.Value
-                    });
-                }
-
-                return Ok(claimsData);
-            }
-            else
-            {
-                return Unauthorized(new { Message = "Usuário não autenticado" });
-            }
+                "Admin" => "http://localhost:5173/admin?role=Admin",
+                "PortAuthorityOfficer" => "http://localhost:5173/port-authority?role=PortAuthorityOfficer",
+                "LogisticOperator" => "http://localhost:5173/logistic-operator?role=LogisticOperator",
+                "ShippingAgentRepresentative" => "http://localhost:5173/shipping-agent?role=ShippingAgentRepresentative",
+                _ => "http://localhost:5173/login"
+            };
+            
+            return Redirect(dashboardUrl);
         }
     }
-}
-
-public class TokenRequest
-{
-    public string? token { get; set; }
 }

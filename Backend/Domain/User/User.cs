@@ -35,19 +35,16 @@ namespace ProjArqsi.Domain.UserAggregate
 
         public void ChangeRole(Role role)
         {
-            if (!IsActive) throw new BusinessRuleValidationException("User cannot be changed in this state");
             Role = role;
         }
 
         public void ChangeUsername(Username username)
         {
-            if (!IsActive) throw new BusinessRuleValidationException("User cannot be changed in this state");
             Username = username;
         }
 
         public void ChangeEmail(Email email)
         {
-            if (!IsActive) throw new BusinessRuleValidationException("User cannot be changed in this state");
             Email = email;
         }
 

@@ -15,6 +15,24 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+}
+
+.company-name {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
 .header-left h1 {
   margin: 0;
   font-size: 1.5rem;

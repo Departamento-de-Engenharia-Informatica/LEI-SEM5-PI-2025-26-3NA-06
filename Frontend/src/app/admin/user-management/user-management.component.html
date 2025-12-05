@@ -1,0 +1,73 @@
+<div class="user-management-container">
+  <div class="header">
+    <h2>User Management</h2>
+    <button class="filter-btn" (click)="toggleFilter()">
+      {{ showInactiveOnly ? 'Show All Users' : 'Show Inactive Users Only' }}
+    </button>
+  </div>
+
+  <div class="users-table" *ngIf="filteredUsers.length > 0; else noUsers">
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of filteredUsers" [class.inactive]="!user.isActive">
+          <td>{{ user.username }}</td>
+          <td>{{ user.email }}</td>
+          <td>
+            <select
+              [(ngModel)]="selectedRole[user.id]"
+              [disabled]="user.isActive"
+              class="role-select"
+            >
+              <option *ngFor="let role of availableRoles" [value]="role">
+                {{ role }}
+              </option>
+            </select>
+          </td>
+          <td>
+            <span
+              class="status-badge"
+              [class.active]="user.isActive"
+              [class.inactive-badge]="!user.isActive"
+            >
+              {{ user.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+          <td class="actions">
+            <button
+              *ngIf="!user.isActive"
+              class="btn-assign"
+              (click)="assignRoleAndSendEmail(user.id)"
+              title="Assign selected role and send activation email"
+            >
+              Assign Role & Send Email
+            </button>
+            <button
+              class="btn-toggle"
+              [class.btn-deactivate]="user.isActive"
+              [class.btn-activate]="!user.isActive"
+              (click)="toggleUserActive(user.id, user.isActive)"
+              title="Toggle user active status"
+            >
+              {{ user.isActive ? 'Deactivate' : 'Activate' }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ng-template #noUsers>
+    <div class="no-users">
+      <p>{{ showInactiveOnly ? 'No inactive users found' : 'No users found' }}</p>
+    </div>
+  </ng-template>
+</div>

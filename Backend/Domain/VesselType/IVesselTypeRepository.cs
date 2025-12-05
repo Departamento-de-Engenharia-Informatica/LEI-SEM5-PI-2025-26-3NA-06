@@ -6,5 +6,7 @@ namespace ProjArqsi.Domain.VesselTypeAggregate
     {
         Task<VesselType?> FindByNameAsync(TypeName name);
         Task<IEnumerable<VesselType>> SearchByNameAsync(string searchTerm);
+        Task<IEnumerable<VesselType>> SearchByDescriptionAsync(string searchTerm);
+        Task<IEnumerable<VesselType>> SearchByNameOrDescriptionAsync(string searchTerm);
     }
 }

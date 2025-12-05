@@ -1,4 +1,5 @@
 using AutoMapper;
+using ProjArqsi.Application.Services;
 using ProjArqsi.Domain.Shared;
 using ProjArqsi.Domain.UserAggregate;
 using ProjArqsi.Domain.UserAggregate.ValueObjects;
@@ -10,13 +11,14 @@ namespace ProjArqsi.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserRepository _userRepository;
-        
+        private readonly EmailService _emailService;
         private readonly IMapper _mapper;
 
-        public UserService(IUnitOfWork unitOfWork, IUserRepository userRepository, IConfiguration configuration, IMapper mapper)
+        public UserService(IUnitOfWork unitOfWork, IUserRepository userRepository, EmailService emailService, IConfiguration configuration, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
             _userRepository = userRepository;
+            _emailService = emailService;
             _mapper = mapper;
         }
 
@@ -26,6 +28,13 @@ namespace ProjArqsi.Services
         {
             var list = await _userRepository.GetAllAsync();
             return _mapper.Map<List<UserDto>>(list);
+        }
+
+        public async Task<List<UserDto>> GetInactiveUsersAsync()
+        {
+            var list = await _userRepository.GetAllAsync();
+            var inactiveUsers = list.Where(u => !u.IsActive).ToList();
+            return _mapper.Map<List<UserDto>>(inactiveUsers);
         }
 
         public async Task<UserDto?> GetByIdAsync(UserId id)
@@ -58,9 +67,9 @@ namespace ProjArqsi.Services
             var user = await _userRepository.GetByIdAsync(new UserId(dto.Id));
             if (user == null) return null;
 
-            user.ChangeRole(dto.Role);
-            user.ChangeUsername(dto.Username);
-            user.ChangeEmail(dto.Email);
+            user.ChangeRole(new Role(Enum.Parse<RoleType>(dto.Role)));
+            user.ChangeUsername(new Username(dto.Username));
+            user.ChangeEmail(new Email(dto.Email));
             user.ChangeConfirmationToken(dto.ConfirmationToken);
 
             await _unitOfWork.CommitAsync();
@@ -116,6 +125,93 @@ namespace ProjArqsi.Services
         {
             var user = await _userRepository.FindByEmailAsync(new Email(email));
             return user == null ? null : _mapper.Map<UserDto>(user);
+        }
+
+        public async Task<List<UserDto>> GetAllUsersAsync()
+        {
+            return await GetAllAsync();
+        }
+
+        public async Task<UserDto?> GetUserByIdAsync(Guid id)
+        {
+            return await GetByIdAsync(new UserId(id));
+        }
+
+        public async Task<UserDto?> UpdateUserRoleAsync(Guid id, RoleType role)
+        {
+            var user = await _userRepository.GetByIdAsync(new UserId(id));
+            if (user == null) return null;
+
+            user.ChangeRole(new Role(role));
+            await _unitOfWork.CommitAsync();
+
+            return _mapper.Map<UserDto>(user);
+        }
+
+        public async Task<UserDto?> ActivateUserAsync(Guid id)
+        {
+            var user = await _userRepository.GetByIdAsync(new UserId(id));
+            if (user == null) return null;
+
+            user.Activate();
+            await _unitOfWork.CommitAsync();
+
+            return _mapper.Map<UserDto>(user);
+        }
+
+        public async Task<UserDto?> DeactivateUserAsync(Guid id)
+        {
+            var user = await _userRepository.GetByIdAsync(new UserId(id));
+            if (user == null) return null;
+
+            user.Deactivate();
+            await _unitOfWork.CommitAsync();
+
+            return _mapper.Map<UserDto>(user);
+        }
+
+        public async Task<UserDto?> ToggleUserActiveAsync(Guid id)
+        {
+            var user = await _userRepository.GetByIdAsync(new UserId(id));
+            if (user == null) return null;
+
+            if (user.IsActive)
+            {
+                user.Deactivate();
+            }
+            else
+            {
+                user.Activate();
+            }
+
+            await _unitOfWork.CommitAsync();
+            return _mapper.Map<UserDto>(user);
+        }
+
+        public async Task<UserDto?> AssignRoleAndSendActivationEmailAsync(Guid id, RoleType role)
+        {
+            var user = await _userRepository.GetByIdAsync(new UserId(id));
+            if (user == null) return null;
+
+            // Update role
+            user.ChangeRole(new Role(role));
+            
+            // Ensure confirmation token exists
+            if (string.IsNullOrEmpty(user.ConfirmationToken))
+            {
+                user.GenerateConfirmationToken();
+            }
+            
+            await _unitOfWork.CommitAsync();
+
+            // Send activation email
+            await _emailService.SendConfirmationEmailAsync(
+                user,
+                user.Email.Value,
+                user.ConfirmationToken
+            );
+
+            return _mapper.Map<UserDto>(user);
         }
 
     }

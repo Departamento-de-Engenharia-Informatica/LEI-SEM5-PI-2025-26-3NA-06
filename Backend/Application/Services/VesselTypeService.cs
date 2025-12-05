@@ -88,6 +88,18 @@ namespace ProjArqsi.Application.Services
             return vesselTypes.Select(MapToDto);
         }
 
+        public async Task<IEnumerable<VesselTypeDto>> SearchByDescriptionAsync(string searchTerm)
+        {
+            var vesselTypes = await _repository.SearchByDescriptionAsync(searchTerm);
+            return vesselTypes.Select(MapToDto);
+        }
+
+        public async Task<IEnumerable<VesselTypeDto>> SearchByNameOrDescriptionAsync(string searchTerm)
+        {
+            var vesselTypes = await _repository.SearchByNameOrDescriptionAsync(searchTerm);
+            return vesselTypes.Select(MapToDto);
+        }
+
         private VesselTypeDto MapToDto(VesselType vesselType)
         {
             return new VesselTypeDto

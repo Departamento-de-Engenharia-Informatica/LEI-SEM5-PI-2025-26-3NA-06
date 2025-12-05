@@ -15,6 +15,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.DataProtection;
 using ProjArqsi.Domain.UserAggregate.ValueObjects;
 using Microsoft.Extensions.DependencyInjection;
+using ProjArqsi.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 // Enable CORS for frontend
@@ -75,11 +76,23 @@ builder.Services.AddAuthentication(options =>
         {
             var email = context.Principal?.FindFirstValue(ClaimTypes.Email);
             var userService = context.HttpContext.RequestServices.GetRequiredService<UserService>();
+            var registrationService = context.HttpContext.RequestServices.GetRequiredService<RegistrationService>();
             var user = await userService.FindByEmailAsync(email ?? "");
             
             var identity = (ClaimsIdentity)context.Principal?.Identity!;
             identity.AddClaim(new Claim("urn:google:access_token", context.AccessToken ?? ""));
             identity.AddClaim(new Claim("urn:google:expires_in", context.ExpiresIn.ToString() ?? ""));
+            
+            // Check if this is an activation flow (token present in redirect URI)
+            var redirectUri = context.Properties?.RedirectUri;
+            string? activationToken = null;
+            if (!string.IsNullOrEmpty(redirectUri) && redirectUri.Contains("token="))
+            {
+                var uri = new Uri(redirectUri, UriKind.RelativeOrAbsolute);
+                var query = uri.IsAbsoluteUri ? uri.Query : redirectUri.Substring(redirectUri.IndexOf('?'));
+                var queryParams = System.Web.HttpUtility.ParseQueryString(query);
+                activationToken = queryParams["token"];
+            }
             
             // if user logs in for the first time
             if (user is null)
@@ -98,6 +111,37 @@ builder.Services.AddAuthentication(options =>
                 identity.AddClaim(new Claim("needs_registration", "true"));
                 identity.AddClaim(new Claim(ClaimTypes.Role, "Pending"));
             }
+            else if (!user.IsActive && !string.IsNullOrEmpty(activationToken))
+            {
+                // User is inactive but has activation token - activate them now
+                Console.WriteLine($"Activating user during OAuth: {email}");
+                try
+                {
+                    await registrationService.ConfirmEmailAsync(activationToken);
+                    // Reload user to get updated status
+                    user = await userService.FindByEmailAsync(email ?? "");
+                    if (user != null && user.IsActive)
+                    {
+                        Console.WriteLine("User activated successfully: " + email);
+                        identity.AddClaim(new Claim(ClaimTypes.Role, user.Role.ToString()));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Activation failed: {ex.Message}");
+                    identity.AddClaim(new Claim("access_denied", "true"));
+                    identity.AddClaim(new Claim("access_denied_reason", "Activation failed. Please contact support."));
+                    identity.AddClaim(new Claim(ClaimTypes.Role, "Inactive"));
+                }
+            }
+            else if (!user.IsActive)
+            {
+                // User exists but is inactive - deny access
+                Console.WriteLine($"Access denied for inactive user: {email}");
+                identity.AddClaim(new Claim("access_denied", "true"));
+                identity.AddClaim(new Claim("access_denied_reason", "Your account is inactive. Please contact an administrator."));
+                identity.AddClaim(new Claim(ClaimTypes.Role, "Inactive"));
+            }
             else
             {
                 Console.WriteLine("User authenticated: " + email);
@@ -107,12 +151,37 @@ builder.Services.AddAuthentication(options =>
         
         options.Events.OnTicketReceived = context =>
         {
+            // Check if access is denied (inactive user)
+            var accessDenied = context.Principal?.FindFirstValue("access_denied");
+            if (accessDenied == "true")
+            {
+                var reason = context.Principal?.FindFirstValue("access_denied_reason");
+                Console.WriteLine($"Access denied: {reason}");
+                context.ReturnUri = $"http://localhost:5173/access-denied?reason={Uri.EscapeDataString(reason ?? "Account inactive")}";
+                return Task.CompletedTask;
+            }
+            
             // Check if user needs registration and redirect
             var needsRegistration = context.Principal?.FindFirstValue("needs_registration");
             if (needsRegistration == "true")
             {
                 Console.WriteLine("Redirecting to registration page");
                 context.ReturnUri = "http://localhost:5173/register";
+            }
+            else
+            {
+                // User exists, redirect to role-based dashboard WITH role query parameter
+                var role = context.Principal?.FindFirstValue(ClaimTypes.Role);
+                Console.WriteLine($"Redirecting authenticated user with role: {role}");
+                
+                context.ReturnUri = role switch
+                {
+                    "Admin" => "http://localhost:5173/admin?role=Admin",
+                    "PortAuthorityOfficer" => "http://localhost:5173/port-authority?role=PortAuthorityOfficer",
+                    "LogisticOperator" => "http://localhost:5173/logistic-operator?role=LogisticOperator",
+                    "ShippingAgentRepresentative" => "http://localhost:5173/shipping-agent?role=ShippingAgentRepresentative",
+                    _ => "http://localhost:5173/login"
+                };
             }
             return Task.CompletedTask;
         };
@@ -140,6 +209,9 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+// Log unauthorized access attempts
+app.UseMiddleware<AuthorizationLoggingMiddleware>();
 
 app.MapControllers();
 

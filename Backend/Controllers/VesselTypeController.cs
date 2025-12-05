@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using ProjArqsi.Application.DTOs;
 using ProjArqsi.Application.Services;
 
@@ -16,6 +17,7 @@ namespace ProjArqsi.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin,PortAuthorityOfficer")]
         public async Task<ActionResult<VesselTypeDto>> Create([FromBody] CreateVesselTypeDto dto)
         {
             try
@@ -30,6 +32,7 @@ namespace ProjArqsi.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,PortAuthorityOfficer")]
         public async Task<ActionResult<VesselTypeDto>> Update(Guid id, [FromBody] UpdateVesselTypeDto dto)
         {
             try
@@ -48,6 +51,7 @@ namespace ProjArqsi.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin,PortAuthorityOfficer")]
         public async Task<ActionResult<VesselTypeDto>> GetById(Guid id)
         {
             var result = await _service.GetByIdAsync(id);
@@ -58,6 +62,7 @@ namespace ProjArqsi.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin,PortAuthorityOfficer")]
         public async Task<ActionResult<IEnumerable<VesselTypeDto>>> GetAll()
         {
             var results = await _service.GetAllAsync();
@@ -65,13 +70,32 @@ namespace ProjArqsi.Controllers
         }
 
         [HttpGet("search")]
-        public async Task<ActionResult<IEnumerable<VesselTypeDto>>> Search([FromQuery] string name)
+        [Authorize(Roles = "Admin,PortAuthorityOfficer")]
+        public async Task<ActionResult<IEnumerable<VesselTypeDto>>> Search(
+            [FromQuery] string? name = null,
+            [FromQuery] string? description = null,
+            [FromQuery] string? searchTerm = null)
         {
-            if (string.IsNullOrWhiteSpace(name))
-                return BadRequest(new { message = "Search term 'name' is required." });
-
-            var results = await _service.SearchByNameAsync(name);
-            return Ok(results);
+            // Support searching by name, description, or both (searchTerm searches both fields)
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var results = await _service.SearchByNameOrDescriptionAsync(searchTerm);
+                return Ok(results);
+            }
+            else if (!string.IsNullOrWhiteSpace(name))
+            {
+                var results = await _service.SearchByNameAsync(name);
+                return Ok(results);
+            }
+            else if (!string.IsNullOrWhiteSpace(description))
+            {
+                var results = await _service.SearchByDescriptionAsync(description);
+                return Ok(results);
+            }
+            else
+            {
+                return BadRequest(new { message = "At least one search parameter (name, description, or searchTerm) is required." });
+            }
         }
     }
 }

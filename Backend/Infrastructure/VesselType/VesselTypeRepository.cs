@@ -1,6 +1,6 @@
 using ProjArqsi.Domain.VesselTypeAggregate;
 using Microsoft.EntityFrameworkCore;
-using DomainVesselType = ProjArqsi.Domain.VesselTypeAggregate.VesselType;
+
 
 namespace ProjArqsi.Infrastructure.Repositories
 {
@@ -13,7 +13,7 @@ namespace ProjArqsi.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<DomainVesselType> AddAsync(DomainVesselType entity)
+        public async Task<VesselType> AddAsync(VesselType entity)
         {
             _context.VesselTypes.Add(entity);
             await _context.SaveChangesAsync();
@@ -30,32 +30,46 @@ namespace ProjArqsi.Infrastructure.Repositories
             }
         }
 
-        public async Task<List<DomainVesselType>> GetAllAsync()
+        public async Task<List<VesselType>> GetAllAsync()
         {
             return await _context.VesselTypes.ToListAsync();
         }
 
-        public async Task<DomainVesselType?> GetByIdAsync(VesselTypeId id)
+        public async Task<VesselType?> GetByIdAsync(VesselTypeId id)
         {
             return await _context.VesselTypes.FirstOrDefaultAsync(vt => vt.Id.Equals(id));
         }
 
-        public async Task<DomainVesselType> UpdateAsync(DomainVesselType entity)
+        public async Task<VesselType> UpdateAsync(VesselType entity)
         {
             _context.VesselTypes.Update(entity);
             await _context.SaveChangesAsync();
             return entity;
         }
 
-        public async Task<DomainVesselType?> FindByNameAsync(TypeName name)
+        public async Task<VesselType?> FindByNameAsync(TypeName name)
         {
             return await _context.VesselTypes.FirstOrDefaultAsync(vt => vt.TypeName.Value.ToLower() == name.Value.ToLower());
         }
 
-        public async Task<IEnumerable<DomainVesselType>> SearchByNameAsync(string searchTerm)
+        public async Task<IEnumerable<VesselType>> SearchByNameAsync(string searchTerm)
         {
             return await _context.VesselTypes
-                .Where(vt => vt.TypeName.Value.ToLower().Contains(searchTerm.ToLower()))
+                .Where(vt => vt.TypeName.Value.Contains(searchTerm))
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<VesselType>> SearchByDescriptionAsync(string searchTerm)
+        {
+            return await _context.VesselTypes
+                .Where(vt => vt.TypeDescription.Value.Contains(searchTerm))
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<VesselType>> SearchByNameOrDescriptionAsync(string searchTerm)
+        {
+            return await _context.VesselTypes
+                .Where(vt => vt.TypeName.Value.Contains(searchTerm) || vt.TypeDescription.Value.Contains(searchTerm))
                 .ToListAsync();
         }
     }

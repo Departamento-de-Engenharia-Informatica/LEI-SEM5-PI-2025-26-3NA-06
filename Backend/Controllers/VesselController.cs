@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using ProjArqsi.Application.Services;
 using ProjArqsi.Domain.VesselAggregate;
 using ProjArqsi.Domain.Shared;
@@ -17,6 +18,7 @@ namespace ProjArqsi.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin,PortAuthorityOfficer,ShippingAgentRepresentative")]
         public async Task<ActionResult<IEnumerable<Vessel>>> GetAll()
         {
             return Ok(await service.GetAllAsync());
@@ -24,6 +26,7 @@ namespace ProjArqsi.Controllers
 
         
         [HttpGet("{imo}")]
+        [Authorize(Roles = "Admin,PortAuthorityOfficer,ShippingAgentRepresentative")]
         public ActionResult<object> GetByImo(string imo)
         {
             // TODO: Implement repository call
@@ -31,6 +34,7 @@ namespace ProjArqsi.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin,ShippingAgentRepresentative")]
         public async Task<ActionResult<Vessel>> CreateVesselAsync([FromBody] object vesselDto)
         {
             try
@@ -58,6 +62,7 @@ namespace ProjArqsi.Controllers
         }
 
         [HttpPut("{imo}")]
+        [Authorize(Roles = "Admin,ShippingAgentRepresentative")]
         public async Task<ActionResult<Vessel>> UpdateVesselAsync(string imo, [FromBody] object vesselDto)
         {
             try
@@ -79,6 +84,7 @@ namespace ProjArqsi.Controllers
         }
 
         [HttpDelete("{imo}")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<Vessel>> DeleteVesselAsync(string imo)
         {
             try

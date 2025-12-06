@@ -7,6 +7,7 @@ namespace ProjArqsi.DTOs.User
         public string Role { get; set; } = default!;
         public string Email { get; set; } = default!;
         public string ConfirmationToken { get; set; } = default!;
+        public DateTime? ConfirmationTokenExpiry { get; set; }
         public bool IsActive { get; set; }
     }
 }

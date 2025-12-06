@@ -62,7 +62,7 @@ namespace ProjArqsi.Controllers
                 var email = protector.Unprotect(token);
                 await _registrationService.SelfRegisterUserAsync(dto, email);
                 HttpContext.Response.Cookies.Delete(".AspNetCore.CustomCookies");
-                return Ok(new { message = "Registration successful! Please check your email to confirm your account." });
+                return Ok(new { message = "Account has been registered. Please wait for an administrator to activate your account." });
             }
             catch (Exception ex)
             {

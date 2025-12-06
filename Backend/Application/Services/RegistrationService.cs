@@ -48,9 +48,16 @@ namespace ProjArqsi.Application.Services
                 throw new Exception("Invalid token or email.");
             }
 
+            // Check if token has expired
+            if (user.ConfirmationTokenExpiry.HasValue && user.ConfirmationTokenExpiry.Value < DateTime.UtcNow)
+            {
+                throw new Exception("This activation link has expired. Please contact an administrator to request a new activation link.");
+            }
+
             // Activate the user account
             user.Activate();
             user.ConfirmationToken = string.Empty;
+            user.ConfirmationTokenExpiry = null;
             await _userRepository.UpdateUserAsync(user);
         }
 

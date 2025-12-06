@@ -24,7 +24,12 @@ export class UserManagementComponent implements OnInit {
   filteredUsers: User[] = [];
   showInactiveOnly: boolean = true;
   selectedRole: { [userId: string]: string } = {};
-  availableRoles = ['Admin', 'PortAuthorityOfficer', 'LogisticOperator', 'ShippingAgentRepresentative'];
+  availableRoles = [
+    'Admin',
+    'PortAuthorityOfficer',
+    'LogisticOperator',
+    'ShippingAgentRepresentative',
+  ];
 
   constructor(private http: HttpClient) {}
 
@@ -37,10 +42,13 @@ export class UserManagementComponent implements OnInit {
       ? 'http://localhost:5218/api/UserManagement/inactive-users'
       : 'http://localhost:5218/api/UserManagement/all-users';
 
+    console.log('Loading users from:', endpoint);
+
     this.http.get<User[]>(endpoint, { withCredentials: true }).subscribe({
       next: (users) => {
         this.users = users;
-        this.filteredUsers = users;
+        this.filteredUsers = [...users]; // Create new array reference
+
         // Initialize selected role for each user
         users.forEach((user) => {
           this.selectedRole[user.id] = user.role;
@@ -54,8 +62,32 @@ export class UserManagementComponent implements OnInit {
   }
 
   toggleFilter() {
-    this.showInactiveOnly = !this.showInactiveOnly;
-    this.loadUsers();
+    // Toggle the flag first to determine which endpoint to call
+    const newFilterState = !this.showInactiveOnly;
+
+    const endpoint = newFilterState
+      ? 'http://localhost:5218/api/UserManagement/inactive-users'
+      : 'http://localhost:5218/api/UserManagement/all-users';
+
+    console.log('Toggling filter to:', newFilterState ? 'inactive only' : 'all users');
+
+    this.http.get<User[]>(endpoint, { withCredentials: true }).subscribe({
+      next: (users) => {
+        // Only update the state after data is successfully loaded
+        this.showInactiveOnly = newFilterState;
+        this.users = users;
+        this.filteredUsers = [...users];
+
+        // Initialize selected role for each user
+        users.forEach((user) => {
+          this.selectedRole[user.id] = user.role;
+        });
+      },
+      error: (error) => {
+        console.error('Error loading users:', error);
+        alert('Failed to load users. Please ensure you are logged in as Admin.');
+      },
+    });
   }
 
   assignRoleAndSendEmail(userId: string) {

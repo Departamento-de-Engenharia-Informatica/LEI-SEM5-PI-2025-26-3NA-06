@@ -10,6 +10,7 @@ namespace ProjArqsi.Domain.UserAggregate
         public Email Email { get; private set; }
         public bool IsActive { get; private set; }
         public string ConfirmationToken { get; set; }
+        public DateTime? ConfirmationTokenExpiry { get; set; }
 
         private User()
         {
@@ -17,6 +18,7 @@ namespace ProjArqsi.Domain.UserAggregate
             Role = default!;
             Email = default!;
             ConfirmationToken = string.Empty;
+            ConfirmationTokenExpiry = null;
             IsActive = true;
         }
 
@@ -56,6 +58,7 @@ namespace ProjArqsi.Domain.UserAggregate
         public void GenerateConfirmationToken()
         {
             ConfirmationToken = Guid.NewGuid().ToString("N");
+            ConfirmationTokenExpiry = DateTime.UtcNow.AddHours(24);
         }
     }
 }

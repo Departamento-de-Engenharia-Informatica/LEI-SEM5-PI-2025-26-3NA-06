@@ -11,3 +11,52 @@ As a (Non-Authenticated) System User, I want to authenticate using the external 
 - The system must not handle the password storage.
 - After successful authentication, a valid access token must be available to the front-end.
 - Logout must also be supported, clearing tokens/session data.
+
+## Implementação
+
+### Backend
+
+**Program.cs** - Google OAuth configuration:
+
+- Integrated `Microsoft.AspNetCore.Authentication.Google`
+- Configured OAuth with Client ID and Client Secret
+- Implemented `OnCreatingTicket` event to check user existence and active status
+- Implemented `OnTicketReceived` event to redirect based on user role or registration status
+- Uses httpOnly cookies for secure session management
+
+**Controllers/LoginController.cs**:
+
+- `GET /api/login` - Initiates Google OAuth challenge
+- `GET /api/logout` - Signs out user and clears authentication cookies
+
+### Frontend
+
+**login/login.component.ts**:
+
+- `loginWithGoogle()` method redirects to backend `/api/login` endpoint
+- Clears localStorage on component init for fresh authentication
+
+**login/login.component.html**:
+
+- Single "Login with Google" button
+- Simple, clean login interface
+
+### Flow
+
+1. User visits `/login`
+2. Clicks "Login with Google" → redirects to `http://localhost:5218/api/login`
+3. Backend initiates OAuth challenge → redirects to Google
+4. User authenticates with Google
+5. Google redirects back to backend with authorization code
+6. Backend exchanges code for tokens
+7. `OnCreatingTicket` checks if user exists in database
+8. `OnTicketReceived` redirects to appropriate page (registration or role-based dashboard)
+9. httpOnly cookie created for session management
+
+### Security
+
+- No password storage in system
+- Google handles all credential management
+- httpOnly cookies prevent XSS attacks
+- Secure cookie flags enabled
+- HTTPS enforced for OAuth redirects

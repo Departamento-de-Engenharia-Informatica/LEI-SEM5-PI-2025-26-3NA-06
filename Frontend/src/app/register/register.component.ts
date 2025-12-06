@@ -56,16 +56,18 @@ export class RegisterComponent implements OnInit {
         withCredentials: true,
       })
       .subscribe({
-        next: () => {
+        next: (response: any) => {
           this.isSuccess = true;
           this.message =
-            'Registration successful! Please check your email to confirm your account. Redirecting to login...';
+            response.message ||
+            'Account has been registered. Please wait for an administrator to activate your account.';
           this.isLoading = false;
 
-          // Redirect to login after 3 seconds
-          setTimeout(() => {
-            this.router.navigate(['/login']);
-          }, 3000);
+          // Show alert to ensure user sees the message
+          alert(this.message);
+
+          // Redirect to login after alert is dismissed
+          this.router.navigate(['/login']);
         },
         error: (error) => {
           this.isSuccess = false;

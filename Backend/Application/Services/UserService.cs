@@ -37,143 +37,16 @@ namespace ProjArqsi.Services
             return _mapper.Map<List<UserDto>>(inactiveUsers);
         }
 
-        public async Task<UserDto?> GetByIdAsync(UserId id)
-        {
-            var user = await _userRepository.GetByIdAsync(id);
-            return user == null ? null : _mapper.Map<UserDto>(user);
-        }
-
-        public async Task<UserDto> AddAsync(CreateUserDto dto)
-        {
-
-            var existingUser = await _userRepository.FindByEmailAsync(new Email(dto.Email));
-
-            if (existingUser != null)
-            {
-                throw new BusinessRuleValidationException("Email já existe no sistema, por favor tente novamente com outro email.");
-            }
-
-            var roleType = Enum.Parse<RoleType>(dto.Role);
-            var user = new User(new Username(dto.Username), new Role(roleType), new Email(dto.Email));
-
-            await _userRepository.AddAsync(user);
-            await _unitOfWork.CommitAsync();
-
-            return _mapper.Map<UserDto>(user);
-        }
-
-        public async Task<UserDto?> UpdateAsync(UserDto dto)
-        {
-            var user = await _userRepository.GetByIdAsync(new UserId(dto.Id));
-            if (user == null) return null;
-
-            user.ChangeRole(new Role(Enum.Parse<RoleType>(dto.Role)));
-            user.ChangeUsername(new Username(dto.Username));
-            user.ChangeEmail(new Email(dto.Email));
-            user.ChangeConfirmationToken(dto.ConfirmationToken);
-
-            await _unitOfWork.CommitAsync();
-            return _mapper.Map<UserDto>(user);
-        }
-
-        public async Task<UserDto?> DeleteAsync(UserId id)
-        {
-            var user = await _userRepository.GetByIdAsync(id);
-            if (user == null) return null;
-
-            if (user.IsActive)
-            {
-                throw new BusinessRuleValidationException("Não é possível excluir um usuário ativo.");
-            }
-
-            await _userRepository.DeleteAsync(user.Id);
-            await _unitOfWork.CommitAsync();
-
-            return _mapper.Map<UserDto>(user);
-        }
-
-        public async Task<UserDto?> DeleteFailureAsync(UserId id)
-        {
-            var user = await _userRepository.GetByIdAsync(id);
-            if (user == null) return null;
-
-            await _userRepository.DeleteAsync(user.Id);
-            await _unitOfWork.CommitAsync();
-
-            return _mapper.Map<UserDto>(user);
-        }
-
-        public async Task<UserDto?> FindByEmailAsync(string email)
+        public async Task<UserDto> FindByEmailAsync(string email)
         {
             var user = await _userRepository.FindByEmailAsync(new Email(email));
-            return user == null ? null : _mapper.Map<UserDto>(user);
-        }
-
-        public async Task<UserDto?> FindByConfirmationTokenAsync(string token)
-        {
-            var user = await _userRepository.GetUserByConfirmationTokenAsync(token);
-            return user == null ? null : _mapper.Map<UserDto>(user);
-        }
-
-        public async Task<UserDto?> GetUserByUsernameAsync(string username)
-        {
-            var user = await _userRepository.GetUserByUsernameAsync(new Username(username));
-            return user == null ? null : _mapper.Map<UserDto>(user);
-        }
-
-        public async Task<UserDto?> checkIfAccountExists(string email)
-        {
-            var user = await _userRepository.FindByEmailAsync(new Email(email));
-            return user == null ? null : _mapper.Map<UserDto>(user);
-        }
-
-        public async Task<List<UserDto>> GetAllUsersAsync()
-        {
-            return await GetAllAsync();
-        }
-
-        public async Task<UserDto?> GetUserByIdAsync(Guid id)
-        {
-            return await GetByIdAsync(new UserId(id));
-        }
-
-        public async Task<UserDto?> UpdateUserRoleAsync(Guid id, RoleType role)
-        {
-            var user = await _userRepository.GetByIdAsync(new UserId(id));
-            if (user == null) return null;
-
-            user.ChangeRole(new Role(role));
-            await _unitOfWork.CommitAsync();
-
+            if (user == null) throw new KeyNotFoundException($"User with email '{email}' not found.");
             return _mapper.Map<UserDto>(user);
         }
 
-        public async Task<UserDto?> ActivateUserAsync(Guid id)
+        public async Task<UserDto> ToggleUserActiveAsync(Guid id)
         {
             var user = await _userRepository.GetByIdAsync(new UserId(id));
-            if (user == null) return null;
-
-            user.Activate();
-            await _unitOfWork.CommitAsync();
-
-            return _mapper.Map<UserDto>(user);
-        }
-
-        public async Task<UserDto?> DeactivateUserAsync(Guid id)
-        {
-            var user = await _userRepository.GetByIdAsync(new UserId(id));
-            if (user == null) return null;
-
-            user.Deactivate();
-            await _unitOfWork.CommitAsync();
-
-            return _mapper.Map<UserDto>(user);
-        }
-
-        public async Task<UserDto?> ToggleUserActiveAsync(Guid id)
-        {
-            var user = await _userRepository.GetByIdAsync(new UserId(id));
-            if (user == null) return null;
 
             if (user.IsActive)
             {
@@ -188,10 +61,9 @@ namespace ProjArqsi.Services
             return _mapper.Map<UserDto>(user);
         }
 
-        public async Task<UserDto?> AssignRoleAndSendActivationEmailAsync(Guid id, RoleType role)
+        public async Task<UserDto> AssignRoleAndSendActivationEmailAsync(Guid id, RoleType role)
         {
             var user = await _userRepository.GetByIdAsync(new UserId(id));
-            if (user == null) return null;
 
             // Update role
             user.ChangeRole(new Role(role));

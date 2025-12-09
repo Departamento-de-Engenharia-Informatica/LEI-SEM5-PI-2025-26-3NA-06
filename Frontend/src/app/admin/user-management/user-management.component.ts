@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -31,7 +31,7 @@ export class UserManagementComponent implements OnInit {
     'ShippingAgentRepresentative',
   ];
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private cdr: ChangeDetectorRef, private ngZone: NgZone) {}
 
   ngOnInit() {
     this.loadUsers();
@@ -46,12 +46,15 @@ export class UserManagementComponent implements OnInit {
 
     this.http.get<User[]>(endpoint, { withCredentials: true }).subscribe({
       next: (users) => {
-        this.users = users;
-        this.filteredUsers = [...users]; // Create new array reference
+        this.ngZone.run(() => {
+          this.users = users;
+          this.filteredUsers = [...users]; // Create new array reference
 
-        // Initialize selected role for each user
-        users.forEach((user) => {
-          this.selectedRole[user.id] = user.role;
+          // Initialize selected role for each user
+          users.forEach((user) => {
+            this.selectedRole[user.id] = user.role;
+          });
+          this.cdr.detectChanges();
         });
       },
       error: (error) => {
@@ -73,14 +76,17 @@ export class UserManagementComponent implements OnInit {
 
     this.http.get<User[]>(endpoint, { withCredentials: true }).subscribe({
       next: (users) => {
-        // Only update the state after data is successfully loaded
-        this.showInactiveOnly = newFilterState;
-        this.users = users;
-        this.filteredUsers = [...users];
+        this.ngZone.run(() => {
+          // Only update the state after data is successfully loaded
+          this.showInactiveOnly = newFilterState;
+          this.users = users;
+          this.filteredUsers = [...users];
 
-        // Initialize selected role for each user
-        users.forEach((user) => {
-          this.selectedRole[user.id] = user.role;
+          // Initialize selected role for each user
+          users.forEach((user) => {
+            this.selectedRole[user.id] = user.role;
+          });
+          this.cdr.detectChanges();
         });
       },
       error: (error) => {

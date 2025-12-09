@@ -14,14 +14,24 @@ namespace ProjArqsi.Infrastructure
             _context = context;
         }
 
-        public async Task<User?> FindByEmailAsync(Email email)
+        public async Task<User> FindByEmailAsync(Email email)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+           var entity = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (entity == null)
+            {
+                throw new InvalidOperationException($"User with email '{email}' not found.");
+            }
+            return entity;
         }
 
-        public async Task<User?> GetUserByConfirmationTokenAsync(string token)
+        public async Task<User> GetUserByConfirmationTokenAsync(string token)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.ConfirmationToken.Equals(token));
+            var entity = await _context.Users.FirstOrDefaultAsync(u => u.ConfirmationToken.Equals(token));
+            if (entity == null)
+            {
+                throw new InvalidOperationException($"User with confirmation token '{token}' not found.");
+            }
+            return entity;
         }
 
 
@@ -36,10 +46,15 @@ namespace ProjArqsi.Infrastructure
             return _context.Users.AsQueryable();
         }
 
-        public async Task<User?> GetUserByUsernameAsync(Username username)
+        public async Task<User> GetUserByUsernameAsync(Username username)
         {
-            return await _context.Users
+            var entity = await _context.Users
             .SingleOrDefaultAsync(u => u.Username.Value == username.Value);
+            if (entity == null)
+            {
+                throw new InvalidOperationException($"User with username '{username.Value}' not found.");
+            }
+            return entity;
         }
 
 
@@ -48,7 +63,5 @@ namespace ProjArqsi.Infrastructure
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
         }
-
-        
     }
 }

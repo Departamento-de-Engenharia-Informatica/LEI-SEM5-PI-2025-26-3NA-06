@@ -5,21 +5,15 @@ namespace ProjArqsi.Domain.UserAggregate
 {
     public class User : Entity<UserId>, IAggregateRoot
     {
-        public Username Username { get; private set; }
-        public Role Role { get; private set; }
-        public Email Email { get; private set; }
-        public bool IsActive { get; private set; }
-        public string ConfirmationToken { get; set; }
+        public Username Username { get; private set; } = null!;
+        public Role Role { get; private set; } = null!;
+        public Email Email { get; private set; } = null!;
+        public bool IsActive { get; private set; } = false;
+        public string ConfirmationToken { get; set; } = string.Empty;
         public DateTime? ConfirmationTokenExpiry { get; set; }
 
         private User()
         {
-            Username = default!;
-            Role = default!;
-            Email = default!;
-            ConfirmationToken = string.Empty;
-            ConfirmationTokenExpiry = null;
-            IsActive = true;
         }
 
         public User(Username username, Role role, Email email, bool isActive = true, string confirmationToken = "")

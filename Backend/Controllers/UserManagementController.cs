@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using ProjArqsi.Services;
 using ProjArqsi.Domain.UserAggregate.ValueObjects;
 using ProjArqsi.DTOs.User;
-using ProjArqsi.Application.DTOs.User;
 
 namespace ProjArqsi.Controllers
 {
@@ -22,31 +21,43 @@ namespace ProjArqsi.Controllers
         [HttpGet("inactive-users")]
         public async Task<ActionResult<IEnumerable<UserDto>>> GetInactiveUsers()
         {
-            var inactiveUsers = await _userService.GetInactiveUsersAsync();
-            return Ok(inactiveUsers);
+            try
+            {
+                var inactiveUsers = await _userService.GetInactiveUsersAsync();
+                return Ok(inactiveUsers);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpGet("all-users")]
         public async Task<ActionResult<IEnumerable<UserDto>>> GetAllUsers()
         {
-            var users = await _userService.GetAllAsync();
-            return Ok(users);
+            try
+            {
+                var users = await _userService.GetAllAsync();
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPut("{id}/assign-role")]
-        public async Task<ActionResult> AssignRoleAndActivate(Guid id, [FromBody] AssignRoleDto dto)
+        public async Task<ActionResult> AssignRoleAndActivate(Guid id, [FromBody] string role)
         {
             try
             {
-                var roleType = Enum.Parse<RoleType>(dto.Role);
-                var result = await _userService.AssignRoleAndSendActivationEmailAsync(id, roleType);
-                
-                if (result == null)
-                {
-                    return NotFound(new { message = "User not found" });
-                }
-
+                var roleType = Enum.Parse<RoleType>(role);
+                await _userService.AssignRoleAndSendActivationEmailAsync(id, roleType);
                 return Ok(new { message = "Role assigned and activation email sent" });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { message = ex.Message });
             }
             catch (Exception ex)
             {
@@ -60,14 +71,12 @@ namespace ProjArqsi.Controllers
             try
             {
                 var result = await _userService.ToggleUserActiveAsync(id);
-                
-                if (result == null)
-                {
-                    return NotFound(new { message = "User not found" });
-                }
-
                 var message = result.IsActive ? "User activated" : "User deactivated";
                 return Ok(new { message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { message = ex.Message });
             }
             catch (Exception ex)
             {

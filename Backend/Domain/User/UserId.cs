@@ -5,7 +5,7 @@ namespace ProjArqsi.Domain.UserAggregate
 {
     public class UserId : EntityId
     {
-        public UserId() : base(Guid.NewGuid()) { } // Necessário para EF Core
+        public UserId() : base(Guid.NewGuid()) { } 
 
         [JsonConstructor]
         public UserId(Guid value) : base(value) {}

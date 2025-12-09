@@ -20,11 +20,15 @@ namespace ProjArqsi.Infrastructure.Shared
             return await _objs.ToListAsync();
         }
         
-        public async Task<TEntity?> GetByIdAsync(TEntityId id)
+        public async Task<TEntity> GetByIdAsync(TEntityId id)
         {
-            //return await this._context.Categories.FindAsync(id);
-            return await _objs
+            var entity = await _objs
                 .Where(x => id.Equals(x.Id)).FirstOrDefaultAsync();
+            if (entity == null)
+            {
+                throw new InvalidOperationException($"Entity of type {typeof(TEntity).Name} with id {id} was not found.");
+            }
+            return entity;
         }
         public async Task<List<TEntity>> GetByIdsAsync(List<TEntityId> ids)
         {

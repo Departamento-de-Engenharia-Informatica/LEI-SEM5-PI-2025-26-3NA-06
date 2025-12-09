@@ -1,0 +1,127 @@
+<div class="create-vessel-container">
+  <div class="create-vessel-card">
+    <h1>Create New Vessel</h1>
+    <p class="subtitle">Register a new vessel in the system</p>
+
+    <form (ngSubmit)="onSubmit()" *ngIf="!isSuccess">
+      <div class="form-group">
+        <label for="imo">IMO Number *</label>
+        <input
+          type="text"
+          id="imo"
+          [(ngModel)]="vessel.imo"
+          name="imo"
+          placeholder="Enter IMO number (7 digits)"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="vesselName">Vessel Name *</label>
+        <input
+          type="text"
+          id="vesselName"
+          [(ngModel)]="vessel.vesselName"
+          name="vesselName"
+          placeholder="Enter vessel name"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="capacity">Capacity (TEU) *</label>
+        <input
+          type="number"
+          id="capacity"
+          [(ngModel)]="vessel.capacity"
+          name="capacity"
+          placeholder="Enter capacity in TEU"
+          min="1"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="rows">Rows *</label>
+        <input
+          type="number"
+          id="rows"
+          [(ngModel)]="vessel.rows"
+          name="rows"
+          placeholder="Enter number of rows"
+          min="1"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="bays">Bays *</label>
+        <input
+          type="number"
+          id="bays"
+          [(ngModel)]="vessel.bays"
+          name="bays"
+          placeholder="Enter number of bays"
+          min="1"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="tiers">Tiers *</label>
+        <input
+          type="number"
+          id="tiers"
+          [(ngModel)]="vessel.tiers"
+          name="tiers"
+          placeholder="Enter number of tiers"
+          min="1"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="length">Length (meters) *</label>
+        <input
+          type="number"
+          id="length"
+          [(ngModel)]="vessel.length"
+          name="length"
+          placeholder="Enter vessel length"
+          min="0.1"
+          step="0.1"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="vesselTypeId">Vessel Type *</label>
+        <select id="vesselTypeId" [(ngModel)]="vessel.vesselTypeId" name="vesselTypeId" required>
+          <option value="">Select a vessel type</option>
+          <option *ngFor="let type of vesselTypes" [value]="type.id">
+            {{ type.typeName }}
+          </option>
+        </select>
+      </div>
+
+      <div *ngIf="message && !isSuccess" class="error-message">
+        {{ message }}
+      </div>
+
+      <div class="button-group">
+        <button type="button" (click)="cancel()" class="cancel-btn" [disabled]="isLoading">
+          Cancel
+        </button>
+        <button type="submit" [disabled]="isLoading" class="submit-btn">
+          {{ isLoading ? 'Creating...' : 'Create Vessel' }}
+        </button>
+      </div>
+    </form>
+
+    <div *ngIf="isSuccess" class="success-container">
+      <div class="success-icon">✓</div>
+      <p class="success-message">{{ message }}</p>
+      <p class="redirect-message">Redirecting to dashboard...</p>
+    </div>
+  </div>
+</div>

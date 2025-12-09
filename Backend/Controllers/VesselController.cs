@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using ProjArqsi.Application.Services;
-using ProjArqsi.Domain.VesselAggregate;
+using ProjArqsi.Application.DTOs;
 using ProjArqsi.Domain.Shared;
 
 namespace ProjArqsi.Controllers
@@ -10,97 +10,132 @@ namespace ProjArqsi.Controllers
     [Route("api/[controller]")]
     public class VesselController : ControllerBase
     {
-        private readonly VesselService service;
+        private readonly VesselService _service;
         
-        public VesselController( VesselService service)
+        public VesselController(VesselService service)
         {
-            this.service = service ;
+            _service = service;
         }
 
         [HttpGet]
         [Authorize(Roles = "Admin,PortAuthorityOfficer,ShippingAgentRepresentative")]
-        public async Task<ActionResult<IEnumerable<Vessel>>> GetAll()
+        public async Task<ActionResult<IEnumerable<VesselDto>>> GetAll()
         {
-            return Ok(await service.GetAllAsync());
+            try
+            {
+                var vessels = await _service.GetAllAsync();
+                return Ok(vessels);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         
         [HttpGet("{imo}")]
         [Authorize(Roles = "Admin,PortAuthorityOfficer,ShippingAgentRepresentative")]
-        public ActionResult<object> GetByImo(string imo)
-        {
-            // TODO: Implement repository call
-            return NotFound();
-        }
-
-        [HttpPost]
-        [Authorize(Roles = "Admin,ShippingAgentRepresentative")]
-        public async Task<ActionResult<Vessel>> CreateVesselAsync([FromBody] object vesselDto)
+        public async Task<ActionResult<VesselDto>> GetByImo(string imo)
         {
             try
             {
-                // TODO: Convert vesselDto to proper DTO parameters
-                // TODO: Validate VesselType exists and is active
-                // TODO: Validate Owner (ShippingAgentOrg) exists and is active
-                
-                var vessel = await service.CreateAsync(
-                    "IMO1234567",  // TODO: Get from DTO
-                    "VesselName",  // TODO: Get from DTO
-                    1000,          // TODO: Get from DTO
-                    100.0,         // TODO: Get from DTO
-                    500,           // TODO: Get from DTO
-                    Guid.Empty,    // TODO: Get ownerId from DTO
-                    Guid.Empty     // TODO: Get vesselTypeId from DTO
+                var vessel = await _service.GetByImoAsync(imo);
+                return Ok(vessel);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin,PortAuthorityOfficer")]
+        public async Task<ActionResult<VesselDto>> CreateVesselAsync([FromBody] CreateVesselDto dto)
+        {
+            try
+            {
+                var vessel = await _service.CreateAsync(
+                    dto.Imo,
+                    dto.VesselName,
+                    dto.Capacity,
+                    dto.Rows,
+                    dto.Bays,
+                    dto.Tiers,
+                    dto.Length,
+                    dto.VesselTypeId
                 );
 
-                return CreatedAtAction(nameof(GetByImo), new { imo = vessel.Id.AsString() }, vessel);
+                return CreatedAtAction(nameof(GetByImo), new { imo = vessel.Imo }, vessel);
             }
             catch (BusinessRuleValidationException ex)
             {
-                return BadRequest(new { Message = ex.Message });
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 
         [HttpPut("{imo}")]
-        [Authorize(Roles = "Admin,ShippingAgentRepresentative")]
-        public async Task<ActionResult<Vessel>> UpdateVesselAsync(string imo, [FromBody] object vesselDto)
+        [Authorize(Roles = "Admin,PortAuthorityOfficer")]
+        public async Task<ActionResult<VesselDto>> UpdateVesselAsync(string imo, [FromBody] UpdateVesselDto dto)
         {
             try
             {
-                // TODO: Convert vesselDto to proper parameters
-                var vessel = await service.UpdateAsync(imo, "TempName", 1000, 100.0, 500, Guid.Empty);
-
-                if (vessel == null)
-                {
-                    return NotFound();
-                }
+                var vessel = await _service.UpdateAsync(
+                    imo,
+                    dto.VesselName,
+                    dto.Capacity,
+                    dto.Rows,
+                    dto.Bays,
+                    dto.Tiers,
+                    dto.Length,
+                    dto.VesselTypeId
+                );
 
                 return Ok(vessel);
             }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
             catch (BusinessRuleValidationException ex)
             {
-                return BadRequest(new { Message = ex.Message });
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 
         [HttpDelete("{imo}")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<Vessel>> DeleteVesselAsync(string imo)
+        public async Task<ActionResult> DeleteVesselAsync(string imo)
         {
             try
             {
-                var result = await service.DeleteAsync(imo);
+                var result = await _service.DeleteAsync(imo);
 
                 if (!result)
                 {
-                    return NotFound();
+                    return NotFound(new { message = $"Vessel with IMO '{imo}' not found." });
                 }
 
                 return NoContent();
             }
-            catch (BusinessRuleValidationException ex)
+            catch (Exception ex)
             {
-                return BadRequest(new { Message = ex.Message });
+                return StatusCode(500, new { message = ex.Message });
             }
         }
     }

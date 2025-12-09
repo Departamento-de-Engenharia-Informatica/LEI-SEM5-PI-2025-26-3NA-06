@@ -2,51 +2,13 @@
   <h2>Welcome, Port Authority Officer!</h2>
   <p class="role-description">Manage vessel types, vessels, docks, and visit approvals</p>
 
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-icon vessel-types-icon">📦</div>
-      <div class="stat-info">
-        <h3>Vessel Types</h3>
-        <p class="stat-number">12</p>
-        <p class="stat-label">Registered Types</p>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon vessels-icon">🚢</div>
-      <div class="stat-info">
-        <h3>Vessels</h3>
-        <p class="stat-number">45</p>
-        <p class="stat-label">Active Vessels</p>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon docks-icon">⚓</div>
-      <div class="stat-info">
-        <h3>Docks</h3>
-        <p class="stat-number">8</p>
-        <p class="stat-label">Available Docks</p>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-icon visits-icon">📋</div>
-      <div class="stat-info">
-        <h3>Pending Approvals</h3>
-        <p class="stat-number">3</p>
-        <p class="stat-label">Visit Requests</p>
-      </div>
-    </div>
-  </div>
-
   <div class="quick-actions">
     <h3>Quick Actions</h3>
     <div class="action-cards">
       <div class="action-card primary">
         <h4>🆕 Create Vessel Type</h4>
         <p>Define a new vessel type with specifications</p>
-        <button routerLink="/port-authority/vessel-types/create" class="btn-primary">
+        <button routerLink="/port-authority/create-vessel-type" class="btn-primary">
           Create New Type
         </button>
       </div>
@@ -62,7 +24,7 @@
       <div class="action-card">
         <h4>🚢 Register Vessel</h4>
         <p>Add a new vessel to the system</p>
-        <button routerLink="/port-authority/vessels/create" class="btn-secondary">
+        <button routerLink="/port-authority/create-vessel" class="btn-secondary">
           Register Vessel
         </button>
       </div>
@@ -79,39 +41,6 @@
         <h4>⚓ Manage Docks</h4>
         <p>Configure dock facilities and availability</p>
         <button routerLink="/port-authority/docks" class="btn-secondary">Manage Docks</button>
-      </div>
-
-      <div class="action-card">
-        <h4>🗺️ View Port in 3D</h4>
-        <p>Visualize port layout and operations</p>
-        <button routerLink="/3d-view" class="btn-secondary">Open 3D View</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="recent-activity">
-    <h3>Recent Activity</h3>
-    <div class="activity-list">
-      <div class="activity-item">
-        <span class="activity-icon">📦</span>
-        <div class="activity-details">
-          <p class="activity-title">New vessel type created: Container Ship XL</p>
-          <p class="activity-time">2 hours ago</p>
-        </div>
-      </div>
-      <div class="activity-item">
-        <span class="activity-icon">✅</span>
-        <div class="activity-details">
-          <p class="activity-title">Visit notification approved for MV Atlantic Star</p>
-          <p class="activity-time">5 hours ago</p>
-        </div>
-      </div>
-      <div class="activity-item">
-        <span class="activity-icon">🚢</span>
-        <div class="activity-details">
-          <p class="activity-title">New vessel registered: MV Pacific Explorer</p>
-          <p class="activity-time">1 day ago</p>
-        </div>
       </div>
     </div>
   </div>

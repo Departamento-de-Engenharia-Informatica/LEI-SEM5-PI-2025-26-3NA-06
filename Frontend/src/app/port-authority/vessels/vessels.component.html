@@ -1,0 +1,69 @@
+<div class="vessels-container">
+  <div class="vessels-header">
+    <h1>Vessels</h1>
+    <div class="header-actions">
+      <button (click)="goBack()" class="back-btn">← Back to Dashboard</button>
+      <button (click)="createNew()" class="create-btn">+ Create New Vessel</button>
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading && vessels.length > 0" class="search-container">
+    <input
+      type="text"
+      [(ngModel)]="searchTerm"
+      (input)="filterVessels()"
+      placeholder="Search by vessel name or IMO..."
+      class="search-input"
+    />
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <p>Loading vessels...</p>
+  </div>
+
+  <div *ngIf="message && !isLoading" class="error-message">
+    {{ message }}
+  </div>
+
+  <div *ngIf="!isLoading && vessels.length === 0" class="empty-state">
+    <p>No vessels found.</p>
+    <button (click)="createNew()" class="create-btn">Create Your First Vessel</button>
+  </div>
+
+  <div *ngIf="!isLoading && filteredVessels.length === 0 && vessels.length > 0" class="empty-state">
+    <p>No vessels match your search.</p>
+  </div>
+
+  <div *ngIf="!isLoading && filteredVessels.length > 0" class="vessels-grid">
+    <div *ngFor="let vessel of filteredVessels" class="vessel-card">
+      <div class="card-header">
+        <h3>{{ vessel.vesselName || 'Unnamed Vessel' }}</h3>
+        <button (click)="editVessel(vessel.imo)" class="edit-btn" title="Edit vessel">✏️</button>
+      </div>
+      <div class="card-body">
+        <div class="specs">
+          <div class="spec-item">
+            <span class="label">IMO:</span>
+            <span class="value">{{ vessel.imo }}</span>
+          </div>
+          <div class="spec-item">
+            <span class="label">Capacity (TEU):</span>
+            <span class="value">{{ vessel.capacity }}</span>
+          </div>
+          <div class="spec-item">
+            <span class="label">Dimensions:</span>
+            <span class="value">{{ vessel.rows }}R × {{ vessel.bays }}B × {{ vessel.tiers }}T</span>
+          </div>
+          <div class="spec-item">
+            <span class="label">Length:</span>
+            <span class="value">{{ vessel.length }}m</span>
+          </div>
+          <div class="spec-item">
+            <span class="label">Vessel Type:</span>
+            <span class="value">{{ vessel.vesselTypeName }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

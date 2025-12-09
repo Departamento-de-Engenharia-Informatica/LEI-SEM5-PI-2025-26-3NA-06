@@ -1,0 +1,71 @@
+<div class="vessel-types-container">
+  <div class="vessel-types-header">
+    <h1>Vessel Types</h1>
+    <div class="header-actions">
+      <button (click)="goBack()" class="back-btn">← Back to Dashboard</button>
+      <button (click)="createNew()" class="create-btn">+ Create New Type</button>
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading && vesselTypes.length > 0" class="search-container">
+    <input
+      type="text"
+      [(ngModel)]="searchTerm"
+      (input)="filterVesselTypes()"
+      placeholder="Search by name or description..."
+      class="search-input"
+    />
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <p>Loading vessel types...</p>
+  </div>
+
+  <div *ngIf="message && !isLoading" class="error-message">
+    {{ message }}
+  </div>
+
+  <div *ngIf="!isLoading && vesselTypes.length === 0" class="empty-state">
+    <p>No vessel types found.</p>
+    <button (click)="createNew()" class="create-btn">Create Your First Vessel Type</button>
+  </div>
+
+  <div
+    *ngIf="!isLoading && filteredVesselTypes.length === 0 && vesselTypes.length > 0"
+    class="empty-state"
+  >
+    <p>No vessel types match your search.</p>
+  </div>
+
+  <div *ngIf="!isLoading && filteredVesselTypes.length > 0" class="vessel-types-grid">
+    <div *ngFor="let type of filteredVesselTypes" class="vessel-type-card">
+      <div class="card-header">
+        <h3>{{ type.typeName }}</h3>
+        <button (click)="editVesselType(type.id)" class="edit-btn" title="Edit vessel type">
+          ✏️
+        </button>
+      </div>
+      <div class="card-body">
+        <p class="description">{{ type.typeDescription || 'No description' }}</p>
+        <div class="specs">
+          <div class="spec-item">
+            <span class="label">Capacity:</span>
+            <span class="value">{{ type.typeCapacity }} TEU</span>
+          </div>
+          <div class="spec-item">
+            <span class="label">Max Rows:</span>
+            <span class="value">{{ type.maxRows }}</span>
+          </div>
+          <div class="spec-item">
+            <span class="label">Max Bays:</span>
+            <span class="value">{{ type.maxBays }}</span>
+          </div>
+          <div class="spec-item">
+            <span class="label">Max Tiers:</span>
+            <span class="value">{{ type.maxTiers }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

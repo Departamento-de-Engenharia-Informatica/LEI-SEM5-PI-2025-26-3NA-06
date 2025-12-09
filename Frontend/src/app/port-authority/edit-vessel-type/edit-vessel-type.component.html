@@ -1,0 +1,104 @@
+<div class="edit-vessel-type-container">
+  <div class="form-header">
+    <h1>Edit Vessel Type</h1>
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <p>Loading vessel type...</p>
+  </div>
+
+  <form *ngIf="!isLoading" (ngSubmit)="onSubmit()" class="vessel-type-form">
+    <div class="form-group">
+      <label for="typeName">Type Name *</label>
+      <input
+        type="text"
+        id="typeName"
+        [(ngModel)]="vesselType.typeName"
+        name="typeName"
+        required
+        placeholder="e.g., Ultra Large Container Vessel"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="typeDescription">Type Description *</label>
+      <textarea
+        id="typeDescription"
+        [(ngModel)]="vesselType.typeDescription"
+        name="typeDescription"
+        required
+        rows="4"
+        placeholder="Enter a description of this vessel type"
+      ></textarea>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="typeCapacity">Capacity (TEU) *</label>
+        <input
+          type="number"
+          id="typeCapacity"
+          [(ngModel)]="vesselType.typeCapacity"
+          name="typeCapacity"
+          required
+          min="1"
+          placeholder="e.g., 24000"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="maxRows">Max Rows *</label>
+        <input
+          type="number"
+          id="maxRows"
+          [(ngModel)]="vesselType.maxRows"
+          name="maxRows"
+          required
+          min="1"
+          placeholder="e.g., 24"
+        />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="maxBays">Max Bays *</label>
+        <input
+          type="number"
+          id="maxBays"
+          [(ngModel)]="vesselType.maxBays"
+          name="maxBays"
+          required
+          min="1"
+          placeholder="e.g., 23"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="maxTiers">Max Tiers *</label>
+        <input
+          type="number"
+          id="maxTiers"
+          [(ngModel)]="vesselType.maxTiers"
+          name="maxTiers"
+          required
+          min="1"
+          placeholder="e.g., 10"
+        />
+      </div>
+    </div>
+
+    <div *ngIf="message && isSuccess" class="success-message">
+      {{ message }}
+    </div>
+
+    <div *ngIf="message && !isSuccess" class="error-message">
+      {{ message }}
+    </div>
+
+    <div class="form-actions">
+      <button type="button" (click)="cancel()" class="cancel-btn">Cancel</button>
+      <button type="submit" class="submit-btn">Update Vessel Type</button>
+    </div>
+  </form>
+</div>

@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using ProjArqsi.Application.DTOs;
 using ProjArqsi.Application.Services;
@@ -18,7 +18,7 @@ namespace ProjArqsi.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin,PortAuthorityOfficer")]
-        public async Task<ActionResult<VesselTypeDto>> Create([FromBody] CreateVesselTypeDto dto)
+        public async Task<ActionResult<VesselTypeDto>> Create([FromBody] VesselTypeUpsertDto dto)
         {
             try
             {
@@ -33,7 +33,7 @@ namespace ProjArqsi.Controllers
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin,PortAuthorityOfficer")]
-        public async Task<ActionResult<VesselTypeDto>> Update(Guid id, [FromBody] UpdateVesselTypeDto dto)
+        public async Task<ActionResult<VesselTypeDto>> Update(Guid id, [FromBody] VesselTypeUpsertDto dto)
         {
             try
             {
@@ -54,11 +54,15 @@ namespace ProjArqsi.Controllers
         [Authorize(Roles = "Admin,PortAuthorityOfficer")]
         public async Task<ActionResult<VesselTypeDto>> GetById(Guid id)
         {
-            var result = await _service.GetByIdAsync(id);
-            if (result == null)
-                return NotFound(new { message = $"Vessel type with id '{id}' not found." });
-            
-            return Ok(result);
+            try
+            {
+                var result = await _service.GetByIdAsync(id);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
         }
 
         [HttpGet]
@@ -71,31 +75,15 @@ namespace ProjArqsi.Controllers
 
         [HttpGet("search")]
         [Authorize(Roles = "Admin,PortAuthorityOfficer")]
-        public async Task<ActionResult<IEnumerable<VesselTypeDto>>> Search(
-            [FromQuery] string? name = null,
-            [FromQuery] string? description = null,
-            [FromQuery] string? searchTerm = null)
+        public async Task<ActionResult<IEnumerable<VesselTypeDto>>> Search([FromQuery] string searchTerm)
         {
-            // Support searching by name, description, or both (searchTerm searches both fields)
-            if (!string.IsNullOrWhiteSpace(searchTerm))
+            if (string.IsNullOrWhiteSpace(searchTerm))
             {
-                var results = await _service.SearchByNameOrDescriptionAsync(searchTerm);
-                return Ok(results);
+                return BadRequest(new { message = "Search term is required." });
             }
-            else if (!string.IsNullOrWhiteSpace(name))
-            {
-                var results = await _service.SearchByNameAsync(name);
-                return Ok(results);
-            }
-            else if (!string.IsNullOrWhiteSpace(description))
-            {
-                var results = await _service.SearchByDescriptionAsync(description);
-                return Ok(results);
-            }
-            else
-            {
-                return BadRequest(new { message = "At least one search parameter (name, description, or searchTerm) is required." });
-            }
+
+            var results = await _service.SearchByNameOrDescriptionAsync(searchTerm);
+            return Ok(results);
         }
     }
 }

@@ -5,6 +5,15 @@ import { ConfirmEmailComponent } from './confirm-email/confirm-email.component';
 import { AdminDashboardComponent } from './admin/admin-dashboard.component';
 import { UserManagementComponent } from './admin/user-management/user-management.component';
 import { PortAuthorityDashboardComponent } from './port-authority/port-authority-dashboard.component';
+import { CreateVesselComponent } from './port-authority/create-vessel/create-vessel.component';
+import { EditVesselComponent } from './port-authority/edit-vessel/edit-vessel.component';
+import { VesselsComponent } from './port-authority/vessels/vessels.component';
+import { CreateVesselTypeComponent } from './port-authority/create-vessel-type/create-vessel-type.component';
+import { EditVesselTypeComponent } from './port-authority/edit-vessel-type/edit-vessel-type.component';
+import { VesselTypesComponent } from './port-authority/vessel-types/vessel-types.component';
+import { DocksComponent } from './port-authority/docks/docks.component';
+import { CreateDockComponent } from './port-authority/create-dock/create-dock.component';
+import { EditDockComponent } from './port-authority/edit-dock/edit-dock.component';
 import { LayoutComponent } from './layout/layout.component';
 import { AccessDeniedComponent } from './access-denied/access-denied.component';
 import { UnauthorizedComponent } from './unauthorized/unauthorized.component';
@@ -38,6 +47,15 @@ export const routes: Routes = [
         canActivate: [authGuard],
         children: [
           { path: '', component: PortAuthorityDashboardComponent },
+          { path: 'create-vessel', component: CreateVesselComponent },
+          { path: 'vessels', component: VesselsComponent },
+          { path: 'edit-vessel/:imo', component: EditVesselComponent },
+          { path: 'create-vessel-type', component: CreateVesselTypeComponent },
+          { path: 'vessel-types', component: VesselTypesComponent },
+          { path: 'edit-vessel-type/:id', component: EditVesselTypeComponent },
+          { path: 'docks', component: DocksComponent },
+          { path: 'create-dock', component: CreateDockComponent },
+          { path: 'edit-dock/:id', component: EditDockComponent },
           // Add more port authority child routes here
         ],
       },

@@ -1,0 +1,71 @@
+<div class="docks-container">
+  <div class="docks-header">
+    <h1>Docks</h1>
+    <div class="header-actions">
+      <button (click)="goBack()" class="back-btn">← Back to Dashboard</button>
+      <button (click)="createDock()" class="create-btn">+ Create New Dock</button>
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading && docks.length > 0" class="search-container">
+    <input
+      type="text"
+      [(ngModel)]="searchTerm"
+      (input)="filterDocks()"
+      placeholder="Search by dock name, location, or vessel type..."
+      class="search-input"
+    />
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <p>Loading docks...</p>
+  </div>
+
+  <div *ngIf="message && !isLoading" class="error-message">
+    {{ message }}
+  </div>
+
+  <div *ngIf="!isLoading && docks.length === 0" class="empty-state">
+    <p>No docks found.</p>
+    <button (click)="createDock()" class="create-btn">Create Your First Dock</button>
+  </div>
+
+  <div *ngIf="!isLoading && filteredDocks.length === 0 && docks.length > 0" class="empty-state">
+    <p>No docks match your search.</p>
+  </div>
+
+  <div *ngIf="!isLoading && filteredDocks.length > 0" class="docks-grid">
+    <div *ngFor="let dock of filteredDocks" class="dock-card">
+      <div class="card-header">
+        <h3>{{ dock.dockName || 'Unnamed Dock' }}</h3>
+        <div class="card-actions">
+          <button (click)="editDock(dock.id)" class="edit-btn" title="Edit dock">✏️</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="specs">
+          <div class="spec-item">
+            <span class="label">Location:</span>
+            <span class="value">{{ dock.locationDescription }}</span>
+          </div>
+          <div class="spec-item">
+            <span class="label">Length:</span>
+            <span class="value">{{ dock.length }}m</span>
+          </div>
+          <div class="spec-item">
+            <span class="label">Depth:</span>
+            <span class="value">{{ dock.depth }}m</span>
+          </div>
+          <div class="spec-item">
+            <span class="label">Max Draft:</span>
+            <span class="value">{{ dock.maxDraft }}m</span>
+          </div>
+          <div class="spec-item">
+            <span class="label">Allowed Vessel Types:</span>
+            <span class="value">{{ getVesselTypeNames(dock.allowedVesselTypeIds) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

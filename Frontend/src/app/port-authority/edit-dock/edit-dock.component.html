@@ -1,0 +1,110 @@
+<div class="edit-dock-container">
+  <div class="edit-dock-card">
+    <h1>Edit Dock</h1>
+    <p class="subtitle">Update dock information</p>
+
+    <div *ngIf="isLoading" class="loading">
+      <p>Loading dock details...</p>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+      <div class="form-group">
+        <label for="dockName">Dock Name *</label>
+        <input
+          type="text"
+          id="dockName"
+          [(ngModel)]="dock.dockName"
+          name="dockName"
+          placeholder="Enter dock name"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="locationDescription">Location Description *</label>
+        <textarea
+          id="locationDescription"
+          [(ngModel)]="dock.locationDescription"
+          name="locationDescription"
+          placeholder="Enter location description"
+          rows="3"
+          required
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="length">Length (meters) *</label>
+        <input
+          type="number"
+          id="length"
+          [(ngModel)]="dock.length"
+          name="length"
+          placeholder="Enter dock length"
+          min="0.1"
+          step="0.1"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="depth">Depth (meters) *</label>
+        <input
+          type="number"
+          id="depth"
+          [(ngModel)]="dock.depth"
+          name="depth"
+          placeholder="Enter dock depth"
+          min="0.1"
+          step="0.1"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="maxDraft">Max Draft (meters) *</label>
+        <input
+          type="number"
+          id="maxDraft"
+          [(ngModel)]="dock.maxDraft"
+          name="maxDraft"
+          placeholder="Enter maximum draft"
+          min="0.1"
+          step="0.1"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Allowed Vessel Types</label>
+        <div class="vessel-types-checkbox">
+          <div *ngFor="let type of vesselTypes" class="checkbox-item">
+            <input
+              type="checkbox"
+              [id]="'vessel-type-' + type.id"
+              [checked]="isVesselTypeSelected(type.id)"
+              (change)="toggleVesselType(type.id)"
+            />
+            <label [for]="'vessel-type-' + type.id">{{ type.typeName }}</label>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="message && isSuccess" class="success-message">
+        {{ message }}
+      </div>
+
+      <div *ngIf="message && !isSuccess" class="error-message">
+        {{ message }}
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="cancel-btn" (click)="goBack()" [disabled]="isLoading">
+          Cancel
+        </button>
+        <button type="submit" class="submit-btn" [disabled]="isLoading">
+          {{ isLoading ? 'Updating...' : 'Update Dock' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

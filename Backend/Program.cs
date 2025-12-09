@@ -1,5 +1,7 @@
 using ProjArqsi.Application.Services;
 using ProjArqsi.Domain.VesselTypeAggregate;
+using ProjArqsi.Domain.VesselAggregate;
+using ProjArqsi.Domain.DockAggregate;
 using ProjArqsi.Domain.Shared;
 using ProjArqsi.Infrastructure.Repositories;
 using ProjArqsi.Infrastructure.Shared;
@@ -7,17 +9,24 @@ using ProjArqsi.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using ProjArqsi.Domain.UserAggregate;
 using ProjArqsi.Services;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
-
 using Microsoft.AspNetCore.DataProtection;
-using ProjArqsi.Domain.UserAggregate.ValueObjects;
-using Microsoft.Extensions.DependencyInjection;
 using ProjArqsi.Middleware;
+using Serilog;
+
+// Configure Serilog - only log warnings and errors, suppress all informational logs
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Warning()
+    .Filter.ByExcluding(logEvent => 
+        logEvent.MessageTemplate.Text.Contains("Failed to determine the https port"))
+    .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseSerilog();
+
 // Enable CORS for frontend
 builder.Services.AddCors(options =>
 {
@@ -46,12 +55,16 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IVesselTypeRepository, VesselTypeRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IVesselRepository, VesselRepository>();
+builder.Services.AddScoped<IDockRepository, DockRepository>();
 
 // Register application services
 builder.Services.AddScoped<VesselTypeService>();
+builder.Services.AddScoped<VesselService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<RegistrationService>();
+builder.Services.AddScoped<DockService>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 // Add authentication (Google & Cookie) with custom event
@@ -97,7 +110,6 @@ builder.Services.AddAuthentication(options =>
             // if user logs in for the first time
             if (user is null)
             {
-                Console.WriteLine("User not found, needs registration: " + email);
                 var dataProtectionProvider = context.HttpContext.RequestServices.GetRequiredService<IDataProtectionProvider>();
                 var protector = dataProtectionProvider.CreateProtector("CustomCookieProtector");
                 var encryptedEmail = protector.Protect(email ?? "");
@@ -114,7 +126,6 @@ builder.Services.AddAuthentication(options =>
             else if (!user.IsActive && !string.IsNullOrEmpty(activationToken))
             {
                 // User is inactive but has activation token - activate them now
-                Console.WriteLine($"Activating user during OAuth: {email}");
                 try
                 {
                     await registrationService.ConfirmEmailAsync(activationToken);
@@ -122,13 +133,11 @@ builder.Services.AddAuthentication(options =>
                     user = await userService.FindByEmailAsync(email ?? "");
                     if (user != null && user.IsActive)
                     {
-                        Console.WriteLine("User activated successfully: " + email);
                         identity.AddClaim(new Claim(ClaimTypes.Role, user.Role.ToString()));
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    Console.WriteLine($"Activation failed: {ex.Message}");
                     identity.AddClaim(new Claim("access_denied", "true"));
                     identity.AddClaim(new Claim("access_denied_reason", "Activation failed. Please contact support."));
                     identity.AddClaim(new Claim(ClaimTypes.Role, "Inactive"));
@@ -137,14 +146,12 @@ builder.Services.AddAuthentication(options =>
             else if (!user.IsActive)
             {
                 // User exists but is inactive - deny access
-                Console.WriteLine($"Access denied for inactive user: {email}");
                 identity.AddClaim(new Claim("access_denied", "true"));
                 identity.AddClaim(new Claim("access_denied_reason", "Your account is inactive. Please contact an administrator."));
                 identity.AddClaim(new Claim(ClaimTypes.Role, "Inactive"));
             }
             else
             {
-                Console.WriteLine("User authenticated: " + email);
                 identity.AddClaim(new Claim(ClaimTypes.Role, user.Role.ToString()));
             }
         };
@@ -156,7 +163,6 @@ builder.Services.AddAuthentication(options =>
             if (accessDenied == "true")
             {
                 var reason = context.Principal?.FindFirstValue("access_denied_reason");
-                Console.WriteLine($"Access denied: {reason}");
                 context.ReturnUri = $"http://localhost:5173/access-denied?reason={Uri.EscapeDataString(reason ?? "Account inactive")}";
                 return Task.CompletedTask;
             }
@@ -165,21 +171,25 @@ builder.Services.AddAuthentication(options =>
             var needsRegistration = context.Principal?.FindFirstValue("needs_registration");
             if (needsRegistration == "true")
             {
-                Console.WriteLine("Redirecting to registration page");
                 context.ReturnUri = "http://localhost:5173/register";
             }
             else
             {
-                // User exists, redirect to role-based dashboard WITH role query parameter
+                // User exists, redirect to role-based dashboard WITH role, email, and name query parameters
                 var role = context.Principal?.FindFirstValue(ClaimTypes.Role);
-                Console.WriteLine($"Redirecting authenticated user with role: {role}");
+                var email = context.Principal?.FindFirstValue(ClaimTypes.Email);
+                var name = context.Principal?.FindFirstValue(ClaimTypes.Name);
+                
+                // URL encode the parameters
+                var encodedEmail = Uri.EscapeDataString(email ?? "");
+                var encodedName = Uri.EscapeDataString(name ?? "");
                 
                 context.ReturnUri = role switch
                 {
-                    "Admin" => "http://localhost:5173/admin?role=Admin",
-                    "PortAuthorityOfficer" => "http://localhost:5173/port-authority?role=PortAuthorityOfficer",
-                    "LogisticOperator" => "http://localhost:5173/logistic-operator?role=LogisticOperator",
-                    "ShippingAgentRepresentative" => "http://localhost:5173/shipping-agent?role=ShippingAgentRepresentative",
+                    "Admin" => $"http://localhost:5173/admin?role=Admin&email={encodedEmail}&name={encodedName}",
+                    "PortAuthorityOfficer" => $"http://localhost:5173/port-authority?role=PortAuthorityOfficer&email={encodedEmail}&name={encodedName}",
+                    "LogisticOperator" => $"http://localhost:5173/logistic-operator?role=LogisticOperator&email={encodedEmail}&name={encodedName}",
+                    "ShippingAgentRepresentative" => $"http://localhost:5173/shipping-agent?role=ShippingAgentRepresentative&email={encodedEmail}&name={encodedName}",
                     _ => "http://localhost:5173/login"
                 };
             }
@@ -193,9 +203,16 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+// Apply pending migrations on startup
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    dbContext.Database.Migrate();
+}
+
 // Use CORS before authentication
 app.UseCors("AllowFrontend");
-//Console.WriteLine("Backend app started!");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -214,5 +231,7 @@ app.UseAuthorization();
 app.UseMiddleware<AuthorizationLoggingMiddleware>();
 
 app.MapControllers();
+
+Console.WriteLine("\n✓ App is ready\n");
 
 app.Run();

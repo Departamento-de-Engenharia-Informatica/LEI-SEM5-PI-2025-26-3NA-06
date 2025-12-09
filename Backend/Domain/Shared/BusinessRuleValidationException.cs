@@ -2,10 +2,11 @@ namespace ProjArqsi.Domain.Shared
 {
     public class BusinessRuleValidationException : Exception
     {
-        public string? Details { get; }
+        public string Details { get; }
 
         public BusinessRuleValidationException(string message) : base(message)
         {
+            Details = message;
             
         }
 

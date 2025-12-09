@@ -12,8 +12,7 @@ export class LoginComponent implements OnInit {
   apiUrl = 'http://localhost:5218';
 
   ngOnInit(): void {
-    // Clear any existing role from localStorage when visiting login page
-    localStorage.removeItem('userRole');
+    // Don't clear localStorage here - it's handled by logout action
   }
 
   loginWithGoogle() {

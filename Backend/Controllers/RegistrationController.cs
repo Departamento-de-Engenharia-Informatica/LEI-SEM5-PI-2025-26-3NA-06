@@ -48,7 +48,7 @@ namespace ProjArqsi.Controllers
         }
 
         [HttpPost("self-register")]
-        public async Task<IActionResult> SelfRegister([FromBody] CreateUserDto dto)
+        public async Task<IActionResult> SelfRegister([FromBody] UserUpsertDto dto)
         {
             try
             {
@@ -74,9 +74,6 @@ namespace ProjArqsi.Controllers
         [HttpGet("confirm-email")]
         public IActionResult ConfirmEmail(string token)
         {
-            // Instead of directly confirming, redirect to Google OAuth with the token
-            // This ensures the user authenticates first
-            // The token will be available in the query string during OAuth callback
             var properties = new Microsoft.AspNetCore.Authentication.AuthenticationProperties 
             { 
                 RedirectUri = $"/api/registration/complete-activation?token={token}",

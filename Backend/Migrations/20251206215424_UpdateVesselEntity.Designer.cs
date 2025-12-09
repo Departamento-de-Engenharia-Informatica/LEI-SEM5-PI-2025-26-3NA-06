@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProjArqsi.Infrastructure;
 using ProjArqsi.Domain.UserAggregate.ValueObjects;
@@ -12,9 +13,11 @@ using ProjArqsi.Domain.UserAggregate.ValueObjects;
 namespace ProjArqsi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251206215424_UpdateVesselEntity")]
+    partial class UpdateVesselEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,16 +25,6 @@ namespace ProjArqsi.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("ProjArqsi.Domain.DockAggregate.Dock", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Docks", (string)null);
-                });
 
             modelBuilder.Entity("ProjArqsi.Domain.UserAggregate.User", b =>
                 {
@@ -90,134 +83,6 @@ namespace ProjArqsi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("VesselTypes", (string)null);
-                });
-
-            modelBuilder.Entity("ProjArqsi.Domain.DockAggregate.Dock", b =>
-                {
-                    b.OwnsOne("ProjArqsi.Domain.DockAggregate.AllowedVesselTypes", "AllowedVesselTypes", b1 =>
-                        {
-                            b1.Property<Guid>("DockId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<string>("VesselTypeIds")
-                                .IsRequired()
-                                .HasColumnType("nvarchar(max)")
-                                .HasColumnName("AllowedVesselTypeIds");
-
-                            b1.HasKey("DockId");
-
-                            b1.ToTable("Docks");
-
-                            b1.WithOwner()
-                                .HasForeignKey("DockId");
-                        });
-
-                    b.OwnsOne("ProjArqsi.Domain.DockAggregate.Depth", "Depth", b1 =>
-                        {
-                            b1.Property<Guid>("DockId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<double>("Value")
-                                .HasColumnType("float")
-                                .HasColumnName("Depth");
-
-                            b1.HasKey("DockId");
-
-                            b1.ToTable("Docks");
-
-                            b1.WithOwner()
-                                .HasForeignKey("DockId");
-                        });
-
-                    b.OwnsOne("ProjArqsi.Domain.DockAggregate.DockLength", "Length", b1 =>
-                        {
-                            b1.Property<Guid>("DockId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<double>("Value")
-                                .HasColumnType("float")
-                                .HasColumnName("Length");
-
-                            b1.HasKey("DockId");
-
-                            b1.ToTable("Docks");
-
-                            b1.WithOwner()
-                                .HasForeignKey("DockId");
-                        });
-
-                    b.OwnsOne("ProjArqsi.Domain.DockAggregate.DockName", "DockName", b1 =>
-                        {
-                            b1.Property<Guid>("DockId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
-                                .HasColumnName("DockName");
-
-                            b1.HasKey("DockId");
-
-                            b1.ToTable("Docks");
-
-                            b1.WithOwner()
-                                .HasForeignKey("DockId");
-                        });
-
-                    b.OwnsOne("ProjArqsi.Domain.DockAggregate.Draft", "MaxDraft", b1 =>
-                        {
-                            b1.Property<Guid>("DockId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<double>("Value")
-                                .HasColumnType("float")
-                                .HasColumnName("MaxDraft");
-
-                            b1.HasKey("DockId");
-
-                            b1.ToTable("Docks");
-
-                            b1.WithOwner()
-                                .HasForeignKey("DockId");
-                        });
-
-                    b.OwnsOne("ProjArqsi.Domain.DockAggregate.Location", "Location", b1 =>
-                        {
-                            b1.Property<Guid>("DockId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<string>("Description")
-                                .IsRequired()
-                                .HasMaxLength(500)
-                                .HasColumnType("nvarchar(500)")
-                                .HasColumnName("LocationDescription");
-
-                            b1.HasKey("DockId");
-
-                            b1.ToTable("Docks");
-
-                            b1.WithOwner()
-                                .HasForeignKey("DockId");
-                        });
-
-                    b.Navigation("AllowedVesselTypes")
-                        .IsRequired();
-
-                    b.Navigation("Depth")
-                        .IsRequired();
-
-                    b.Navigation("DockName")
-                        .IsRequired();
-
-                    b.Navigation("Length")
-                        .IsRequired();
-
-                    b.Navigation("Location")
-                        .IsRequired();
-
-                    b.Navigation("MaxDraft")
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("ProjArqsi.Domain.VesselAggregate.Vessel", b =>

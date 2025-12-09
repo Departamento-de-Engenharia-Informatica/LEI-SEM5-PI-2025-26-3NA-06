@@ -1,21 +1,16 @@
-using Google.Apis.Auth;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.DataProtection;
-using ProjArqsi.Services;
 
-namespace DDDSample1.Presentation.Controllers
+namespace ProjArqsi.Controllers
 {
     public class LoginController : Controller
     {
-        UserService userService;
+        
 
-        public LoginController(UserService userService)
+        public LoginController()
         {
-            this.userService = userService;
         }
 
         [HttpGet("api/login")]
@@ -32,22 +27,27 @@ namespace DDDSample1.Presentation.Controllers
         {
             var needsRegistration = User.FindFirstValue("needs_registration");
             var role = User.FindFirstValue(ClaimTypes.Role);
-            
+            var email = User.FindFirstValue(ClaimTypes.Email);
+            var name = User.FindFirstValue(ClaimTypes.Name);
+                        
             if (needsRegistration == "true")
             {
                 return Redirect("http://localhost:5173/register");
             }
             
-            // Store role in query parameter so frontend can save it
+            // URL encode the parameters
+            var encodedEmail = Uri.EscapeDataString(email ?? "");
+            var encodedName = Uri.EscapeDataString(name ?? "");
+            
+            // Store role, email, and name in query parameters so frontend can save them
             var dashboardUrl = role switch
             {
-                "Admin" => "http://localhost:5173/admin?role=Admin",
-                "PortAuthorityOfficer" => "http://localhost:5173/port-authority?role=PortAuthorityOfficer",
-                "LogisticOperator" => "http://localhost:5173/logistic-operator?role=LogisticOperator",
-                "ShippingAgentRepresentative" => "http://localhost:5173/shipping-agent?role=ShippingAgentRepresentative",
+                "Admin" => $"http://localhost:5173/admin?role=Admin&email={encodedEmail}&name={encodedName}",
+                "PortAuthorityOfficer" => $"http://localhost:5173/port-authority?role=PortAuthorityOfficer&email={encodedEmail}&name={encodedName}",
+                "LogisticOperator" => $"http://localhost:5173/logistic-operator?role=LogisticOperator&email={encodedEmail}&name={encodedName}",
+                "ShippingAgentRepresentative" => $"http://localhost:5173/shipping-agent?role=ShippingAgentRepresentative&email={encodedEmail}&name={encodedName}",
                 _ => "http://localhost:5173/login"
-            };
-            
+            };            
             return Redirect(dashboardUrl);
         }
     }

@@ -1,6 +1,7 @@
 using ProjArqsi.Application.DTOs;
 using ProjArqsi.Domain.VesselTypeAggregate;
 using ProjArqsi.Domain.Shared;
+using AutoMapper;
 
 namespace ProjArqsi.Application.Services
 {
@@ -8,14 +9,16 @@ namespace ProjArqsi.Application.Services
     {
         private readonly IVesselTypeRepository _repository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        public VesselTypeService(IVesselTypeRepository repository, IUnitOfWork unitOfWork)
+        public VesselTypeService(IVesselTypeRepository repository, IUnitOfWork unitOfWork, IMapper mapper)
         {
             _repository = repository;
             _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
 
-        public async Task<VesselTypeDto> CreateAsync(CreateVesselTypeDto dto)
+        public async Task<VesselTypeDto> CreateAsync(VesselTypeUpsertDto dto)
         {
             // Validate unique name
             var typeName = new TypeName(dto.TypeName);
@@ -37,10 +40,10 @@ namespace ProjArqsi.Application.Services
             await _repository.AddAsync(vesselType);
             await _unitOfWork.CommitAsync();
 
-            return MapToDto(vesselType);
+            return _mapper.Map<VesselTypeDto>(vesselType);
         }
 
-        public async Task<VesselTypeDto> UpdateAsync(Guid id, UpdateVesselTypeDto dto)
+        public async Task<VesselTypeDto> UpdateAsync(Guid id, VesselTypeUpsertDto dto)
         {
             var vesselType = await _repository.GetByIdAsync(new VesselTypeId(id));
             if (vesselType == null)
@@ -67,51 +70,37 @@ namespace ProjArqsi.Application.Services
 
             await _unitOfWork.CommitAsync();
 
-            return MapToDto(vesselType);
+            return _mapper.Map<VesselTypeDto>(vesselType);
         }
 
-        public async Task<VesselTypeDto?> GetByIdAsync(Guid id)
+        public async Task<VesselTypeDto> GetByIdAsync(Guid id)
         {
             var vesselType = await _repository.GetByIdAsync(new VesselTypeId(id));
-            return vesselType == null ? null : MapToDto(vesselType);
+            return _mapper.Map<VesselTypeDto>(vesselType);
         }
 
         public async Task<IEnumerable<VesselTypeDto>> GetAllAsync()
         {
             var vesselTypes = await _repository.GetAllAsync();
-            return vesselTypes.Select(MapToDto);
+            return _mapper.Map<IEnumerable<VesselTypeDto>>(vesselTypes);
         }
 
         public async Task<IEnumerable<VesselTypeDto>> SearchByNameAsync(string searchTerm)
         {
             var vesselTypes = await _repository.SearchByNameAsync(searchTerm);
-            return vesselTypes.Select(MapToDto);
+            return _mapper.Map<IEnumerable<VesselTypeDto>>(vesselTypes);
         }
 
         public async Task<IEnumerable<VesselTypeDto>> SearchByDescriptionAsync(string searchTerm)
         {
             var vesselTypes = await _repository.SearchByDescriptionAsync(searchTerm);
-            return vesselTypes.Select(MapToDto);
+            return _mapper.Map<IEnumerable<VesselTypeDto>>(vesselTypes);
         }
 
         public async Task<IEnumerable<VesselTypeDto>> SearchByNameOrDescriptionAsync(string searchTerm)
         {
             var vesselTypes = await _repository.SearchByNameOrDescriptionAsync(searchTerm);
-            return vesselTypes.Select(MapToDto);
-        }
-
-        private VesselTypeDto MapToDto(VesselType vesselType)
-        {
-            return new VesselTypeDto
-            {
-                Id = Guid.Parse(vesselType.Id.Value),
-                TypeName = vesselType.TypeName.Value,
-                TypeDescription = vesselType.TypeDescription.Value,
-                TypeCapacity = vesselType.TypeCapacity.Value,
-                MaxRows = vesselType.MaxRows.Value,
-                MaxBays = vesselType.MaxBays.Value,
-                MaxTiers = vesselType.MaxTiers.Value
-            };
+            return _mapper.Map<IEnumerable<VesselTypeDto>>(vesselTypes);
         }
     }
 }

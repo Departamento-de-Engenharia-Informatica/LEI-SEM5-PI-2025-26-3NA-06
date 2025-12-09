@@ -25,6 +25,20 @@ export class LayoutComponent implements OnInit {
 
   logout(): void {
     localStorage.removeItem('userRole');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userName');
     this.router.navigate(['/login']);
+  }
+
+  goToDashboard(): void {
+    const dashboardRoutes: { [key: string]: string } = {
+      Admin: '/admin',
+      PortAuthorityOfficer: '/port-authority',
+      LogisticOperator: '/logistic-operator',
+      ShippingAgentRepresentative: '/shipping-agent',
+    };
+
+    const route = dashboardRoutes[this.userRole] || '/login';
+    this.router.navigate([route]);
   }
 }

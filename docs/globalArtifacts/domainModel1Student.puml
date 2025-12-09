@@ -82,7 +82,7 @@ package "VesselType Aggregate" {
     -value: string
   }
   
-  class TypeCapacity <<value object>> {
+  class MaxCapacity <<value object>> {
     -value: int
   }
   
@@ -111,19 +111,19 @@ package "Vessel Aggregate" {
     -number: string
   }
   
-  class Size <<value object>> {
+  class Length <<value object>> {
     -value: double
   }
   
-  class CargoCapacity <<value object>> {
-    -teu: int
+  class Capacity <<value object>> {
+    -value: int
   }
   
   class VesselName <<value object>> {
     -name: string
   }
   
-  class MaxTeu <<value object>> {
+  class Teu <<value object>> {
     -value: int
   }
   
@@ -266,7 +266,7 @@ StorageArea "1" *-- "0..*" Distance : distance to docks >
 ' VESSEL TYPE AGGREGATE
 VesselType "1" *-- "1" TypeName
 VesselType "1" *-- "1" TypeDescription
-VesselType "1" *-- "1" TypeCapacity
+VesselType "1" *-- "1" MaxCapacity
 VesselType "1" *-- "1" MaxRows
 VesselType "1" *-- "1" MaxBays
 VesselType "1" *-- "1" MaxTiers
@@ -275,9 +275,9 @@ VesselType "1" *-- "1" MaxTiers
 ' Vessel Aggregate - Value Object Relationships
 Vessel "1" *-- "1" IMO
 Vessel "1" *-- "1" VesselName
-Vessel "1" *-- "1" MaxTeu
-Vessel "1" *-- "1" Size
-Vessel "1" *-- "1" CargoCapacity
+Vessel "1" *-- "1" Teu
+Vessel "1" *-- "1" Length
+Vessel "1" *-- "1" Capacity
 Vessel "1" --> "1" VesselType : classified by (by ID) >
 
 ' VESSEL VISIT NOTIFICATION AGGREGATE

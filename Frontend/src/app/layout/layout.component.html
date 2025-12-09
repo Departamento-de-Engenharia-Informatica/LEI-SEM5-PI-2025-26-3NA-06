@@ -1,7 +1,7 @@
 <div class="app-container">
   <header class="app-header">
     <div class="header-left">
-      <div class="logo-container">
+      <div class="logo-container" (click)="goToDashboard()" style="cursor: pointer">
         <img src="companyLogo.png" alt="Company Logo" class="logo" />
         <span class="company-name">Port Management System</span>
       </div>
@@ -34,18 +34,13 @@
         >
       </li>
       <li *ngIf="userRole === 'PortAuthorityOfficer'">
-        <a routerLink="/port-authority/vessel-types" routerLinkActive="active">Vessel Types</a>
-      </li>
-      <li *ngIf="userRole === 'PortAuthorityOfficer'">
         <a routerLink="/port-authority/vessels" routerLinkActive="active">Vessels</a>
       </li>
       <li *ngIf="userRole === 'PortAuthorityOfficer'">
-        <a routerLink="/port-authority/docks" routerLinkActive="active">Docks</a>
+        <a routerLink="/port-authority/vessel-types" routerLinkActive="active">Vessel Types</a>
       </li>
       <li *ngIf="userRole === 'PortAuthorityOfficer'">
-        <a routerLink="/port-authority/visit-approvals" routerLinkActive="active"
-          >Visit Approvals</a
-        >
+        <a routerLink="/port-authority/docks" routerLinkActive="active">Docks</a>
       </li>
 
       <!-- Logistic Operator Menu -->
@@ -57,14 +52,6 @@
           >Dashboard</a
         >
       </li>
-      <li *ngIf="userRole === 'LogisticOperator'">
-        <a routerLink="/logistic-operator/storage-areas" routerLinkActive="active">Storage Areas</a>
-      </li>
-      <li *ngIf="userRole === 'LogisticOperator'">
-        <a routerLink="/logistic-operator/resources" routerLinkActive="active"
-          >Physical Resources</a
-        >
-      </li>
 
       <!-- Shipping Agent Representative Menu -->
       <li *ngIf="userRole === 'ShippingAgentRepresentative'">
@@ -74,16 +61,6 @@
           [routerLinkActiveOptions]="{ exact: true }"
           >Dashboard</a
         >
-      </li>
-      <li *ngIf="userRole === 'ShippingAgentRepresentative'">
-        <a routerLink="/shipping-agent/vessel-visits" routerLinkActive="active"
-          >Vessel Visit Notifications</a
-        >
-      </li>
-
-      <!-- Common Menu Items -->
-      <li>
-        <a routerLink="/3d-view" routerLinkActive="active">3D Visualization</a>
       </li>
     </ul>
   </nav>

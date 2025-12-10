@@ -1,13 +1,13 @@
 <div class="edit-dock-container">
-  <div class="edit-dock-card">
-    <h1>Edit Dock</h1>
-    <p class="subtitle">Update dock information</p>
+  <div *ngIf="isLoading || isLoadingTypes" class="loading">
+    <p>Loading dock details...</p>
+  </div>
 
-    <div *ngIf="isLoading" class="loading">
-      <p>Loading dock details...</p>
-    </div>
+  <form *ngIf="!isLoading && !isLoadingTypes" (ngSubmit)="onSubmit()">
+    <div class="edit-dock-card">
+      <h1>Edit Dock</h1>
+      <p class="subtitle">Update dock information</p>
 
-    <form (ngSubmit)="onSubmit()" *ngIf="!isLoading">
       <div class="form-group">
         <label for="dockName">Dock Name *</label>
         <input
@@ -105,6 +105,6 @@
           {{ isLoading ? 'Updating...' : 'Update Dock' }}
         </button>
       </div>
-    </form>
-  </div>
+    </div>
+  </form>
 </div>

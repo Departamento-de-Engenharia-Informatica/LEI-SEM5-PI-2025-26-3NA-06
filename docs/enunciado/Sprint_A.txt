@@ -64,7 +64,7 @@ Acceptance Criteria / Comments:
 
 --------------------------------------------------------------------------------
 
-US 2.2.5 - Register New Shipping Agent Organizations
+US 2.2.5 - Register New Shipping Agent Organizations (NAO FAZER)
 As a Port Authority Officer, I want to register new shipping agent organizations, so that they can operate within the port's digital system.
 
 Acceptance Criteria / Comments:
@@ -74,7 +74,7 @@ Acceptance Criteria / Comments:
 
 --------------------------------------------------------------------------------
 
-US 2.2.6 - Register and Manage Shipping Agent Representatives
+US 2.2.6 - Register and Manage Shipping Agent Representatives (NAO FAZER)
 As a Port Authority Officer, I want to register and manage representatives of a shipping agent organization (create, update, deactivate), so that the right individuals are authorized to interact with the system on behalf of their organization.
 
 Acceptance Criteria / Comments:
@@ -123,7 +123,7 @@ Acceptance Criteria / Comments:
 
 --------------------------------------------------------------------------------
 
-US 2.2.11 - Register and Manage Operating Staff Members
+US 2.2.11 - Register and Manage Operating Staff Members (NAO FAZER)
 As a Logistics Operator, I want to register and manage operating staff members (create, update, deactivate), so that the system can accurately reflect staff availability and ensure that only qualified personnel are assigned to resources during scheduling.
 
 Acceptance Criteria / Comments:
@@ -133,7 +133,7 @@ Acceptance Criteria / Comments:
 
 --------------------------------------------------------------------------------
 
-US 2.2.12 - Register and Manage Physical Resources
+US 2.2.12 - Register and Manage Physical Resources (NAO FAZER)
 As a Logistics Operator, I want to register and manage physical resources (create, update, deactivate), so that they can be accurately considered during planning and scheduling operations.
 
 Acceptance Criteria / Comments:
@@ -149,83 +149,13 @@ Acceptance Criteria / Comments:
 
 --------------------------------------------------------------------------------
 
-US 2.2.13 - Register and Manage Qualifications
+US 2.2.13 - Register and Manage Qualifications (NAO FAZER)
 As a Logistics Operator, I want to register and manage qualifications (create, update), so that staff members and resources can be consistently associated with the correct skills and certifications required for port operations.
 
 Acceptance Criteria / Comments:
 • Each qualification has a unique code and a descriptive name (e.g., "STS Crane Operator," "Truck Driver").
 • Qualifications must be searchable and filterable by code or name.
 • A qualification must exist before it can be assigned to staff members or resources.
-
-================================================================================
-2.3. PROJECT CLIENT ANALYSIS
-================================================================================
-
-US 2.3.1 - Client Organization Summary
-As a Project Manager, I want the team to prepare a summary presentation of the client organization, so that anyone can easily understand what it is and what it does.
-
-Acceptance Criteria / Comments:
-• Select a real European company in the field of port management.
-• The summary must include type of organization, ownership structure, activities and scope of operations, main products and markets, countries of presence.
-• Include key indicators (e.g., number of employees, sales volume, or another relevant business activity indicator).
-• The presentation must be clear, concise, and professional.
-
---------------------------------------------------------------------------------
-
-US 2.3.2 - Organizational Structure Analysis
-As a Project Manager, I want the team to analyze the organizational structure of the client, so that we can understand how the company operates and adapts to change.
-
-Acceptance Criteria / Comments:
-• Use the organizational chart and related documentation.
-• Analyze departmentalization, number of hierarchical levels, line and staff positions.
-• Identify formal and informal structures, as well as flexibility/rigidity in decision-making.
-• Highlight ability to adapt to change.
-
---------------------------------------------------------------------------------
-
-US 2.3.3 - Suggest Organizational Improvements
-As a Project Manager, I want the team to suggest improvements to the organization's internal structure or rules, so that we can identify ways to enhance its performance.
-
-Acceptance Criteria / Comments:
-• Suggestions must be justified (e.g., modify departmentalization, grant more or less autonomy).
-• Focus on actionable and realistic changes.
-
---------------------------------------------------------------------------------
-
-US 2.3.4 - Identify Values, Vision, and Mission
-As a Project Manager, I want the team to identify and comment on the organization's values, vision, and mission, so that we can understand its cultural and strategic orientation.
-
-Acceptance Criteria / Comments:
-• Identify each element (values, vision, mission) from the available documentation.
-• Provide a management-oriented commentary on their coherence and effectiveness.
-
---------------------------------------------------------------------------------
-
-US 2.3.5 - Propose SMART Objectives
-As a Project Manager, I want the team to propose one SMART objective for each of the three management levels, so that we can assess the organization's alignment across strategic, tactical, and operational levels.
-
-Acceptance Criteria / Comments:
-• Justify why each objective is suitable for its level.
-
---------------------------------------------------------------------------------
-
-US 2.3.6 - Conduct SWOT Analysis
-As a Project Manager, I want the team to conduct a SWOT analysis of the organization, so that we can evaluate its internal strengths/weaknesses and external opportunities/threats.
-
-Acceptance Criteria / Comments:
-• SWOT must be based on PESTEL, Porter, value chain, and VRIO methodologies.
-• Sources of information must be clearly indicated.
-• Present SWOT in table form.
-• Highlight the most relevant aspects of the internal and external situation.
-
---------------------------------------------------------------------------------
-
-US 2.3.7 - Propose Organization Strategy
-As a Project Manager, I want the team to propose a possible strategy for the organization, so that we can identify a future direction aligned with its situation.
-
-Acceptance Criteria / Comments:
-• The strategy must be derived from the SWOT analysis.
-• It should be realistic, actionable, and justified.
 
 ================================================================================
 2.4. ADDITIONAL REMARKS - MANDATORY SCOPE OF WORK

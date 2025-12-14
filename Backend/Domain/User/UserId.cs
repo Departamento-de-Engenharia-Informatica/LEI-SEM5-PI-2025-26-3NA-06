@@ -12,15 +12,9 @@ namespace ProjArqsi.Domain.UserAggregate
 
         public UserId(string value) : base(value) {}
 
-        protected override object createFromString(string text)
-        {
-            return new Guid(text);
-        }
+       
 
-        public override string AsString()
-        {
-            return ((Guid)ObjValue).ToString();
-        }
+       
 
         public Guid AsGuid()
         {

@@ -3,7 +3,9 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using ProjArqsi.Domain.UserAggregate.ValueObjects;
 using ProjArqsi.Infrastructure;
 
 #nullable disable
@@ -11,9 +13,11 @@ using ProjArqsi.Infrastructure;
 namespace ProjArqsi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251209212602_AddUniqueDockNameConstraint")]
+    partial class AddUniqueDockNameConstraint
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,25 +34,6 @@ namespace ProjArqsi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Docks", (string)null);
-                });
-
-            modelBuilder.Entity("ProjArqsi.Domain.StorageAreaAggregate.StorageArea", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("ServedDocks")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("ServedDockIds");
-
-                    b.Property<bool>("ServesEntirePort")
-                        .HasColumnType("bit")
-                        .HasColumnName("ServesEntirePort");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("StorageAreas", (string)null);
                 });
 
             modelBuilder.Entity("ProjArqsi.Domain.UserAggregate.User", b =>
@@ -147,25 +132,6 @@ namespace ProjArqsi.Migrations
                                 .HasForeignKey("DockId");
                         });
 
-                    b.OwnsOne("ProjArqsi.Domain.DockAggregate.Location", "Location", b1 =>
-                        {
-                            b1.Property<Guid>("DockId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<string>("Description")
-                                .IsRequired()
-                                .HasMaxLength(500)
-                                .HasColumnType("nvarchar(500)")
-                                .HasColumnName("LocationDescription");
-
-                            b1.HasKey("DockId");
-
-                            b1.ToTable("Docks");
-
-                            b1.WithOwner()
-                                .HasForeignKey("DockId");
-                        });
-
                     b.OwnsOne("ProjArqsi.Domain.DockAggregate.DockLength", "Length", b1 =>
                         {
                             b1.Property<Guid>("DockId")
@@ -222,6 +188,25 @@ namespace ProjArqsi.Migrations
                                 .HasForeignKey("DockId");
                         });
 
+                    b.OwnsOne("ProjArqsi.Domain.DockAggregate.Location", "Location", b1 =>
+                        {
+                            b1.Property<Guid>("DockId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Description")
+                                .IsRequired()
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)")
+                                .HasColumnName("LocationDescription");
+
+                            b1.HasKey("DockId");
+
+                            b1.ToTable("Docks");
+
+                            b1.WithOwner()
+                                .HasForeignKey("DockId");
+                        });
+
                     b.Navigation("AllowedVesselTypes")
                         .IsRequired();
 
@@ -238,96 +223,6 @@ namespace ProjArqsi.Migrations
                         .IsRequired();
 
                     b.Navigation("MaxDraft")
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("ProjArqsi.Domain.StorageAreaAggregate.StorageArea", b =>
-                {
-                    b.OwnsOne("ProjArqsi.Domain.StorageAreaAggregate.AreaName", "Name", b1 =>
-                        {
-                            b1.Property<string>("StorageAreaId")
-                                .HasColumnType("nvarchar(450)");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)")
-                                .HasColumnName("AreaName");
-
-                            b1.HasKey("StorageAreaId");
-
-                            b1.HasIndex("Value")
-                                .IsUnique();
-
-                            b1.ToTable("StorageAreas");
-
-                            b1.WithOwner()
-                                .HasForeignKey("StorageAreaId");
-                        });
-
-                    b.OwnsOne("ProjArqsi.Domain.StorageAreaAggregate.AreaType", "AreaType", b1 =>
-                        {
-                            b1.Property<string>("StorageAreaId")
-                                .HasColumnType("nvarchar(450)");
-
-                            b1.Property<int>("Value")
-                                .HasColumnType("int")
-                                .HasColumnName("AreaType");
-
-                            b1.HasKey("StorageAreaId");
-
-                            b1.ToTable("StorageAreas");
-
-                            b1.WithOwner()
-                                .HasForeignKey("StorageAreaId");
-                        });
-
-                    b.OwnsOne("ProjArqsi.Domain.StorageAreaAggregate.MaxCapacity", "MaxCapacity", b1 =>
-                        {
-                            b1.Property<string>("StorageAreaId")
-                                .HasColumnType("nvarchar(450)");
-
-                            b1.Property<int>("Value")
-                                .HasColumnType("int")
-                                .HasColumnName("MaxCapacity");
-
-                            b1.HasKey("StorageAreaId");
-
-                            b1.ToTable("StorageAreas");
-
-                            b1.WithOwner()
-                                .HasForeignKey("StorageAreaId");
-                        });
-
-                    b.OwnsOne("ProjArqsi.Domain.DockAggregate.Location", "Location", b1 =>
-                        {
-                            b1.Property<string>("StorageAreaId")
-                                .HasColumnType("nvarchar(450)");
-
-                            b1.Property<string>("Description")
-                                .IsRequired()
-                                .HasMaxLength(200)
-                                .HasColumnType("nvarchar(200)")
-                                .HasColumnName("Location");
-
-                            b1.HasKey("StorageAreaId");
-
-                            b1.ToTable("StorageAreas");
-
-                            b1.WithOwner()
-                                .HasForeignKey("StorageAreaId");
-                        });
-
-                    b.Navigation("AreaType")
-                        .IsRequired();
-
-                    b.Navigation("Location")
-                        .IsRequired();
-
-                    b.Navigation("MaxCapacity")
-                        .IsRequired();
-
-                    b.Navigation("Name")
                         .IsRequired();
                 });
 

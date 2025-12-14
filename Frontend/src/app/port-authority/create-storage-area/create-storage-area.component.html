@@ -1,0 +1,99 @@
+<div class="create-storage-area-container">
+  <div class="create-storage-area-card">
+    <h1>Create New Storage Area</h1>
+    <p class="subtitle">Register a new storage area in the system</p>
+
+    <form (ngSubmit)="onSubmit()" *ngIf="!isSuccess">
+      <div class="form-group">
+        <label for="areaName">Area Name *</label>
+        <input
+          type="text"
+          id="areaName"
+          [(ngModel)]="storageArea.areaName"
+          name="areaName"
+          placeholder="Enter area name"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="areaType">Area Type *</label>
+        <select id="areaType" [(ngModel)]="storageArea.areaType" name="areaType" required>
+          <option value="">Select area type</option>
+          <option *ngFor="let type of areaTypes" [value]="type">{{ type }}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="location">Location *</label>
+        <textarea
+          id="location"
+          [(ngModel)]="storageArea.location"
+          name="location"
+          placeholder="Enter location description"
+          rows="3"
+          required
+        ></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="maxCapacity">Max Capacity (TEU) *</label>
+        <input
+          type="number"
+          id="maxCapacity"
+          [(ngModel)]="storageArea.maxCapacity"
+          name="maxCapacity"
+          placeholder="Enter maximum capacity in TEU"
+          min="1"
+          step="1"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label>
+          <input
+            type="checkbox"
+            [(ngModel)]="storageArea.servesEntirePort"
+            name="servesEntirePort"
+          />
+          Serves Entire Port
+        </label>
+      </div>
+
+      <div class="form-group" *ngIf="!storageArea.servesEntirePort">
+        <label>Served Docks</label>
+        <div class="docks-checkbox">
+          <div *ngFor="let dock of docks" class="checkbox-item">
+            <input
+              type="checkbox"
+              [id]="'dock-' + dock.id"
+              [checked]="isDockSelected(dock.id)"
+              (change)="toggleDock(dock.id)"
+            />
+            <label [for]="'dock-' + dock.id">{{ dock.dockName }}</label>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="message && !isSuccess" class="error-message">
+        {{ message }}
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="cancel-btn" (click)="goBack()" [disabled]="isLoading">
+          Cancel
+        </button>
+        <button type="submit" class="submit-btn" [disabled]="isLoading">
+          {{ isLoading ? 'Creating...' : 'Create Storage Area' }}
+        </button>
+      </div>
+    </form>
+
+    <div *ngIf="isSuccess" class="success-container">
+      <div class="success-icon">✓</div>
+      <p class="success-message">{{ message }}</p>
+      <p class="redirect-message">Redirecting to storage areas list...</p>
+    </div>
+  </div>
+</div>

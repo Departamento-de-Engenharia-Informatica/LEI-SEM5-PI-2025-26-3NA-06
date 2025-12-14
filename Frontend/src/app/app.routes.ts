@@ -18,6 +18,9 @@ import { LayoutComponent } from './layout/layout.component';
 import { AccessDeniedComponent } from './access-denied/access-denied.component';
 import { UnauthorizedComponent } from './unauthorized/unauthorized.component';
 import { authGuard } from './guards/auth.guard';
+import { StorageAreasComponent } from './port-authority/storage-areas/storage-areas.component';
+import { CreateStorageAreaComponent } from './port-authority/create-storage-area/create-storage-area.component';
+import { EditStorageAreaComponent } from './port-authority/edit-storage-area/edit-storage-area.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -56,6 +59,9 @@ export const routes: Routes = [
           { path: 'docks', component: DocksComponent },
           { path: 'create-dock', component: CreateDockComponent },
           { path: 'edit-dock/:id', component: EditDockComponent },
+          { path: 'storage-areas', component: StorageAreasComponent },
+          { path: 'create-storage-area', component: CreateStorageAreaComponent },
+          { path: 'edit-storage-area/:id', component: EditStorageAreaComponent },
           // Add more port authority child routes here
         ],
       },

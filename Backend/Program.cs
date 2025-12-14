@@ -15,6 +15,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.DataProtection;
 using ProjArqsi.Middleware;
 using Serilog;
+using ProjArqsi.Domain.StorageAreaAggregate;
 
 // Configure Serilog - only log warnings and errors, suppress all informational logs
 Log.Logger = new LoggerConfiguration()
@@ -57,6 +58,7 @@ builder.Services.AddScoped<IVesselTypeRepository, VesselTypeRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IVesselRepository, VesselRepository>();
 builder.Services.AddScoped<IDockRepository, DockRepository>();
+builder.Services.AddScoped<IStorageAreaRepository, StorageAreaRepository>();
 
 // Register application services
 builder.Services.AddScoped<VesselTypeService>();
@@ -65,6 +67,7 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<RegistrationService>();
 builder.Services.AddScoped<DockService>();
+builder.Services.AddScoped<StorageAreaService>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 // Add authentication (Google & Cookie) with custom event

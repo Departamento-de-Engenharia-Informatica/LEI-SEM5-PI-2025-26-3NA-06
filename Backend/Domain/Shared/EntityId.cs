@@ -12,23 +12,25 @@ namespace ProjArqsi.Domain.Shared
                 } 
         }
 
-        protected EntityId(object value)
+        public EntityId(object value)
         {
             if (value.GetType() == typeof(string))
-                ObjValue = createFromString((string)value);
+                ObjValue = CreateFromString((string)value);
             else
                 ObjValue = value;
         }
 
-       
-        protected abstract object createFromString(string text);
-        
-        public abstract string AsString();
+        public virtual object CreateFromString(string text){
+            return new Guid(text);
+        }
+        public string AsString(){
+            return ObjValue.ToString() ?? string.Empty;
+        }
 
 
         public override bool Equals(object? obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             return obj is EntityId other && Equals(other);
         }
 
@@ -57,9 +59,7 @@ namespace ProjArqsi.Domain.Shared
             if (Equals(obj1, null))
             {
                 if (Equals(obj2, null))
-                {
                     return true;
-                }
                 return false;
             }
             return obj1.Equals(obj2);

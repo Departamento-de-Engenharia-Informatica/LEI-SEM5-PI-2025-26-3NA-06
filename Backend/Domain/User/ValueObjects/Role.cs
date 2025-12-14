@@ -4,10 +4,10 @@ namespace ProjArqsi.Domain.UserAggregate.ValueObjects
 {
     public enum RoleType
     {
-        Admin,
-        PortAuthorityOfficer,
-        LogisticOperator,
-        ShippingAgentRepresentative
+        Admin = 0,
+        PortAuthorityOfficer = 1,
+        LogisticOperator = 2,
+        ShippingAgentRepresentative = 3,
     }
 
     public class Role : ValueObject

@@ -42,6 +42,9 @@
       <li *ngIf="userRole === 'PortAuthorityOfficer'">
         <a routerLink="/port-authority/docks" routerLinkActive="active">Docks</a>
       </li>
+      <li *ngIf="userRole === 'PortAuthorityOfficer'">
+        <a routerLink="/port-authority/storage-areas" routerLinkActive="active">Storage Areas</a>
+      </li>
 
       <!-- Logistic Operator Menu -->
       <li *ngIf="userRole === 'LogisticOperator'">

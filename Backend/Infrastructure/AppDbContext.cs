@@ -1,8 +1,8 @@
-using Microsoft.EntityFrameworkCore;
 using ProjArqsi.Domain.VesselTypeAggregate;
 using ProjArqsi.Domain.UserAggregate;
 using ProjArqsi.Domain.VesselAggregate;
 using ProjArqsi.Domain.DockAggregate;
+using ProjArqsi.Domain.StorageAreaAggregate;
 
 namespace ProjArqsi.Infrastructure
 {
@@ -12,6 +12,7 @@ namespace ProjArqsi.Infrastructure
         public DbSet<User> Users { get; set; }
         public DbSet<Vessel> Vessels { get; set; }
         public DbSet<Dock> Docks { get; set; }
+        public DbSet<StorageArea> StorageAreas { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -21,6 +22,7 @@ namespace ProjArqsi.Infrastructure
             modelBuilder.ApplyConfiguration(new UserEntityTypeConfiguration());
             modelBuilder.ApplyConfiguration(new VesselEntityTypeConfiguration());
             modelBuilder.ApplyConfiguration(new DockEntityTypeConfiguration());
+            modelBuilder.ApplyConfiguration(new StorageAreaEntityTypeConfiguration());
         }
     }
 

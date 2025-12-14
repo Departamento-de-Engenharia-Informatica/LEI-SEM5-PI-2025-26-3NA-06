@@ -1,0 +1,50 @@
+<div class="storage-areas-container">
+  <div class="storage-areas-header">
+    <h1>Storage Areas</h1>
+    <button (click)="createStorageArea()" class="create-btn">+ Create Storage Area</button>
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <p>Loading storage areas...</p>
+  </div>
+
+  <div *ngIf="message && !isLoading" class="error-message">
+    {{ message }}
+  </div>
+
+  <div *ngIf="!isLoading && storageAreas.length === 0" class="empty-state">
+    <p>No storage areas found.</p>
+    <button (click)="createStorageArea()" class="create-btn">Create Your First Storage Area</button>
+  </div>
+
+  <div *ngIf="!isLoading && storageAreas.length > 0" class="storage-areas-grid">
+    <div *ngFor="let area of storageAreas" class="storage-area-card">
+      <div class="card-header">
+        <h3>{{ area.areaName || 'Unnamed Area' }}</h3>
+        <button (click)="editStorageArea(area.id)" class="edit-btn" title="Edit storage area">
+          ✏️
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="specs">
+          <div class="spec-item">
+            <span class="label">Type:</span>
+            <span class="value">{{ area.areaType }}</span>
+          </div>
+          <div class="spec-item">
+            <span class="label">Location:</span>
+            <span class="value">{{ area.location }}</span>
+          </div>
+          <div class="spec-item">
+            <span class="label">Max Capacity:</span>
+            <span class="value">{{ area.maxCapacity }}</span>
+          </div>
+          <div class="spec-item">
+            <span class="label">Served Docks:</span>
+            <span class="value">{{ area.servedDockIds?.length || 0 }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

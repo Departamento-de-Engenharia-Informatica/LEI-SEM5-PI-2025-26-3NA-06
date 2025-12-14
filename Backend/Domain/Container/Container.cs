@@ -1,11 +1,8 @@
+using ProjArqsi.Domain.ContainerAggregate.ValueObjects;
 using ProjArqsi.Domain.Shared;
 
-namespace ProjArqsi.Domain.Container
+namespace ProjArqsi.Domain.ContainerAggregate
 {
-    /// <summary>
-    /// Container aggregate root representing a shipping container
-    /// Identified by ISO 6346:2022 compliant code
-    /// </summary>
     public class Container : Entity<IsoCode>, IAggregateRoot
     {
         public SizeTeu SizeTeu { get; private set; }

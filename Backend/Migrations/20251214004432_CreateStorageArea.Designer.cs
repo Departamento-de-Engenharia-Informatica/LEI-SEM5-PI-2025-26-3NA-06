@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProjArqsi.Infrastructure;
 
@@ -11,9 +12,11 @@ using ProjArqsi.Infrastructure;
 namespace ProjArqsi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251214004432_CreateStorageArea")]
+    partial class CreateStorageArea
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -41,10 +44,6 @@ namespace ProjArqsi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("ServedDockIds");
-
-                    b.Property<bool>("ServesEntirePort")
-                        .HasColumnType("bit")
-                        .HasColumnName("ServesEntirePort");
 
                     b.HasKey("Id");
 
@@ -282,6 +281,23 @@ namespace ProjArqsi.Migrations
                                 .HasForeignKey("StorageAreaId");
                         });
 
+                    b.OwnsOne("ProjArqsi.Domain.StorageAreaAggregate.CurrentOccupancy", "CurrentOccupancy", b1 =>
+                        {
+                            b1.Property<string>("StorageAreaId")
+                                .HasColumnType("nvarchar(450)");
+
+                            b1.Property<int>("Value")
+                                .HasColumnType("int")
+                                .HasColumnName("CurrentOccupancy");
+
+                            b1.HasKey("StorageAreaId");
+
+                            b1.ToTable("StorageAreas");
+
+                            b1.WithOwner()
+                                .HasForeignKey("StorageAreaId");
+                        });
+
                     b.OwnsOne("ProjArqsi.Domain.StorageAreaAggregate.MaxCapacity", "MaxCapacity", b1 =>
                         {
                             b1.Property<string>("StorageAreaId")
@@ -319,6 +335,9 @@ namespace ProjArqsi.Migrations
                         });
 
                     b.Navigation("AreaType")
+                        .IsRequired();
+
+                    b.Navigation("CurrentOccupancy")
                         .IsRequired();
 
                     b.Navigation("Location")

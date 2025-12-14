@@ -39,12 +39,12 @@ namespace ProjArqsi.Domain.VesselAggregate
         public void UpdateDetails(VesselName vesselName, Capacity capacity, 
                                  Rows rows, Bays bays, Tiers tiers, Length length)
         {
-            VesselName = vesselName ?? throw new ArgumentNullException(nameof(vesselName));
-            Capacity = capacity ?? throw new ArgumentNullException(nameof(capacity));
-            Rows = rows ?? throw new ArgumentNullException(nameof(rows));
-            Bays = bays ?? throw new ArgumentNullException(nameof(bays));
-            Tiers = tiers ?? throw new ArgumentNullException(nameof(tiers));
-            Length = length ?? throw new ArgumentNullException(nameof(length));
+            VesselName = vesselName;
+            Capacity = capacity;
+            Rows = rows ;
+            Bays = bays ;
+            Tiers = tiers ;
+            Length = length ;
         }
     }
 }

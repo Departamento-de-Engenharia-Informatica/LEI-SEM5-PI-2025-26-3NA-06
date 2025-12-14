@@ -1,15 +1,7 @@
 using ProjArqsi.Domain.Shared;
 
-namespace ProjArqsi.Domain.Container
+namespace ProjArqsi.Domain.ContainerAggregate
 {
-    /// <summary>
-    /// ISO 6346:2022 compliant container identifier
-    /// Format: AAAU123456-C where:
-    /// - AAA: Owner code (3 letters)
-    /// - U: Equipment category identifier (1 letter, typically 'U' for freight containers)
-    /// - 123456: Serial number (6 digits)
-    /// - C: Check digit (1 digit)
-    /// </summary>
     public class IsoCode : EntityId
     {
         public IsoCode(string value) : base(value)
@@ -18,18 +10,6 @@ namespace ProjArqsi.Domain.Container
 
         protected IsoCode() : base(Guid.NewGuid().ToString())
         {
-        }
-
-        protected override object createFromString(string text)
-        {
-            ValidateIsoCode(text);
-            // Clean the code and return uppercase version without hyphens
-            return text.Replace("-", "").Replace(" ", "").ToUpperInvariant();
-        }
-
-        public override string AsString()
-        {
-            return ObjValue.ToString() ?? string.Empty;
         }
 
         private void ValidateIsoCode(string value)

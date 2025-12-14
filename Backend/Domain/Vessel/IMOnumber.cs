@@ -19,6 +19,12 @@ namespace ProjArqsi.Domain.VesselAggregate
             Number = number;
         }
 
+        public override object CreateFromString(string text)
+        {
+            // For IMO numbers, just return the string itself (do not parse as Guid)
+            return text;
+        }
+
         private static bool IsValidIMO(string imoNumber, out string errorMessage)
         {
             // IMO must be exactly 7 digits
@@ -56,22 +62,6 @@ namespace ProjArqsi.Domain.VesselAggregate
 
             errorMessage = string.Empty;
             return true;
-        }
-
-        protected override object createFromString(string text)
-        {
-            if (string.IsNullOrWhiteSpace(text))
-                throw new InvalidOperationException("IMO number cannot be empty");
-
-            if (!IsValidIMO(text, out string errorMessage))
-                throw new InvalidOperationException(errorMessage);
-
-            return text;
-        }
-
-        public override string AsString()
-        {
-            return (string)ObjValue;
         }
     }
 }

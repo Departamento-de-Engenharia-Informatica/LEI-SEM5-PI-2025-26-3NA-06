@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using ProjArqsi.Application.Services;
-using ProjArqsi.Domain.UserAggregate;
-using ProjArqsi.Domain.UserAggregate.ValueObjects;
 using ProjArqsi.DTOs.User;
 
 namespace ProjArqsi.Controllers

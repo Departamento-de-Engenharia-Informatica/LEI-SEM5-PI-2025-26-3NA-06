@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using ProjArqsi.Domain.Shared;
 
 namespace ProjArqsi.Domain.VesselAggregate

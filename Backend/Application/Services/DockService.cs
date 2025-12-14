@@ -33,6 +33,14 @@ namespace ProjArqsi.Application.Services
         public async Task<DockDto> AddAsync(DockUpsertDto dto)
         {
             var dockName = new DockName(dto.DockName);
+            
+            // Check for duplicate name
+            var existing = await _repo.FindByNameAsync(dockName);
+            if (existing != null)
+            {
+                throw new BusinessRuleValidationException($"A dock with name '{dto.DockName}' already exists.");
+            }
+
             var location = new Location(dto.LocationDescription);
             var length = new DockLength(dto.Length);
             var depth = new Depth(dto.Depth);
@@ -51,7 +59,19 @@ namespace ProjArqsi.Application.Services
         {
             var dock = await _repo.GetByIdAsync(id);
 
-            dock.ChangeDockName(new DockName(dto.DockName));
+            var newDockName = new DockName(dto.DockName);
+            
+            // Check for duplicate name (only if name is changing)
+            if (dock.DockName.Value != dto.DockName)
+            {
+                var existing = await _repo.FindByNameAsync(newDockName);
+                if (existing != null && existing.Id.AsGuid() != id.AsGuid())
+                {
+                    throw new BusinessRuleValidationException($"A dock with name '{dto.DockName}' already exists.");
+                }
+            }
+
+            dock.ChangeDockName(newDockName);
             dock.ChangeLocation(new Location(dto.LocationDescription));
             dock.ChangeLength(new DockLength(dto.Length));
             dock.ChangeDepth(new Depth(dto.Depth));

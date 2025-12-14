@@ -23,6 +23,7 @@ namespace ProjArqsi.Infrastructure
                     .HasColumnName("DockName")
                     .HasMaxLength(100)
                     .IsRequired();
+                dockName.HasIndex(dn => dn.Value).IsUnique();
             });
 
             builder.OwnsOne(d => d.Location, location =>

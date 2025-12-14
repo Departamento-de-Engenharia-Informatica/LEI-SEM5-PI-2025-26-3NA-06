@@ -13,17 +13,6 @@ namespace ProjArqsi.Domain.VesselTypeAggregate
             if (id == Guid.Empty)
                 throw new ArgumentException("VesselTypeId cannot be empty", nameof(id));
         }
-
-        protected override object createFromString(string text)
-        {
-            return Guid.Parse(text);
-        }
-
-        public override string AsString()
-        {
-            return ((Guid)ObjValue).ToString();
-        }
-
         public Guid AsGuid()
         {
             return (Guid)ObjValue;

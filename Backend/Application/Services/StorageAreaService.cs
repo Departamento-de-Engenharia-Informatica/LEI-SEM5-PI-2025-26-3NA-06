@@ -48,7 +48,7 @@ namespace ProjArqsi.Application.Services
             var location = new Location(dto.Location);
             var maxCapacity = new MaxCapacity(dto.MaxCapacity);
             var servesEntirePort = dto.ServesEntirePort;
-            var servedDocks = new ServedDocks(dto.ServedDockIds.Select(id => new DockId(id)).ToList());
+            var servedDocks = new ServedDocks([.. dto.ServedDockIds.Select(id => new DockId(new Guid(id)))]);
             
             
             var storageArea = new StorageArea(areaName, areaType, location, maxCapacity, servesEntirePort, servedDocks);
@@ -70,9 +70,9 @@ namespace ProjArqsi.Application.Services
                 throw new BusinessRuleValidationException($"Invalid AreaType '{dto.AreaType}'.");
 
             var servesEntirePort = dto.ServesEntirePort;
-            var servedDockIds = (dto.ServedDockIds ?? Enumerable.Empty<Guid>())
+            var servedDockIds = (dto.ServedDockIds ?? Enumerable.Empty<string>())
                 .Distinct()
-                .Select(dockId => new DockId(dockId))
+                .Select(dockId => new DockId(new Guid(dockId)))
                 .ToList();
 
             // Check for duplicate name (only if name is changing)

@@ -53,22 +53,12 @@ namespace ProjArqsi.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,PortAuthorityOfficer")]
+        [Authorize(Roles = "PortAuthorityOfficer")]
         public async Task<ActionResult<VesselDto>> CreateVesselAsync([FromBody] CreateVesselDto dto)
         {
             try
             {
-                var vessel = await _service.CreateAsync(
-                    dto.Imo,
-                    dto.VesselName,
-                    dto.Capacity,
-                    dto.Rows,
-                    dto.Bays,
-                    dto.Tiers,
-                    dto.Length,
-                    dto.VesselTypeId
-                );
-
+                var vessel = await _service.CreateAsync(dto);
                 return CreatedAtAction(nameof(GetByImo), new { imo = vessel.Imo }, vessel);
             }
             catch (BusinessRuleValidationException ex)
@@ -86,22 +76,12 @@ namespace ProjArqsi.Controllers
         }
 
         [HttpPut("{imo}")]
-        [Authorize(Roles = "Admin,PortAuthorityOfficer")]
+        [Authorize(Roles = "PortAuthorityOfficer")]
         public async Task<ActionResult<VesselDto>> UpdateVesselAsync(string imo, [FromBody] UpdateVesselDto dto)
         {
             try
             {
-                var vessel = await _service.UpdateAsync(
-                    imo,
-                    dto.VesselName,
-                    dto.Capacity,
-                    dto.Rows,
-                    dto.Bays,
-                    dto.Tiers,
-                    dto.Length,
-                    dto.VesselTypeId
-                );
-
+                var vessel = await _service.UpdateAsync(imo, dto);
                 return Ok(vessel);
             }
             catch (InvalidOperationException ex)

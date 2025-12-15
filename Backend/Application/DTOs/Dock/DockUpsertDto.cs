@@ -7,6 +7,6 @@ namespace ProjArqsi.Application.DTOs.Dock
         public required double Length { get; set; }
         public required double Depth { get; set; }
         public required double MaxDraft { get; set; }
-        public required List<Guid> AllowedVesselTypeIds { get; set; }
+        public required List<string> AllowedVesselTypeIds { get; set; }
     }
 }

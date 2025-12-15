@@ -20,7 +20,7 @@ namespace ProjArqsi.Infrastructure.Shared
             return await _objs.ToListAsync();
         }
         
-        public async Task<TEntity> GetByIdAsync(TEntityId id)
+        public async Task<TEntity?> GetByIdAsync(TEntityId id)
         {
             var entity = await _objs
                 .Where(x => id.Equals(x.Id)).FirstOrDefaultAsync();

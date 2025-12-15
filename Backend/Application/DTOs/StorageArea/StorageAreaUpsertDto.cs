@@ -7,6 +7,6 @@ namespace ProjArqsi.Application.DTOs.StorageArea
         public required string Location { get; set; }
         public required int MaxCapacity { get; set; }
         public required bool ServesEntirePort { get; set; }
-        public required List<Guid> ServedDockIds { get; set; }
+        public required List<string> ServedDockIds { get; set; }
     }
 }

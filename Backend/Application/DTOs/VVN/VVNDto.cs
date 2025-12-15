@@ -3,10 +3,10 @@ namespace ProjArqsi.Application.DTOs.VVN
     //Usado para passar VVNs completas
     public class VVNDto
     {
-        public string Id { get; set; } = string.Empty;
-        public string ReferredVesselId { get; set; } = string.Empty;
-        public DateTime ArrivalDate { get; set; }
-        public DateTime DepartureDate { get; set; }
+        public required string Id { get; set; }
+        public required string ReferredVesselId { get; set; }
+        public required DateTime ArrivalDate { get; set; }
+        public required DateTime DepartureDate { get; set; }
         //public List<CrewMemberDto> CrewMembers { get; set; } = new();
         //public List<string> CargoManifest { get; set; } = new();
         public string Status { get; set; } = string.Empty;

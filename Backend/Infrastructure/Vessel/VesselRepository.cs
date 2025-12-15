@@ -13,10 +13,9 @@ namespace ProjArqsi.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<Vessel> FindByNameAsync(VesselName name)
+        public async Task<Vessel?> FindByNameAsync(VesselName name)
         {
-            return await _context.Vessels.FirstOrDefaultAsync(v => v.VesselName.Name.Equals(name.Name, StringComparison.CurrentCultureIgnoreCase)) 
-                ?? throw new InvalidOperationException($"Vessel with name '{name.Name}' not found.");
+            return await _context.Vessels.FirstOrDefaultAsync(v => v.VesselName.Name.Equals(name.Name, StringComparison.CurrentCultureIgnoreCase));
         }
 
         public async Task<IEnumerable<Vessel>> SearchByImoAsync(IMOnumber searchTerm)

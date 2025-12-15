@@ -45,7 +45,8 @@ namespace ProjArqsi.Application.Services
             var length = new DockLength(dto.Length);
             var depth = new Depth(dto.Depth);
             var maxDraft = new Draft(dto.MaxDraft);
-            var allowedVesselTypes = new AllowedVesselTypes(dto.AllowedVesselTypeIds);
+            var allowedVesselTypeGuids = dto.AllowedVesselTypeIds.Select(Guid.Parse).ToList();
+            var allowedVesselTypes = new AllowedVesselTypes(allowedVesselTypeGuids);
 
             var dock = new Dock(dockName, location, length, depth, maxDraft, allowedVesselTypes);
 
@@ -76,7 +77,8 @@ namespace ProjArqsi.Application.Services
             dock.ChangeLength(new DockLength(dto.Length));
             dock.ChangeDepth(new Depth(dto.Depth));
             dock.ChangeMaxDraft(new Draft(dto.MaxDraft));
-            dock.SetAllowedVesselTypes(new AllowedVesselTypes(dto.AllowedVesselTypeIds));
+            var allowedVesselTypeGuids = dto.AllowedVesselTypeIds.Select(Guid.Parse).ToList();
+            dock.SetAllowedVesselTypes(new AllowedVesselTypes(allowedVesselTypeGuids));
 
             await _unitOfWork.CommitAsync();
 

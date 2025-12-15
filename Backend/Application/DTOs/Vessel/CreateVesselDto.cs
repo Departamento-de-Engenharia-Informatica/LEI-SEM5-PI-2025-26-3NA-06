@@ -9,6 +9,6 @@ namespace ProjArqsi.Application.DTOs
         public required int Bays { get; set; }
         public required int Tiers { get; set; }
         public required double Length { get; set; }
-        public required Guid VesselTypeId { get; set; }
+        public required string VesselTypeId { get; set; }
     }
 }

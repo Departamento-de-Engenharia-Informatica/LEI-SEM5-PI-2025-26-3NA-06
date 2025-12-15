@@ -4,6 +4,7 @@ using ProjArqsi.Domain.Shared;
 using AutoMapper;
 using ProjArqsi.Domain.StorageAreaAggregate;
 using ProjArqsi.Application.DTOs.StorageArea;
+using ProjArqsi.Domain.StorageArea.ValueObjects;
 
 namespace ProjArqsi.Application.Services
 {
@@ -47,7 +48,7 @@ namespace ProjArqsi.Application.Services
             var location = new Location(dto.Location);
             var maxCapacity = new MaxCapacity(dto.MaxCapacity);
             var servesEntirePort = dto.ServesEntirePort;
-            var servedDocks = dto.ServedDockIds.Select(id => new DockId(id)).ToList();
+            var servedDocks = new ServedDocks(dto.ServedDockIds.Select(id => new DockId(id)).ToList());
             
             
             var storageArea = new StorageArea(areaName, areaType, location, maxCapacity, servesEntirePort, servedDocks);
@@ -89,7 +90,7 @@ namespace ProjArqsi.Application.Services
             new Location(dto.Location),
             new MaxCapacity(dto.MaxCapacity),
             servesEntirePort,
-            servedDockIds
+            new ServedDocks(servedDockIds)
             );
 
             await _unitOfWork.CommitAsync();

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ProjArqsi.Domain.StorageAreaAggregate;
 using ProjArqsi.Domain.DockAggregate;
+using ProjArqsi.Domain.StorageArea.ValueObjects;
 
 namespace ProjArqsi.Infrastructure
 {
@@ -56,8 +57,8 @@ namespace ProjArqsi.Infrastructure
             builder
                 .Property(sa => sa.ServedDocks)
                 .HasConversion(
-                    v => string.Join(',', v.Select(d => d.Value.ToString())),
-                    v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(s => new DockId(Guid.Parse(s))).ToList()
+                    v => string.Join(',', v.Value.Select(d => d.Value.ToString())),
+                    v => new ServedDocks(v.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(s => new DockId(Guid.Parse(s))).ToList())
                 )
                 .HasColumnName("ServedDockIds");
 

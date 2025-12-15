@@ -11,16 +11,6 @@ namespace ProjArqsi.Domain.VesselTypeAggregate
         public MaxBays MaxBays { get; private set; }
         public MaxTiers MaxTiers { get; private set; }
 
-        private VesselType()
-        {
-            TypeName = default!;
-            TypeDescription = default!;
-            TypeCapacity = default!;
-            MaxRows = default!;
-            MaxBays = default!;
-            MaxTiers = default!;
-        }
-
         public VesselType(VesselTypeId vesselTypeId, TypeName typeName, TypeDescription typeDescription,
                          TypeCapacity typeCapacity, MaxRows maxRows, MaxBays maxBays, MaxTiers maxTiers)
         {

@@ -13,22 +13,23 @@ namespace ProjArqsi.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<VesselType?> FindByNameAsync(TypeName name)
+        public async Task<VesselType> FindByNameAsync(TypeName name)
         {
-            return await _context.VesselTypes.FirstOrDefaultAsync(vt => vt.TypeName.Value.ToLower() == name.Value.ToLower());
+            var result = await _context.VesselTypes.FirstOrDefaultAsync(vt => vt.TypeName.Value == name.Value);
+            return result ?? throw new InvalidOperationException("VesselType not found.");
         }
 
-        public async Task<IEnumerable<VesselType>> SearchByNameAsync(string searchTerm)
+        public async Task<IEnumerable<VesselType>> SearchByNameAsync(TypeName searchTerm)
         {
             return await _context.VesselTypes
-                .Where(vt => vt.TypeName.Value.Contains(searchTerm))
+                .Where(vt => vt.TypeName.Value.Contains(searchTerm.Value))
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<VesselType>> SearchByDescriptionAsync(string searchTerm)
+        public async Task<IEnumerable<VesselType>> SearchByDescriptionAsync(TypeDescription searchTerm)
         {
             return await _context.VesselTypes
-                .Where(vt => vt.TypeDescription.Value.Contains(searchTerm))
+                .Where(vt => vt.TypeDescription.Value.Contains(searchTerm.Value))
                 .ToListAsync();
         }
 

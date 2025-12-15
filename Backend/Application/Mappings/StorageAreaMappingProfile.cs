@@ -14,7 +14,8 @@ namespace ProjArqsi.Application.Mappings
                 .ForMember(dest => dest.AreaType, opt => opt.MapFrom(src => src.AreaType.Value.ToString()))
                 .ForMember(dest => dest.Location, opt => opt.MapFrom(src => src.Location.Description))
                 .ForMember(dest => dest.MaxCapacity, opt => opt.MapFrom(src => src.MaxCapacity.Value))
-                .ForMember(dest => dest.ServedDockIds, opt => opt.MapFrom(src => src.ServedDocks.Select(d => d.Value).ToList()));
+                .ForMember(dest => dest.ServedDockIds, opt => opt.MapFrom(src => src.ServedDocks.Value.Select(dockId => dockId.Value).ToList()))
+                .ForMember(dest => dest.ServesEntirePort, opt => opt.MapFrom(src => src.ServesEntirePort));
         }
     }
 }

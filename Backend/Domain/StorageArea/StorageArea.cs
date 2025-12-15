@@ -1,6 +1,7 @@
 using ProjArqsi.Domain.Shared;
 using ProjArqsi.Domain.DockAggregate;
 using ProjArqsi.Domain.ContainerAggregate;
+using ProjArqsi.Domain.StorageArea.ValueObjects;
 
 namespace ProjArqsi.Domain.StorageAreaAggregate
 {
@@ -12,11 +13,11 @@ namespace ProjArqsi.Domain.StorageAreaAggregate
         public MaxCapacity MaxCapacity { get; private set; } = null!;
         public CurrentOccupancy CurrentOccupancy { get; } = null!;
         public bool ServesEntirePort { get; private set; } = true;
-        public List<IsoCode> CurrentContainers { get; private set; } = null!;
-        public List<DockId> ServedDocks { get; private set; } = null!;
+        public CurrentContainers CurrentContainers { get; private set; } = null!;
+        public ServedDocks ServedDocks { get; private set; } = null!;
 
         protected StorageArea() { }
-        public StorageArea( AreaName name, AreaType type, Location location, MaxCapacity maxCapacity,bool servesEntirePort, List<DockId> servedDocks)
+        public StorageArea( AreaName name, AreaType type, Location location, MaxCapacity maxCapacity,bool servesEntirePort, ServedDocks servedDocks)
         {
             Id = new StorageAreaId(Guid.NewGuid());
             Name = name;
@@ -27,7 +28,7 @@ namespace ProjArqsi.Domain.StorageAreaAggregate
             ServedDocks = servedDocks;
         }
 
-       public void UpdateDetails(AreaName name, AreaType type, Location location, MaxCapacity maxCapacity,bool servesEntirePort, List<DockId> servedDocks)
+       public void UpdateDetails(AreaName name, AreaType type, Location location, MaxCapacity maxCapacity,bool servesEntirePort, ServedDocks servedDocks)
         {
             Name = name;
             AreaType = type;

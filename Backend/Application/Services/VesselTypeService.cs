@@ -87,13 +87,13 @@ namespace ProjArqsi.Application.Services
 
         public async Task<IEnumerable<VesselTypeDto>> SearchByNameAsync(string searchTerm)
         {
-            var vesselTypes = await _repository.SearchByNameAsync(searchTerm);
+            var vesselTypes = await _repository.SearchByNameAsync(new TypeName(searchTerm));
             return _mapper.Map<IEnumerable<VesselTypeDto>>(vesselTypes);
         }
 
         public async Task<IEnumerable<VesselTypeDto>> SearchByDescriptionAsync(string searchTerm)
         {
-            var vesselTypes = await _repository.SearchByDescriptionAsync(searchTerm);
+            var vesselTypes = await _repository.SearchByDescriptionAsync(new TypeDescription(searchTerm));
             return _mapper.Map<IEnumerable<VesselTypeDto>>(vesselTypes);
         }
 

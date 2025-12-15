@@ -12,9 +12,10 @@ namespace ProjArqsi.Infrastructure
             _context = context;
         }
 
-        public async Task<StorageArea?> FindByNameAsync(AreaName name)
+        public async Task<StorageArea> FindByNameAsync(AreaName name)
         {
-            return await _context.StorageAreas.FirstOrDefaultAsync(d => d.Name.Value == name.Value);
+            var result = await _context.StorageAreas.FirstOrDefaultAsync(sa => sa.Name.Value == name.Value);
+            return result ?? throw new InvalidOperationException("StorageArea not found.");
         }
     }
 }

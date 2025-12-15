@@ -19,17 +19,17 @@ namespace ProjArqsi.Infrastructure.Repositories
                 ?? throw new InvalidOperationException($"Vessel with name '{name.Name}' not found.");
         }
 
-        public async Task<IEnumerable<Vessel>> SearchByImoAsync(string searchTerm)
+        public async Task<IEnumerable<Vessel>> SearchByImoAsync(IMOnumber searchTerm)
         {
             return await _context.Vessels
-                .Where(v => v.Id.AsString().Contains(searchTerm))
+                .Where(v => v.Id.AsString().Contains(searchTerm.AsString()))
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Vessel>> SearchByNameAsync(string searchTerm)
+        public async Task<IEnumerable<Vessel>> SearchByNameAsync(VesselName searchTerm)
         {
             return await _context.Vessels
-                .Where(v => v.VesselName.Name.Contains(searchTerm))
+                .Where(v => v.VesselName.Name.Contains(searchTerm.Name))
                 .ToListAsync();
         }
 

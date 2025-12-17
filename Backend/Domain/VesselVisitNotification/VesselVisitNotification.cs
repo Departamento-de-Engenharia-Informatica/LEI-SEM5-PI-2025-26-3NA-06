@@ -1,12 +1,11 @@
 using ProjArqsi.Domain.Shared;
 using ProjArqsi.Domain.VesselAggregate;
-using ProjArqsi.Domain.VesselVisitNotification.ValueObjects;
 
 namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
 {
     public class VesselVisitNotification : Entity<VesselVisitNotificationId>, IAggregateRoot
     {
-        public ReferredVessel ReferredVessel { get; private set; } = null!;
+        public ReferredVesselId ReferredVesselId { get; private set; } = null!;
         public ArrivalDate ArrivalDate { get; private set; } = null!;
         public DepartureDate DepartureDate { get; private set; } = null!;
 
@@ -16,17 +15,23 @@ namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
         public RejectionReason? RejectionReason { get; private set; }
         public Status Status { get; private set; } = null!;
 
-        protected VesselVisitNotification() { }
-
-        public VesselVisitNotification(string referredVessel, DateTime? arrivalDate, DateTime? departureDate)
+        // Primitive property for EF Core queries
+        public int StatusValue
         {
-            Id = new VesselVisitNotificationId(Guid.NewGuid());
-            ReferredVessel = new ReferredVessel(new IMOnumber(referredVessel));
-            ArrivalDate = new ArrivalDate(arrivalDate);
-            DepartureDate = new DepartureDate(departureDate);
+            get => (int)Status.Value;
+            private set => Status = new Status((StatusEnum)value);
         }
 
-        public void Submit()
+    protected VesselVisitNotification() { }
+
+    public VesselVisitNotification(string referredVessel, DateTime? arrivalDate, DateTime? departureDate)
+    {
+        Id = new VesselVisitNotificationId(Guid.NewGuid());
+        ReferredVesselId = new ReferredVesselId(new IMOnumber(referredVessel));
+        ArrivalDate = new ArrivalDate(arrivalDate);
+        DepartureDate = new DepartureDate(departureDate);
+        Status = Statuses.InProgress;
+    }        public void Submit()
         {
             if (!Status.Equals(Statuses.InProgress))
                 throw new InvalidOperationException("Only notifications in progress can be submitted.");

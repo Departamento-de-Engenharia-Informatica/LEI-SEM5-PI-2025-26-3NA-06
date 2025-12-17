@@ -50,9 +50,7 @@ export class EditVesselTypeComponent implements OnInit {
     this.message = '';
 
     this.http
-      .get<any>(`http://localhost:5218/api/VesselType/${this.vesselTypeId}`, {
-        withCredentials: true,
-      })
+      .get<any>(`http://localhost:5218/api/VesselType/${this.vesselTypeId}`)
       .pipe(
         timeout(20000),
         catchError((err) => {
@@ -100,9 +98,7 @@ export class EditVesselTypeComponent implements OnInit {
       this.isSuccess = false;
 
       this.http
-        .put(`http://localhost:5218/api/VesselType/${this.vesselTypeId}`, this.vesselType, {
-          withCredentials: true,
-        })
+        .put(`http://localhost:5218/api/VesselType/${this.vesselTypeId}`, this.vesselType)
         .pipe(
           timeout(20000),
           catchError((err) => {

@@ -34,6 +34,10 @@ namespace ProjArqsi.Application.Services
             foreach (var vessel in vessels)
             {
                 var vesselType = await _vesselTypeRepository.GetByIdAsync(new VesselTypeId(vessel.VesselTypeId));
+                if (vesselType == null)
+                {
+                    throw new BusinessRuleValidationException($"Vessel type with ID '{vessel.VesselTypeId}' does not exist.");
+                }
                 var dto = _mapper.Map<VesselDto>(vessel);
                 dto.VesselTypeName = vesselType.TypeName.Value;
                 vesselDtos.Add(dto);
@@ -45,10 +49,8 @@ namespace ProjArqsi.Application.Services
         public async Task<VesselDto> GetByImoAsync(string imo)
         {
             var vesselId = new IMOnumber(imo);
-            var vessel = await _vesselRepository.GetByIdAsync(vesselId);
-
-            var vesselType = await _vesselTypeRepository.GetByIdAsync(new VesselTypeId(vessel.VesselTypeId));
-            
+            var vessel = await _vesselRepository.GetByIdAsync(vesselId) ?? throw new InvalidOperationException($"Vessel with IMO number '{imo}' does not exist.");
+            var vesselType = await _vesselTypeRepository.GetByIdAsync(new VesselTypeId(vessel.VesselTypeId)) ?? throw new BusinessRuleValidationException($"Vessel type with ID '{vessel.VesselTypeId}' does not exist.");
             var dto = _mapper.Map<VesselDto>(vessel);
             dto.VesselTypeName = vesselType.TypeName.Value;
             return dto;
@@ -59,7 +61,8 @@ namespace ProjArqsi.Application.Services
             
             var imo = dto.Imo;
 
-             var existingVessel = await _vesselRepository.GetByIdAsync(new IMOnumber(imo));
+            // Check if vessel already exists
+            var existingVessel = await _vesselRepository.GetByIdAsync(new IMOnumber(imo));
             if (existingVessel != null)
             {
                 throw new BusinessRuleValidationException($"A vessel with IMO number '{imo}' already exists.");
@@ -74,11 +77,25 @@ namespace ProjArqsi.Application.Services
             var length = new Length(dto.Length);
             var vesselTypeId = new Guid(dto.VesselTypeId);
 
-            // Validate vessel type exists
-            var vesselType = await _vesselTypeRepository.GetByIdAsync(new VesselTypeId(vesselTypeId))
+            // Validate vessel type exists and check constraints BEFORE creating vessel
+            var vesselType = await _vesselTypeRepository.GetByIdAsNoTrackingAsync(new VesselTypeId(vesselTypeId))
                 ?? throw new BusinessRuleValidationException($"Vessel type with ID '{vesselTypeId}' does not exist.");
             
-            var vessel = new Vessel(imoNumber, vesselTypeId, vesselName, capacity, rows, bays, tiers, length, vesselType);
+            // Validate all constraints in service layer
+            if (capacity.Value > vesselType.TypeCapacity.Value)
+                throw new BusinessRuleValidationException($"Vessel capacity ({capacity.Value}) cannot exceed the vessel type capacity ({vesselType.TypeCapacity.Value}).");
+
+            if (rows.Value > vesselType.MaxRows.Value)
+                throw new BusinessRuleValidationException($"Vessel Rows ({rows.Value}) cannot exceed the vessel type max rows ({vesselType.MaxRows.Value}).");
+
+            if (bays.Value > vesselType.MaxBays.Value)
+                throw new BusinessRuleValidationException($"Vessel Bays ({bays.Value}) cannot exceed the vessel type max bays ({vesselType.MaxBays.Value}).");
+
+            if (tiers.Value > vesselType.MaxTiers.Value)
+                throw new BusinessRuleValidationException($"Vessel Tiers ({tiers.Value}) cannot exceed the vessel type max tiers ({vesselType.MaxTiers.Value}).");
+            
+            // All validations passed, create vessel with just the ID reference
+            var vessel = new Vessel(imoNumber, vesselTypeId, vesselName, capacity, rows, bays, tiers, length);
 
             await _vesselRepository.AddAsync(vessel);
             await _unitOfWork.CommitAsync();
@@ -89,20 +106,32 @@ namespace ProjArqsi.Application.Services
         public async Task<VesselDto> UpdateAsync(string imo, UpdateVesselDto dto)
         {
             var vesselId = new IMOnumber(imo);
-            var vessel = await _vesselRepository.GetByIdAsync(vesselId);
-            if (vessel == null)
-            {
-                throw new InvalidOperationException($"Vessel with IMO number '{imo}' does not exist.");
-            }
+            var vessel = await _vesselRepository.GetByIdAsync(vesselId)
+                ?? throw new InvalidOperationException($"Vessel with IMO number '{imo}' does not exist.");
 
             // Validate that vessel type exists and check capacity constraints
-            _ = await _vesselTypeRepository.GetByIdAsync(new VesselTypeId(vessel.VesselTypeId)) ?? throw new BusinessRuleValidationException($"Vessel type with ID '{vessel.VesselTypeId}' does not exist.");
+            var vesselType = await _vesselTypeRepository.GetByIdAsNoTrackingAsync(new VesselTypeId(vessel.VesselTypeId)) 
+                ?? throw new BusinessRuleValidationException($"Vessel type with ID '{vessel.VesselTypeId}' does not exist.");
+            
             var vesselName = new VesselName(dto.VesselName);
             var capacity = new Capacity(dto.Capacity);
             var rows = new Rows(dto.Rows);
             var bays = new Bays(dto.Bays);
             var tiers = new Tiers(dto.Tiers);
             var length = new Length(dto.Length);
+            
+            // Validate all constraints in service layer BEFORE updating
+            if (capacity.Value > vesselType.TypeCapacity.Value)
+                throw new BusinessRuleValidationException($"Vessel capacity ({capacity.Value}) cannot exceed the vessel type capacity ({vesselType.TypeCapacity.Value}).");
+
+            if (rows.Value > vesselType.MaxRows.Value)
+                throw new BusinessRuleValidationException($"Vessel Rows ({rows.Value}) cannot exceed the vessel type max rows ({vesselType.MaxRows.Value}).");
+
+            if (bays.Value > vesselType.MaxBays.Value)
+                throw new BusinessRuleValidationException($"Vessel Bays ({bays.Value}) cannot exceed the vessel type max bays ({vesselType.MaxBays.Value}).");
+
+            if (tiers.Value > vesselType.MaxTiers.Value)
+                throw new BusinessRuleValidationException($"Vessel Tiers ({tiers.Value}) cannot exceed the vessel type max tiers ({vesselType.MaxTiers.Value}).");
             
             vessel.UpdateDetails(vesselName, capacity, rows, bays, tiers, length);
              
@@ -118,7 +147,8 @@ namespace ProjArqsi.Application.Services
             
             try
             {
-                var vessel = await _vesselRepository.GetByIdAsync(vesselId);
+                var vessel = await _vesselRepository.GetByIdAsync(vesselId)
+                    ?? throw new InvalidOperationException($"Vessel with IMO number '{imo}' does not exist.");
                 await _vesselRepository.DeleteAsync(vesselId);
                 await _unitOfWork.CommitAsync();
                 return true;

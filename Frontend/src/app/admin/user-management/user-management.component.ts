@@ -39,12 +39,12 @@ export class UserManagementComponent implements OnInit {
 
   loadUsers() {
     const endpoint = this.showInactiveOnly
-      ? 'http://localhost:5218/api/UserManagement/inactive-users'
-      : 'http://localhost:5218/api/UserManagement/all-users';
+      ? 'http://localhost:5218/api/User/inactive-users'
+      : 'http://localhost:5218/api/User/all-users';
 
     console.log('Loading users from:', endpoint);
 
-    this.http.get<User[]>(endpoint, { withCredentials: true }).subscribe({
+    this.http.get<User[]>(endpoint).subscribe({
       next: (users) => {
         this.ngZone.run(() => {
           this.users = users;
@@ -69,12 +69,12 @@ export class UserManagementComponent implements OnInit {
     const newFilterState = !this.showInactiveOnly;
 
     const endpoint = newFilterState
-      ? 'http://localhost:5218/api/UserManagement/inactive-users'
-      : 'http://localhost:5218/api/UserManagement/all-users';
+      ? 'http://localhost:5218/api/User/inactive-users'
+      : 'http://localhost:5218/api/User/all-users';
 
     console.log('Toggling filter to:', newFilterState ? 'inactive only' : 'all users');
 
-    this.http.get<User[]>(endpoint, { withCredentials: true }).subscribe({
+    this.http.get<User[]>(endpoint).subscribe({
       next: (users) => {
         this.ngZone.run(() => {
           // Only update the state after data is successfully loaded
@@ -108,11 +108,9 @@ export class UserManagementComponent implements OnInit {
     }
 
     this.http
-      .put(
-        `http://localhost:5218/api/UserManagement/${userId}/assign-role`,
-        { role },
-        { withCredentials: true }
-      )
+      .put(`http://localhost:5218/api/User/${userId}/assign-role`, JSON.stringify(role), {
+        headers: { 'Content-Type': 'application/json' },
+      })
       .subscribe({
         next: (response: any) => {
           alert(response.message || 'Role assigned and activation email sent successfully');
@@ -131,21 +129,15 @@ export class UserManagementComponent implements OnInit {
       return;
     }
 
-    this.http
-      .put(
-        `http://localhost:5218/api/UserManagement/${userId}/toggle-active`,
-        {},
-        { withCredentials: true }
-      )
-      .subscribe({
-        next: (response: any) => {
-          alert(response.message || `User ${action}d successfully`);
-          this.loadUsers();
-        },
-        error: (error) => {
-          console.error('Error toggling user status:', error);
-          alert('Failed to toggle user status: ' + (error.error?.message || error.message));
-        },
-      });
+    this.http.put(`http://localhost:5218/api/User/${userId}/toggle-active`, {}).subscribe({
+      next: (response: any) => {
+        alert(response.message || `User ${action}d successfully`);
+        this.loadUsers();
+      },
+      error: (error) => {
+        console.error('Error toggling user status:', error);
+        alert('Failed to toggle user status: ' + (error.error?.message || error.message));
+      },
+    });
   }
 }

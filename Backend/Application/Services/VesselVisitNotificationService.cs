@@ -21,11 +21,16 @@ namespace ProjArqsi.Application.Services
         //This stores draft VVN. Only basic checks are performed. The object will suffer changes later.
         public async Task<VVNDraftDtoWId> DraftVVNAsync(VVNDraftDto dto)
         {
-            var referredVessel = dto.ReferredVesselId;
-            var arrivalDate = dto.ArrivalDate;
-            var departureDate = dto.DepartureDate;
+            if (string.IsNullOrWhiteSpace(dto.ReferredVesselId))
+                throw new ArgumentException("Vessel ID (IMO number) is required.");
+            if (!dto.ArrivalDate.HasValue)
+                throw new ArgumentException("Arrival date is required.");
+            if (!dto.DepartureDate.HasValue)
+                throw new ArgumentException("Departure date is required.");
+            if (dto.DepartureDate.HasValue && dto.ArrivalDate.HasValue && dto.DepartureDate.Value <= dto.ArrivalDate.Value)
+                throw new ArgumentException("Departure date must be after arrival date.");
 
-            var draft = new VesselVisitNotification(referredVessel, arrivalDate, departureDate);
+            var draft = new VesselVisitNotification(dto.ReferredVesselId, dto.ArrivalDate, dto.DepartureDate);
 
             await _repo.DraftVVN(draft);
             await _unitOfWork.CommitAsync();
@@ -35,7 +40,14 @@ namespace ProjArqsi.Application.Services
         //This stores finished VVN. All business rules must be validated.
         public async Task<VVNSubmitDtoWId> SubmitVVNAsync(VVNSubmitDto dto)
         {
-            //Validate all business rules here
+            if (string.IsNullOrWhiteSpace(dto.ReferredVesselId))
+                throw new ArgumentException("Vessel ID (IMO number) is required.");
+            if (dto.ArrivalDate == default)
+                throw new ArgumentException("Arrival date is required.");
+            if (dto.DepartureDate == default)
+                throw new ArgumentException("Departure date is required.");
+            if (dto.DepartureDate <= dto.ArrivalDate)
+                throw new ArgumentException("Departure date must be after arrival date.");
            
             var referredVessel = dto.ReferredVesselId;
             var arrivalDate = dto.ArrivalDate;
@@ -45,6 +57,7 @@ namespace ProjArqsi.Application.Services
                 arrivalDate,
                 departureDate
                 );
+            draft.Submit();
             await _repo.AddAsync(draft);
             await _unitOfWork.CommitAsync();
 
@@ -53,9 +66,8 @@ namespace ProjArqsi.Application.Services
 
          public async Task<VVNDto> AcceptAsync(Guid id)
         {
-            var vvn = await _repo.GetByIdAsync(new VesselVisitNotificationId(id));
-            if (vvn == null)
-                throw new BusinessRuleValidationException("Vessel Visit Notification not found.");
+            var vvn = await _repo.GetByIdAsync(new VesselVisitNotificationId(id))
+                ?? throw new BusinessRuleValidationException("Vessel Visit Notification not found.");
             if (!vvn.Status.Equals(Statuses.Submitted))
                 throw new BusinessRuleValidationException("Only submitted notifications can be accepted.");
             vvn.Accept();
@@ -65,9 +77,8 @@ namespace ProjArqsi.Application.Services
 
         public async Task<VVNDto> RejectAsync(Guid id, string rejectionReason)
         {
-            var vvn = await _repo.GetByIdAsync(new VesselVisitNotificationId(id));
-            if (vvn == null)
-                throw new BusinessRuleValidationException("Vessel Visit Notification not found.");
+            var vvn = await _repo.GetByIdAsync(new VesselVisitNotificationId(id))
+                ?? throw new BusinessRuleValidationException("Vessel Visit Notification not found.");
             if (!vvn.Status.Equals(Statuses.Submitted))
                 throw new BusinessRuleValidationException("Only submitted notifications can be rejected.");
             if (string.IsNullOrWhiteSpace(rejectionReason))

@@ -28,24 +28,22 @@ export class StorageAreasComponent implements OnInit {
 
   loadStorageAreas() {
     this.isLoading = true;
-    this.http
-      .get<any[]>('http://localhost:5218/api/StorageArea', { withCredentials: true })
-      .subscribe({
-        next: (data) => {
-          this.ngZone.run(() => {
-            this.storageAreas = data;
-            this.isLoading = false;
-            this.cdr.detectChanges();
-          });
-        },
-        error: (err) => {
-          this.ngZone.run(() => {
-            this.message = 'Failed to load storage areas';
-            this.isLoading = false;
-            this.cdr.detectChanges();
-          });
-        },
-      });
+    this.http.get<any[]>('http://localhost:5218/api/StorageArea').subscribe({
+      next: (data) => {
+        this.ngZone.run(() => {
+          this.storageAreas = data;
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        });
+      },
+      error: (err) => {
+        this.ngZone.run(() => {
+          this.message = 'Failed to load storage areas';
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        });
+      },
+    });
   }
 
   createStorageArea() {

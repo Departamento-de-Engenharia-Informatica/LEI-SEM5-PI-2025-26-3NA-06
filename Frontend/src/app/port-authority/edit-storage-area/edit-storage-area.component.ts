@@ -53,7 +53,7 @@ export class EditStorageAreaComponent implements OnInit {
     this.isLoadingDocks = true;
 
     this.http
-      .get<any[]>('http://localhost:5218/api/Dock', { withCredentials: true })
+      .get<any[]>('http://localhost:5218/api/Dock')
       .pipe(
         timeout(10000),
         catchError((err) => {
@@ -85,9 +85,7 @@ export class EditStorageAreaComponent implements OnInit {
     this.message = '';
 
     this.http
-      .get<any>(`http://localhost:5218/api/StorageArea/${this.storageAreaId}`, {
-        withCredentials: true,
-      })
+      .get<any>(`http://localhost:5218/api/StorageArea/${this.storageAreaId}`)
       .pipe(
         timeout(20000),
         catchError((err) => {
@@ -158,9 +156,7 @@ export class EditStorageAreaComponent implements OnInit {
     this.message = '';
 
     this.http
-      .put(`http://localhost:5218/api/StorageArea/${this.storageAreaId}`, this.storageArea, {
-        withCredentials: true,
-      })
+      .put(`http://localhost:5218/api/StorageArea/${this.storageAreaId}`, this.storageArea)
       .subscribe({
         next: (response: any) => {
           this.ngZone.run(() => {

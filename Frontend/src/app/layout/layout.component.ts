@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-layout',
@@ -13,20 +14,22 @@ export class LayoutComponent implements OnInit {
   userRole: string = '';
   userName: string = 'User';
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authService: AuthService) {}
 
   ngOnInit(): void {
-    // Get role from localStorage
-    this.userRole = localStorage.getItem('userRole') || '';
-    if (!this.userRole) {
+    // Get user from AuthService
+    const user = this.authService.getUser();
+    if (user) {
+      this.userRole = user.role;
+      this.userName = user.name;
+    } else {
+      // User is not authenticated, redirect will be handled by auth guard
       this.router.navigate(['/login']);
     }
   }
 
   logout(): void {
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userName');
+    this.authService.logout();
     this.router.navigate(['/login']);
   }
 

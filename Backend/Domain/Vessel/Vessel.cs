@@ -1,5 +1,4 @@
 using ProjArqsi.Domain.Shared;
-using ProjArqsi.Domain.VesselTypeAggregate;
 
 namespace ProjArqsi.Domain.VesselAggregate
 {
@@ -18,23 +17,8 @@ namespace ProjArqsi.Domain.VesselAggregate
 
         public Vessel(IMOnumber imo, Guid vesselTypeId, VesselName vesselName, 
                      Capacity capacity, Rows rows, Bays bays, Tiers tiers,
-                     Length length, VesselType vesselType)
+                     Length length)
         {
-            if (vesselType == null)
-                throw new BusinessRuleValidationException("Vessel type must exist.");
-
-            if (capacity.Value > vesselType.TypeCapacity.Value)
-                throw new BusinessRuleValidationException($"Vessel capacity ({capacity.Value}) cannot exceed the vessel type capacity ({vesselType.TypeCapacity.Value}).");
-
-            if (rows.Value > vesselType.MaxRows.Value)
-                throw new BusinessRuleValidationException($"Vessel Rows ({rows.Value}) cannot exceed the vessel type max rows ({vesselType.MaxRows.Value}).");
-
-            if (bays.Value > vesselType.MaxBays.Value)
-                throw new BusinessRuleValidationException($"Vessel Bays ({bays.Value}) cannot exceed the vessel type max bays ({vesselType.MaxBays.Value}).");
-
-            if (tiers.Value > vesselType.MaxTiers.Value)
-                throw new BusinessRuleValidationException($"Vessel Tiers ({tiers.Value}) cannot exceed the vessel type max tiers ({vesselType.MaxTiers.Value}).");
-
             Id = imo;
             VesselTypeId = vesselTypeId;
             VesselName = vesselName;
@@ -44,16 +28,16 @@ namespace ProjArqsi.Domain.VesselAggregate
             Tiers = tiers;
             Length = length;
         }
-
+    
         public void UpdateDetails(VesselName vesselName, Capacity capacity, 
                                  Rows rows, Bays bays, Tiers tiers, Length length)
         {
             VesselName = vesselName;
             Capacity = capacity;
-            Rows = rows ;
-            Bays = bays ;
-            Tiers = tiers ;
-            Length = length ;
+            Rows = rows;
+            Bays = bays;
+            Tiers = tiers;
+            Length = length;
         }
     }
 }

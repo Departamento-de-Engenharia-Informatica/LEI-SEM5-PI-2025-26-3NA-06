@@ -39,7 +39,7 @@ export class CreateStorageAreaComponent implements OnInit {
   }
 
   loadDocks() {
-    this.http.get<any[]>('http://localhost:5218/api/Dock', { withCredentials: true }).subscribe({
+    this.http.get<any[]>('http://localhost:5218/api/Dock').subscribe({
       next: (data) => {
         this.ngZone.run(() => {
           this.docks = data;
@@ -79,33 +79,31 @@ export class CreateStorageAreaComponent implements OnInit {
     this.isLoading = true;
     this.message = '';
 
-    this.http
-      .post('http://localhost:5218/api/StorageArea', this.storageArea, { withCredentials: true })
-      .subscribe({
-        next: () => {
-          this.ngZone.run(() => {
-            this.isSuccess = true;
-            this.message = 'Storage area created successfully!';
-            this.isLoading = false;
-            this.cdr.detectChanges();
+    this.http.post('http://localhost:5218/api/StorageArea', this.storageArea).subscribe({
+      next: () => {
+        this.ngZone.run(() => {
+          this.isSuccess = true;
+          this.message = 'Storage area created successfully!';
+          this.isLoading = false;
+          this.cdr.detectChanges();
 
-            setTimeout(() => {
-              this.router.navigate(['/port-authority/storage-areas']);
-            }, 2000);
-          });
-        },
-        error: (error) => {
-          this.ngZone.run(() => {
-            this.isSuccess = false;
-            this.message =
-              error.error.message ||
-              error.error.Message ||
-              'Failed to create storage area. Please try again.';
-            this.isLoading = false;
-            this.cdr.detectChanges();
-          });
-        },
-      });
+          setTimeout(() => {
+            this.router.navigate(['/port-authority/storage-areas']);
+          }, 2000);
+        });
+      },
+      error: (error) => {
+        this.ngZone.run(() => {
+          this.isSuccess = false;
+          this.message =
+            error.error.message ||
+            error.error.Message ||
+            'Failed to create storage area. Please try again.';
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        });
+      },
+    });
   }
 
   validateForm(): boolean {

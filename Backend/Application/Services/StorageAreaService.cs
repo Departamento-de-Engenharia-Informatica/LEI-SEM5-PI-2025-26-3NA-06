@@ -29,7 +29,8 @@ namespace ProjArqsi.Application.Services
 
         public async Task<StorageAreaDto> GetByIdAsync(StorageAreaId id)
         {
-            var storageArea = await _repo.GetByIdAsync(id);
+            var storageArea = await _repo.GetByIdAsync(id)
+                ?? throw new InvalidOperationException($"Storage area with ID '{id.Value}' not found.");
             return _mapper.Map<StorageAreaDto>(storageArea);
         }
 
@@ -61,8 +62,8 @@ namespace ProjArqsi.Application.Services
         public async Task<StorageAreaDto> UpdateAsync(StorageAreaId id, StorageAreaUpsertDto dto)
         {
         
-            var storageArea = await _repo.GetByIdAsync(id);
-            if (storageArea is null) throw new BusinessRuleValidationException($"StorageArea '{id}' not found.");
+            var storageArea = await _repo.GetByIdAsync(id)
+                ?? throw new BusinessRuleValidationException($"StorageArea '{id}' not found.");
 
             var newAreaName = new AreaName(dto.AreaName);
 

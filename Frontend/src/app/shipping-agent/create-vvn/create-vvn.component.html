@@ -1,0 +1,65 @@
+<div class="create-vvn-container">
+  <div *ngIf="isLoading || isLoadingVessels" class="loading">
+    <p>{{ isLoadingVessels ? 'Loading vessels...' : 'Processing...' }}</p>
+  </div>
+
+  <form *ngIf="!isLoading && !isLoadingVessels" class="vvn-form">
+    <div class="form-header">
+      <h1>Create Vessel Visit Notification</h1>
+    </div>
+
+    <div class="form-group">
+      <label for="referredVesselId">Vessel *</label>
+      <select
+        id="referredVesselId"
+        [(ngModel)]="vvn.referredVesselId"
+        name="referredVesselId"
+        required
+        class="form-control"
+      >
+        <option value="">Select a vessel</option>
+        <option *ngFor="let vessel of vessels" [value]="vessel.imo">
+          {{ vessel.vesselName }} (IMO: {{ vessel.imo }})
+        </option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="arrivalDate">Expected Arrival Date (ETA)</label>
+      <input
+        type="datetime-local"
+        id="arrivalDate"
+        [(ngModel)]="vvn.arrivalDate"
+        name="arrivalDate"
+        class="form-control"
+      />
+      <small class="field-note">Optional for draft, required for submission</small>
+    </div>
+
+    <div class="form-group">
+      <label for="departureDate">Expected Departure Date (ETD)</label>
+      <input
+        type="datetime-local"
+        id="departureDate"
+        [(ngModel)]="vvn.departureDate"
+        name="departureDate"
+        class="form-control"
+      />
+      <small class="field-note">Optional for draft, required for submission</small>
+    </div>
+
+    <div *ngIf="message && isSuccess" class="success-message">
+      {{ message }}
+    </div>
+
+    <div *ngIf="message && !isSuccess" class="error-message">
+      {{ message }}
+    </div>
+
+    <div class="form-actions">
+      <button type="button" (click)="cancel()" class="cancel-btn">Cancel</button>
+      <button type="button" (click)="saveDraft()" class="draft-btn">Save as Draft</button>
+      <button type="button" (click)="submitVVN()" class="submit-btn">Submit for Review</button>
+    </div>
+  </form>
+</div>

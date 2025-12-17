@@ -37,10 +37,8 @@ export class DocksComponent implements OnInit {
     this.message = '';
 
     forkJoin({
-      vesselTypes: this.http.get<any[]>('http://localhost:5218/api/VesselType', {
-        withCredentials: true,
-      }),
-      docks: this.http.get<any[]>('http://localhost:5218/api/Dock', { withCredentials: true }),
+      vesselTypes: this.http.get<any[]>('http://localhost:5218/api/VesselType'),
+      docks: this.http.get<any[]>('http://localhost:5218/api/Dock'),
     })
       .pipe(
         timeout(20000),

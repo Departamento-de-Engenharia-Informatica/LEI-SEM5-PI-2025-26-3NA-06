@@ -40,20 +40,18 @@ export class CreateVesselComponent implements OnInit {
   }
 
   loadVesselTypes() {
-    this.http
-      .get<any[]>('http://localhost:5218/api/VesselType', { withCredentials: true })
-      .subscribe({
-        next: (data) => {
-          this.ngZone.run(() => {
-            this.vesselTypes = data;
-            this.cdr.detectChanges();
-          });
-        },
-        error: (err) => {
-          console.error('Failed to load vessel types', err);
-          this.message = 'Failed to load vessel types';
-        },
-      });
+    this.http.get<any[]>('http://localhost:5218/api/VesselType').subscribe({
+      next: (data) => {
+        this.ngZone.run(() => {
+          this.vesselTypes = data;
+          this.cdr.detectChanges();
+        });
+      },
+      error: (err) => {
+        console.error('Failed to load vessel types', err);
+        this.message = 'Failed to load vessel types';
+      },
+    });
   }
 
   onSubmit() {
@@ -65,28 +63,26 @@ export class CreateVesselComponent implements OnInit {
     this.isLoading = true;
     this.message = '';
 
-    this.http
-      .post('http://localhost:5218/api/Vessel', this.vessel, { withCredentials: true })
-      .subscribe({
-        next: (response: any) => {
-          this.isSuccess = true;
-          this.message = 'Vessel created successfully!';
-          this.isLoading = false;
+    this.http.post('http://localhost:5218/api/Vessel', this.vessel).subscribe({
+      next: (response: any) => {
+        this.isSuccess = true;
+        this.message = 'Vessel created successfully!';
+        this.isLoading = false;
 
-          setTimeout(() => {
-            this.router.navigate(['/port-authority/vessels']);
-          }, 2000);
-        },
-        error: (error) => {
-          this.isSuccess = false;
-          this.message =
-            error.error.message ||
-            error.error.Message ||
-            'Failed to create vessel. Please try again.';
-          this.isLoading = false;
-          this.cdr.detectChanges();
-        },
-      });
+        setTimeout(() => {
+          this.router.navigate(['/port-authority/vessels']);
+        }, 2000);
+      },
+      error: (error) => {
+        this.isSuccess = false;
+        this.message =
+          error.error.message ||
+          error.error.Message ||
+          'Failed to create vessel. Please try again.';
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   validateForm(): boolean {

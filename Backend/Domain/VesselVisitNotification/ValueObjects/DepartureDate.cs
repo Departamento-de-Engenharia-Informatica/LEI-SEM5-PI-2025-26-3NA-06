@@ -1,5 +1,5 @@
 using System;
-namespace ProjArqsi.Domain.VesselVisitNotification.ValueObjects
+namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
 {
 	public class DepartureDate
 	{

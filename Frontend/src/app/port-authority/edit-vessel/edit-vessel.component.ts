@@ -15,6 +15,7 @@ import { throwError } from 'rxjs';
 })
 export class EditVesselComponent implements OnInit {
   vesselImo: string = '';
+  vesselId: string = '';
   vessel = {
     imo: '',
     vesselName: '',
@@ -41,6 +42,7 @@ export class EditVesselComponent implements OnInit {
 
   ngOnInit() {
     this.vesselImo = this.route.snapshot.params['imo'];
+    this.vesselId = this.vesselImo; // Use IMO as ID
     if (this.vesselImo) {
       this.loadVesselTypes();
       this.loadVessel();
@@ -54,7 +56,7 @@ export class EditVesselComponent implements OnInit {
     this.isLoadingTypes = true;
 
     this.http
-      .get<any[]>('http://localhost:5218/api/VesselType', { withCredentials: true })
+      .get<any[]>('http://localhost:5218/api/VesselType')
       .pipe(
         timeout(20000),
         catchError((err) => {
@@ -86,9 +88,7 @@ export class EditVesselComponent implements OnInit {
     this.message = '';
 
     this.http
-      .get<any>(`http://localhost:5218/api/Vessel/${this.vesselImo}`, {
-        withCredentials: true,
-      })
+      .get<any>(`http://localhost:5218/api/Vessel/${this.vesselId}`)
       .pipe(
         timeout(20000),
         catchError((err) => {
@@ -141,9 +141,7 @@ export class EditVesselComponent implements OnInit {
     this.isSuccess = false;
 
     this.http
-      .put(`http://localhost:5218/api/Vessel/${this.vesselImo}`, this.vessel, {
-        withCredentials: true,
-      })
+      .put(`http://localhost:5218/api/Vessel/${this.vesselId}`, this.vessel)
       .pipe(
         timeout(20000),
         catchError((err) => {

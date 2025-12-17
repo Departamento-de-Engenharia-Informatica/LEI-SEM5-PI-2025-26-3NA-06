@@ -17,6 +17,18 @@ namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
         {
             Value = value;
         }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is Status other)
+                return Value == other.Value;
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return Value.GetHashCode();
+        }
     }
 
     public static class Statuses

@@ -1,0 +1,83 @@
+<div class="vvn-reviewed-container">
+  <div class="header">
+    <h1>Reviewed Vessel Visit Notifications</h1>
+    <div class="header-actions">
+      <button (click)="goBack()" class="back-btn">← Back to Dashboard</button>
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading && reviewed.length > 0" class="filters-container">
+    <div class="search-container">
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (input)="applyFilters()"
+        placeholder="Search by vessel IMO or VVN ID..."
+        class="search-input"
+      />
+    </div>
+    <div class="status-filter">
+      <label for="filterStatus">Filter by status:</label>
+      <select
+        id="filterStatus"
+        [(ngModel)]="filterStatus"
+        (change)="onFilterChange()"
+        class="filter-select"
+      >
+        <option value="all">All</option>
+        <option value="accepted">Accepted</option>
+        <option value="rejected">Rejected</option>
+      </select>
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <p>Loading reviewed notifications...</p>
+  </div>
+
+  <div *ngIf="message && !isLoading" class="message">
+    {{ message }}
+  </div>
+
+  <div *ngIf="!isLoading && reviewed.length === 0" class="empty-state">
+    <p>No reviewed notifications found.</p>
+  </div>
+
+  <div
+    *ngIf="!isLoading && filteredReviewed.length === 0 && reviewed.length > 0"
+    class="empty-state"
+  >
+    <p>No notifications match your filters.</p>
+  </div>
+
+  <div *ngIf="!isLoading && filteredReviewed.length > 0" class="reviewed-grid">
+    <div *ngFor="let vvn of filteredReviewed" class="vvn-card">
+      <div class="card-header">
+        <h3>VVN ID: {{ vvn.id }}</h3>
+        <span class="status-badge" [ngClass]="getStatusClass(vvn.status)">{{ vvn.status }}</span>
+      </div>
+      <div class="card-body">
+        <div class="info-row">
+          <span class="label">Vessel IMO:</span>
+          <span class="value">{{ vvn.referredVesselId }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Arrival Date:</span>
+          <span class="value">{{ formatDate(vvn.arrivalDate) }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Departure Date:</span>
+          <span class="value">{{ formatDate(vvn.departureDate) }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Status:</span>
+          <span class="value">{{ vvn.status }}</span>
+        </div>
+        <div *ngIf="vvn.rejectionReason" class="rejection-reason">
+          <span class="label">Rejection Reason:</span>
+          <p class="reason-text">{{ vvn.rejectionReason }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

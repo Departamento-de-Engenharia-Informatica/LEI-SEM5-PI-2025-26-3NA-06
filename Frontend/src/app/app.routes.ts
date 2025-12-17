@@ -21,6 +21,11 @@ import { authGuard } from './guards/auth.guard';
 import { StorageAreasComponent } from './port-authority/storage-areas/storage-areas.component';
 import { CreateStorageAreaComponent } from './port-authority/create-storage-area/create-storage-area.component';
 import { EditStorageAreaComponent } from './port-authority/edit-storage-area/edit-storage-area.component';
+import { ShippingAgentDashboardComponent } from './shipping-agent/shipping-agent-dashboard.component';
+import { CreateVvnComponent } from './shipping-agent/create-vvn/create-vvn.component';
+import { VvnDraftsComponent } from './shipping-agent/vvn-drafts/vvn-drafts.component';
+import { VvnSubmittedComponent } from './shipping-agent/vvn-submitted/vvn-submitted.component';
+import { VvnReviewedComponent } from './shipping-agent/vvn-reviewed/vvn-reviewed.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -80,7 +85,11 @@ export const routes: Routes = [
         canActivate: [authGuard],
         children: [
           { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-          // Add shipping agent routes here
+          { path: 'dashboard', component: ShippingAgentDashboardComponent },
+          { path: 'create-vvn', component: CreateVvnComponent },
+          { path: 'vvn-drafts', component: VvnDraftsComponent },
+          { path: 'vvn-submitted', component: VvnSubmittedComponent },
+          { path: 'vvn-reviewed', component: VvnReviewedComponent },
         ],
       },
     ],

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using ProjArqsi.Domain.UserAggregate.ValueObjects;
 using ProjArqsi.Infrastructure;
 
 #nullable disable
@@ -108,6 +109,30 @@ namespace ProjArqsi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("VesselTypes", (string)null);
+                });
+
+            modelBuilder.Entity("ProjArqsi.Domain.VesselVisitNotificationAggregate.VesselVisitNotification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ArrivalDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DepartureDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ReferredVesselId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StatusValue")
+                        .HasColumnType("int")
+                        .HasColumnName("Status");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("VesselVisitNotifications");
                 });
 
             modelBuilder.Entity("ProjArqsi.Domain.DockAggregate.Dock", b =>
@@ -578,6 +603,28 @@ namespace ProjArqsi.Migrations
 
                     b.Navigation("TypeName")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("ProjArqsi.Domain.VesselVisitNotificationAggregate.VesselVisitNotification", b =>
+                {
+                    b.OwnsOne("ProjArqsi.Domain.VesselVisitNotificationAggregate.RejectionReason", "RejectionReason", b1 =>
+                        {
+                            b1.Property<Guid>("VesselVisitNotificationId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .HasColumnType("nvarchar(max)")
+                                .HasColumnName("RejectionReason");
+
+                            b1.HasKey("VesselVisitNotificationId");
+
+                            b1.ToTable("VesselVisitNotifications");
+
+                            b1.WithOwner()
+                                .HasForeignKey("VesselVisitNotificationId");
+                        });
+
+                    b.Navigation("RejectionReason");
                 });
 #pragma warning restore 612, 618
         }

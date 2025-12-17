@@ -37,17 +37,19 @@ namespace ProjArqsi.Services
             return _mapper.Map<List<UserDto>>(inactiveUsers);
         }
 
-        public async Task<UserDto> FindByEmailAsync(string email)
+        public async Task<UserDto?> FindByEmailAsync(string email)
         {
             var user = await _userRepository.FindByEmailAsync(new Email(email));
-            if (user == null) throw new KeyNotFoundException($"User with email '{email}' not found.");
+            if (user == null)
+            {
+                return null;
+            }
             return _mapper.Map<UserDto>(user);
         }
 
         public async Task<UserDto> ToggleUserActiveAsync(Guid id)
         {
-            var user = await _userRepository.GetByIdAsync(new UserId(id));
-
+            var user = await _userRepository.GetByIdAsync(new UserId(id)) ?? throw new KeyNotFoundException($"User with id '{id}' not found.");
             if (user.IsActive)
             {
                 user.Deactivate();
@@ -63,7 +65,7 @@ namespace ProjArqsi.Services
 
         public async Task<UserDto> AssignRoleAndSendActivationEmailAsync(Guid id, RoleType role)
         {
-            var user = await _userRepository.GetByIdAsync(new UserId(id));
+            var user = await _userRepository.GetByIdAsync(new UserId(id)) ?? throw new KeyNotFoundException($"User with id '{id}' not found.");
 
             // Update role
             user.ChangeRole(new Role(role));

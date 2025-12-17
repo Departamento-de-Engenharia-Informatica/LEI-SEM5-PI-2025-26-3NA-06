@@ -45,9 +45,8 @@ namespace ProjArqsi.Application.Services
 
         public async Task<VesselTypeDto> UpdateAsync(Guid id, VesselTypeUpsertDto dto)
         {
-            var vesselType = await _repository.GetByIdAsync(new VesselTypeId(id));
-            if (vesselType == null)
-                throw new KeyNotFoundException($"Vessel type with id '{id}' not found.");
+            var vesselType = await _repository.GetByIdAsync(new VesselTypeId(id))
+                ?? throw new KeyNotFoundException($"Vessel type with id '{id}' not found.");
 
             // Validate unique name (if changed)
             var newTypeName = new TypeName(dto.TypeName);
@@ -75,7 +74,8 @@ namespace ProjArqsi.Application.Services
 
         public async Task<VesselTypeDto> GetByIdAsync(Guid id)
         {
-            var vesselType = await _repository.GetByIdAsync(new VesselTypeId(id));
+            var vesselType = await _repository.GetByIdAsync(new VesselTypeId(id))
+                ?? throw new KeyNotFoundException($"Vessel type with id '{id}' not found.");
             return _mapper.Map<VesselTypeDto>(vesselType);
         }
 

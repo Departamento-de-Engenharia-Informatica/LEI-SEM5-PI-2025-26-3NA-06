@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using ProjArqsi.Domain.DockAggregate;
 using ProjArqsi.Infrastructure.Shared;
 

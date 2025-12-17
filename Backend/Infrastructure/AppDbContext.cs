@@ -1,8 +1,12 @@
+
+using Microsoft.EntityFrameworkCore;
 using ProjArqsi.Domain.VesselTypeAggregate;
 using ProjArqsi.Domain.UserAggregate;
 using ProjArqsi.Domain.VesselAggregate;
 using ProjArqsi.Domain.DockAggregate;
 using ProjArqsi.Domain.StorageAreaAggregate;
+using ProjArqsi.Domain.VesselVisitNotificationAggregate;
+using Infrastructure;
 
 namespace ProjArqsi.Infrastructure
 {
@@ -13,6 +17,7 @@ namespace ProjArqsi.Infrastructure
         public DbSet<Vessel> Vessels { get; set; }
         public DbSet<Dock> Docks { get; set; }
         public DbSet<StorageArea> StorageAreas { get; set; }
+        public DbSet<VesselVisitNotification> VesselVisitNotifications { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -23,6 +28,7 @@ namespace ProjArqsi.Infrastructure
             modelBuilder.ApplyConfiguration(new VesselEntityTypeConfiguration());
             modelBuilder.ApplyConfiguration(new DockEntityTypeConfiguration());
             modelBuilder.ApplyConfiguration(new StorageAreaEntityTypeConfiguration());
+            modelBuilder.ApplyConfiguration(new VesselVisitNotificationEntityTypeConfiguration());
         }
     }
 

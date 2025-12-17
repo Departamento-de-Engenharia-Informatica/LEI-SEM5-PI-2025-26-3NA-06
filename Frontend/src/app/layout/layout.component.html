@@ -65,6 +65,18 @@
           >Dashboard</a
         >
       </li>
+      <li *ngIf="userRole === 'ShippingAgentRepresentative'">
+        <a routerLink="/shipping-agent/create-vvn" routerLinkActive="active">Create VVN</a>
+      </li>
+      <li *ngIf="userRole === 'ShippingAgentRepresentative'">
+        <a routerLink="/shipping-agent/vvn-drafts" routerLinkActive="active">Draft VVNs</a>
+      </li>
+      <li *ngIf="userRole === 'ShippingAgentRepresentative'">
+        <a routerLink="/shipping-agent/vvn-submitted" routerLinkActive="active">Submitted VVNs</a>
+      </li>
+      <li *ngIf="userRole === 'ShippingAgentRepresentative'">
+        <a routerLink="/shipping-agent/vvn-reviewed" routerLinkActive="active">Reviewed VVNs</a>
+      </li>
     </ul>
   </nav>
 

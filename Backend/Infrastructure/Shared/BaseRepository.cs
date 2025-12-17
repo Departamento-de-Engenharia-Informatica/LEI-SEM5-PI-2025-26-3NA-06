@@ -22,13 +22,8 @@ namespace ProjArqsi.Infrastructure.Shared
         
         public async Task<TEntity?> GetByIdAsync(TEntityId id)
         {
-            var entity = await _objs
+            return await _objs
                 .Where(x => id.Equals(x.Id)).FirstOrDefaultAsync();
-            if (entity == null)
-            {
-                throw new InvalidOperationException($"Entity of type {typeof(TEntity).Name} with id {id} was not found.");
-            }
-            return entity;
         }
         public async Task<List<TEntity>> GetByIdsAsync(List<TEntityId> ids)
         {

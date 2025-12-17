@@ -4,6 +4,6 @@ namespace ProjArqsi.Domain.StorageAreaAggregate
 {
     public interface IStorageAreaRepository : IRepository<StorageArea, StorageAreaId>
     {
-        Task<StorageArea> FindByNameAsync(AreaName areaName);
+        Task<StorageArea?> FindByNameAsync(AreaName areaName);
     }
 }

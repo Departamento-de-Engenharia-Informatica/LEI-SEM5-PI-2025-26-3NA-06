@@ -4,13 +4,14 @@ namespace ProjArqsi.Domain.VesselTypeAggregate
 {
     public class VesselType : Entity<VesselTypeId>, IAggregateRoot
     {
-        public TypeName TypeName { get; private set; }
-        public TypeDescription TypeDescription { get; private set; }
-        public TypeCapacity TypeCapacity { get; private set; }
-        public MaxRows MaxRows { get; private set; }
-        public MaxBays MaxBays { get; private set; }
-        public MaxTiers MaxTiers { get; private set; }
+        public TypeName TypeName { get; private set; } = null!;
+        public TypeDescription TypeDescription { get; private set; } = null!;
+        public TypeCapacity TypeCapacity { get; private set; } = null!;
+        public MaxRows MaxRows { get; private set; } = null!;
+        public MaxBays MaxBays { get; private set; } = null!;
+        public MaxTiers MaxTiers { get; private set; } = null!;
 
+        public VesselType() { }
         public VesselType(VesselTypeId vesselTypeId, TypeName typeName, TypeDescription typeDescription,
                          TypeCapacity typeCapacity, MaxRows maxRows, MaxBays maxBays, MaxTiers maxTiers)
         {

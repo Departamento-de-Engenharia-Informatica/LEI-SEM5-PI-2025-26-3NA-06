@@ -60,3 +60,25 @@ h1 {
   width: 24px;
   height: 24px;
 }
+
+#google-signin-button {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.loading {
+  margin-top: 1rem;
+  color: #667eea;
+  font-weight: 500;
+}
+
+.error-message {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #fee;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  color: #c33;
+  font-size: 0.9rem;
+}

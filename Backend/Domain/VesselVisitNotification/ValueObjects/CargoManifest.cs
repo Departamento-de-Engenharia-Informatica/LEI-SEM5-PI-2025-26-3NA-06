@@ -1,6 +1,6 @@
 using ProjArqsi.Domain.ContainerAggregate;
 
-namespace ProjArqsi.Domain.VesselVisitNotification.ValueObjects
+namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
 {
 	public class CargoManifest
 	{

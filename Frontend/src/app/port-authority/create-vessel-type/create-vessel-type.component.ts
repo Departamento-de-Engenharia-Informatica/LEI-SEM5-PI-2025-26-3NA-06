@@ -36,31 +36,28 @@ export class CreateVesselTypeComponent {
     this.isLoading = true;
     this.message = '';
 
-    this.http
-      .post('http://localhost:5218/api/VesselType', this.vesselType, { withCredentials: true })
-      .subscribe({
-        next: (response: any) => {
-          this.ngZone.run(() => {
-            this.isSuccess = true;
-            this.message = 'Vessel type created successfully!';
-            this.isLoading = false;
-            this.cdr.detectChanges();
+    this.http.post('http://localhost:5218/api/VesselType', this.vesselType).subscribe({
+      next: (response: any) => {
+        this.ngZone.run(() => {
+          this.isSuccess = true;
+          this.message = 'Vessel type created successfully!';
+          this.isLoading = false;
+          this.cdr.detectChanges();
 
-            setTimeout(() => {
-              this.router.navigate(['/port-authority']);
-            }, 2000);
-          });
-        },
-        error: (error) => {
-          this.ngZone.run(() => {
-            this.isSuccess = false;
-            this.message =
-              error.error?.message || 'Failed to create vessel type. Please try again.';
-            this.isLoading = false;
-            this.cdr.detectChanges();
-          });
-        },
-      });
+          setTimeout(() => {
+            this.router.navigate(['/port-authority']);
+          }, 2000);
+        });
+      },
+      error: (error) => {
+        this.ngZone.run(() => {
+          this.isSuccess = false;
+          this.message = error.error?.message || 'Failed to create vessel type. Please try again.';
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        });
+      },
+    });
   }
 
   cancel() {

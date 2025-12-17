@@ -1,5 +1,7 @@
+using Microsoft.EntityFrameworkCore;
 using ProjArqsi.Domain.UserAggregate;
 using ProjArqsi.Infrastructure.Shared;
+using ProjArqsi.Domain.UserAggregate.ValueObjects;
 
 namespace ProjArqsi.Infrastructure
 {
@@ -12,13 +14,9 @@ namespace ProjArqsi.Infrastructure
             _context = context;
         }
 
-        public async Task<User> FindByEmailAsync(Email email)
+        public async Task<User?> FindByEmailAsync(Email email)
         {
            var entity = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-            if (entity == null)
-            {
-                throw new InvalidOperationException($"User with email '{email}' not found.");
-            }
             return entity;
         }
 

@@ -1,0 +1,67 @@
+<div class="vvn-submitted-container">
+  <div class="header">
+    <h1>Submitted Vessel Visit Notifications</h1>
+    <div class="header-actions">
+      <button (click)="goBack()" class="back-btn">← Back to Dashboard</button>
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading && submitted.length > 0" class="search-container">
+    <input
+      type="text"
+      [(ngModel)]="searchTerm"
+      (input)="filterSubmitted()"
+      placeholder="Search by vessel IMO or VVN ID..."
+      class="search-input"
+    />
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <p>Loading submitted notifications...</p>
+  </div>
+
+  <div *ngIf="message && !isLoading" class="message">
+    {{ message }}
+  </div>
+
+  <div *ngIf="!isLoading && submitted.length === 0" class="empty-state">
+    <p>No submitted notifications pending review.</p>
+  </div>
+
+  <div
+    *ngIf="!isLoading && filteredSubmitted.length === 0 && submitted.length > 0"
+    class="empty-state"
+  >
+    <p>No submitted notifications match your search.</p>
+  </div>
+
+  <div *ngIf="!isLoading && filteredSubmitted.length > 0" class="submitted-grid">
+    <div *ngFor="let vvn of filteredSubmitted" class="vvn-card">
+      <div class="card-header">
+        <h3>VVN ID: {{ vvn.id }}</h3>
+        <span class="status-badge submitted">Submitted</span>
+      </div>
+      <div class="card-body">
+        <div class="info-row">
+          <span class="label">Vessel IMO:</span>
+          <span class="value">{{ vvn.referredVesselId }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Arrival Date:</span>
+          <span class="value">{{ formatDate(vvn.arrivalDate) }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Departure Date:</span>
+          <span class="value">{{ formatDate(vvn.departureDate) }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Status:</span>
+          <span class="value">{{ vvn.status }}</span>
+        </div>
+      </div>
+      <div class="card-footer">
+        <p class="note">⏳ Awaiting Port Authority review</p>
+      </div>
+    </div>
+  </div>
+</div>

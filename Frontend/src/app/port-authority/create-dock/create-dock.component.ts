@@ -38,20 +38,18 @@ export class CreateDockComponent implements OnInit {
   }
 
   loadVesselTypes() {
-    this.http
-      .get<any[]>('http://localhost:5218/api/VesselType', { withCredentials: true })
-      .subscribe({
-        next: (data) => {
-          this.ngZone.run(() => {
-            this.vesselTypes = data;
-            this.cdr.detectChanges();
-          });
-        },
-        error: (err) => {
-          console.error('Failed to load vessel types', err);
-          this.message = 'Failed to load vessel types';
-        },
-      });
+    this.http.get<any[]>('http://localhost:5218/api/VesselType').subscribe({
+      next: (data) => {
+        this.ngZone.run(() => {
+          this.vesselTypes = data;
+          this.cdr.detectChanges();
+        });
+      },
+      error: (err) => {
+        console.error('Failed to load vessel types', err);
+        this.message = 'Failed to load vessel types';
+      },
+    });
   }
 
   toggleVesselType(vesselTypeId: string) {
@@ -75,33 +73,31 @@ export class CreateDockComponent implements OnInit {
     this.isLoading = true;
     this.message = '';
 
-    this.http
-      .post('http://localhost:5218/api/Dock', this.dock, { withCredentials: true })
-      .subscribe({
-        next: (response: any) => {
-          this.ngZone.run(() => {
-            this.isSuccess = true;
-            this.message = 'Dock created successfully!';
-            this.isLoading = false;
-            this.cdr.detectChanges();
+    this.http.post('http://localhost:5218/api/Dock', this.dock).subscribe({
+      next: (response: any) => {
+        this.ngZone.run(() => {
+          this.isSuccess = true;
+          this.message = 'Dock created successfully!';
+          this.isLoading = false;
+          this.cdr.detectChanges();
 
-            setTimeout(() => {
-              this.router.navigate(['/port-authority/docks']);
-            }, 2000);
-          });
-        },
-        error: (error) => {
-          this.ngZone.run(() => {
-            this.isSuccess = false;
-            this.message =
-              error.error.message ||
-              error.error.Message ||
-              'Failed to create dock. Please try again.';
-            this.isLoading = false;
-            this.cdr.detectChanges();
-          });
-        },
-      });
+          setTimeout(() => {
+            this.router.navigate(['/port-authority/docks']);
+          }, 2000);
+        });
+      },
+      error: (error) => {
+        this.ngZone.run(() => {
+          this.isSuccess = false;
+          this.message =
+            error.error.message ||
+            error.error.Message ||
+            'Failed to create dock. Please try again.';
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        });
+      },
+    });
   }
 
   validateForm(): boolean {

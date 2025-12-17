@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-register',
@@ -18,43 +18,35 @@ export class RegisterComponent implements OnInit {
   message: string = '';
   isLoading: boolean = false;
   isSuccess: boolean = false;
+  registrationData: any = {};
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private http: HttpClient, private router: Router, private route: ActivatedRoute) {}
 
   ngOnInit() {
-    // Get email from cookie if available
-    this.getEmailFromBackend();
-  }
-
-  getEmailFromBackend() {
-    this.http
-      .get('http://localhost:5218/api/Registration/get-pending-email', { withCredentials: true })
-      .subscribe({
-        next: (response: any) => {
-          if (response && response.email) {
-            this.email = response.email;
-          }
-        },
-        error: (error) => {
-          console.error('Error getting email:', error);
-        },
-      });
+    // Get email and name from query parameters (passed from login)
+    this.route.queryParams.subscribe((params) => {
+      if (params['email']) {
+        this.email = params['email'];
+      }
+      if (params['name']) {
+        // Pre-fill username with name from Google (user can change it)
+        this.username = params['name'].replace(/\s+/g, '');
+      }
+    });
   }
 
   onSubmit() {
     this.isLoading = true;
     this.message = '';
 
-    const registrationData = {
+    this.registrationData = {
       email: this.email,
       username: this.username,
       role: this.role,
     };
 
     this.http
-      .post('http://localhost:5218/api/Registration/self-register', registrationData, {
-        withCredentials: true,
-      })
+      .post('http://localhost:5218/api/Registration/register', this.registrationData)
       .subscribe({
         next: (response: any) => {
           this.isSuccess = true;

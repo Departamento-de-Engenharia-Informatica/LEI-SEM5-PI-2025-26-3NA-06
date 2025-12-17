@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using ProjArqsi.Domain.StorageAreaAggregate;
 using ProjArqsi.Infrastructure.Shared;
 
@@ -12,10 +13,9 @@ namespace ProjArqsi.Infrastructure
             _context = context;
         }
 
-        public async Task<StorageArea> FindByNameAsync(AreaName name)
+        public async Task<StorageArea?> FindByNameAsync(AreaName name)
         {
-            var result = await _context.StorageAreas.FirstOrDefaultAsync(sa => sa.Name.Value == name.Value);
-            return result ?? throw new InvalidOperationException("StorageArea not found.");
+            return await _context.StorageAreas.FirstOrDefaultAsync(sa => sa.Name.Value == name.Value);
         }
     }
 }

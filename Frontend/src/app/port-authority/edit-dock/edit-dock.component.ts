@@ -52,7 +52,7 @@ export class EditDockComponent implements OnInit {
     this.isLoadingTypes = true;
 
     this.http
-      .get<any[]>('http://localhost:5218/api/VesselType', { withCredentials: true })
+      .get<any[]>('http://localhost:5218/api/VesselType')
       .pipe(
         timeout(10000),
         catchError((err) => {
@@ -84,9 +84,7 @@ export class EditDockComponent implements OnInit {
     this.message = '';
 
     this.http
-      .get<any>(`http://localhost:5218/api/Dock/${this.dockId}`, {
-        withCredentials: true,
-      })
+      .get<any>(`http://localhost:5218/api/Dock/${this.dockId}`)
       .pipe(
         timeout(20000),
         catchError((err) => {
@@ -151,33 +149,31 @@ export class EditDockComponent implements OnInit {
     this.isLoading = true;
     this.message = '';
 
-    this.http
-      .put(`http://localhost:5218/api/Dock/${this.dockId}`, this.dock, { withCredentials: true })
-      .subscribe({
-        next: (response: any) => {
-          this.ngZone.run(() => {
-            this.isSuccess = true;
-            this.message = 'Dock updated successfully!';
-            this.isLoading = false;
-            this.cdr.detectChanges();
+    this.http.put(`http://localhost:5218/api/Dock/${this.dockId}`, this.dock).subscribe({
+      next: (response: any) => {
+        this.ngZone.run(() => {
+          this.isSuccess = true;
+          this.message = 'Dock updated successfully!';
+          this.isLoading = false;
+          this.cdr.detectChanges();
 
-            setTimeout(() => {
-              this.router.navigate(['/port-authority/docks']);
-            }, 2000);
-          });
-        },
-        error: (error) => {
-          this.ngZone.run(() => {
-            this.isSuccess = false;
-            this.message =
-              error.error.message ||
-              error.error.Message ||
-              'Failed to update dock. Please try again.';
-            this.isLoading = false;
-            this.cdr.detectChanges();
-          });
-        },
-      });
+          setTimeout(() => {
+            this.router.navigate(['/port-authority/docks']);
+          }, 2000);
+        });
+      },
+      error: (error) => {
+        this.ngZone.run(() => {
+          this.isSuccess = false;
+          this.message =
+            error.error.message ||
+            error.error.Message ||
+            'Failed to update dock. Please try again.';
+          this.isLoading = false;
+          this.cdr.detectChanges();
+        });
+      },
+    });
   }
 
   validateForm(): boolean {

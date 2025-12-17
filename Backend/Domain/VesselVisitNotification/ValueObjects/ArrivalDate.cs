@@ -1,6 +1,6 @@
 using System;
 using ProjArqsi.Domain.Shared;
-namespace ProjArqsi.Domain.VesselVisitNotification.ValueObjects
+namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
 {
 	public class ArrivalDate : IValueObject
 	{

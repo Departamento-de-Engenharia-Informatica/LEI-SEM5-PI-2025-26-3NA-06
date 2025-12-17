@@ -63,9 +63,9 @@ namespace ProjArqsi.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while creating the storage area." });
+                return StatusCode(500, new { message = "An error occurred while creating the storage area.", detail = ex.Message, stackTrace = ex.StackTrace });
             }
         }
 

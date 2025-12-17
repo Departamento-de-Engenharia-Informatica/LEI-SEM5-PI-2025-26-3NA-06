@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-unauthorized',
@@ -13,10 +14,11 @@ export class UnauthorizedComponent implements OnInit {
   userRole: string = '';
   attemptedRoute: string = '';
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authService: AuthService) {}
 
   ngOnInit(): void {
-    this.userRole = localStorage.getItem('userRole') || 'Unknown';
+    const user = this.authService.getUser();
+    this.userRole = user?.role || 'Unknown';
 
     // Get the attempted route from navigation state
     const navigation = this.router.getCurrentNavigation();
@@ -24,7 +26,8 @@ export class UnauthorizedComponent implements OnInit {
   }
 
   goToDashboard(): void {
-    const userRole = localStorage.getItem('userRole');
+    const user = this.authService.getUser();
+    const userRole = user?.role;
     switch (userRole) {
       case 'Admin':
         this.router.navigate(['/admin']);

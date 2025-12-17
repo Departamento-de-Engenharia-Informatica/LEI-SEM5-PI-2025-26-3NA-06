@@ -26,7 +26,8 @@ namespace ProjArqsi.Application.Services
 
         public async Task<DockDto> GetByIdAsync(DockId id)
         {
-            var dock = await _repo.GetByIdAsync(id);
+            var dock = await _repo.GetByIdAsync(id)
+                ?? throw new InvalidOperationException($"Dock with ID '{id.Value}' not found.");
             return _mapper.Map<DockDto>(dock);
         }
 
@@ -61,12 +62,16 @@ namespace ProjArqsi.Application.Services
             var dock = await _repo.GetByIdAsync(id);
 
             var newDockName = new DockName(dto.DockName);
+            if (dock == null)
+            {
+                throw new InvalidOperationException($"Dock with ID '{id}' does not exist.");
+            }
             
             // Check for duplicate name (only if name is changing)
             if (dock.DockName.Value != dto.DockName)
             {
                 var existing = await _repo.FindByNameAsync(newDockName);
-                if (existing != null && existing.Id.AsGuid() != id.AsGuid())
+                if (existing != null && existing.Id.Value != id.Value)
                 {
                     throw new BusinessRuleValidationException($"A dock with name '{dto.DockName}' already exists.");
                 }

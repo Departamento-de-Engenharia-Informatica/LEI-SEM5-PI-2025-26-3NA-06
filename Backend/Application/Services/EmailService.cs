@@ -8,9 +8,9 @@ namespace ProjArqsi.Application.Services
     {
         public async Task SendConfirmationEmailAsync(User user, string email, string token)
         {
-            // Change link to correct frontend confirmation page
-            var confirmationLink = $"http://localhost:5173/confirm-email?token={token}";
-            var subject = "Confirm Your Registration | ProjArqsi";
+            // Direct link to Backend activation endpoint
+            var confirmationLink = $"http://localhost:5218/api/Activation/confirm?token={token}";
+            var subject = "Activate Your Account | ProjArqsi";
             
             var body = $@"
             <html>
@@ -19,14 +19,16 @@ namespace ProjArqsi.Application.Services
                         <div style='text-align: center;'>
                             <img src='../Backend/assets/image.png' alt='ProjArqsi Logo' style='max-width: 150px;' />
                         </div>
-                        <h2 style='text-align: center; color: #333;'>Confirm Your Registration</h2>
-                        <p style='font-size: 16px; color: #333;'>Dear {user.Username},</p>
-                        <p style='font-size: 16px; color: #333;'>We received your registration request at ProjArqsi. To confirm your account, please click the link below:</p>
+                        <h2 style='text-align: center; color: #333;'>Activate Your Account</h2>
+                        <p style='font-size: 16px; color: #333;'>Dear {user.Username.Value},</p>
+                        <p style='font-size: 16px; color: #333;'>An administrator has assigned you the role of <strong>{user.Role.Value}</strong> and activated your account!</p>
+                        <p style='font-size: 16px; color: #333;'>To complete your activation and start using ProjArqsi, please click the link below:</p>
                         <p style='text-align: center;'>
-                            <a href='{confirmationLink}' style='font-size: 16px; color: #ffffff; text-decoration: none; background-color: #007bff; padding: 10px 20px; border-radius: 5px; display: inline-block;'>Confirm Registration</a>
+                            <a href='{confirmationLink}' style='font-size: 16px; color: #ffffff; text-decoration: none; background-color: #28a745; padding: 12px 24px; border-radius: 5px; display: inline-block;'>Activate My Account</a>
                         </p>
-                        <p style='font-size: 16px; color: #333;'>If you didn’t request this, please ignore this email or contact ProjArqsi support immediately.</p>
-                        <p style='font-size: 16px; color: #333;'>Thank you for joining ProjArqsi!</p>
+                        <p style='font-size: 14px; color: #666; text-align: center; margin-top: 20px;'>This link will expire in 24 hours</p>
+                        <p style='font-size: 16px; color: #333;'>If you didn't request this account, please ignore this email or contact support.</p>
+                        <p style='font-size: 16px; color: #333;'>After activation, you can log in at: <a href='http://localhost:4200/login'>http://localhost:4200/login</a></p>
                         <p style='font-size: 16px; color: #333;'>Best regards,</p>
                         <p style='font-size: 16px; color: #333;'>The ProjArqsi Team</p>
                     </div>

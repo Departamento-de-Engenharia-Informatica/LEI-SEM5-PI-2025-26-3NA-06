@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using ProjArqsi.Application.DTOs.VVN;
 using ProjArqsi.Application.Services;
 using ProjArqsi.Domain.Shared;
@@ -34,9 +35,15 @@ namespace ProjArqsi.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (DbUpdateException ex)
             {
-                return StatusCode(500, new { message = "An error occurred while accepting the VVN." });
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "Database error while accepting VVN.", details = innerMessage });
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "An error occurred while accepting the VVN.", details = innerMessage });
             }
         }
 
@@ -54,9 +61,15 @@ namespace ProjArqsi.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (DbUpdateException ex)
             {
-                return StatusCode(500, new { message = "An error occurred while rejecting the VVN." });
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "Database error while rejecting VVN.", details = innerMessage });
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "An error occurred while rejecting the VVN.", details = innerMessage });
             }
         }
 
@@ -64,7 +77,7 @@ namespace ProjArqsi.Controllers
         // ----------AGENT SHIP REPRESENTATIVE METHODS----------
         // Get all drafted VVNs
         [HttpGet("drafts")]
-        [Authorize(Roles = "AgentShipRep")]
+        [Authorize(Roles = "ShippingAgentRepresentative")]
         public async Task<ActionResult<IEnumerable<VVNDto>>> GetAllDrafts()
         {
             try
@@ -72,15 +85,16 @@ namespace ProjArqsi.Controllers
                 var vvns = await _service.GetAllDraftsAsync();
                 return Ok(vvns);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while retrieving drafted vessel visit notifications." });
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "An error occurred while retrieving drafted vessel visit notifications.", details = innerMessage });
             }
         }
 
          // Get a drafted VVN by Id
         [HttpGet("drafts/{id}")]
-        [Authorize(Roles = "AgentShipRep")]
+        [Authorize(Roles = "ShippingAgentRepresentative")]
         public async Task<ActionResult<VVNDto>> GetDraftById(Guid id)
         {
             try
@@ -92,14 +106,15 @@ namespace ProjArqsi.Controllers
             {
                 return NotFound(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while retrieving the drafted VVN." });
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "An error occurred while retrieving the drafted VVN.", details = innerMessage });
             }
         }
 
         [HttpPost("draft")]
-        [Authorize(Roles = "AgentShipRep")]
+        [Authorize(Roles = "ShippingAgentRepresentative")]
         public async Task<ActionResult<VVNDto>> DraftVVN([FromBody] VVNDraftDto dto)
         {
             try
@@ -111,14 +126,24 @@ namespace ProjArqsi.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (ArgumentException ex)
             {
-                return StatusCode(500, new { message = "An error occurred while creating the dock." });
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (DbUpdateException ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "Database error while drafting VVN.", details = innerMessage });
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "An error occurred while drafting the VVN.", details = innerMessage });
             }
         }
 
         [HttpPost("submit")]
-        [Authorize(Roles = "AgentShipRep")]
+        [Authorize(Roles = "ShippingAgentRepresentative")]
         public async Task<ActionResult<VVNDto>> SubmitVVN([FromBody] VVNSubmitDto dto)
         {
             try
@@ -130,9 +155,19 @@ namespace ProjArqsi.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (ArgumentException ex)
             {
-                return StatusCode(500, new { message = "An error occurred while creating the dock." });
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (DbUpdateException ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "Database error while submitting VVN.", details = innerMessage });
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "An error occurred while submitting the VVN.", details = innerMessage });
             }
         }
 
@@ -140,7 +175,7 @@ namespace ProjArqsi.Controllers
 
          // For Agent Ship Rep: Delete a drafted VVN
         [HttpDelete("drafts/{id}")]
-        [Authorize(Roles = "AgentShipRep")]
+        [Authorize(Roles = "ShippingAgentRepresentative")]
         public async Task<IActionResult> DeleteDraft(Guid id)
         {
             try
@@ -152,9 +187,15 @@ namespace ProjArqsi.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (DbUpdateException ex)
             {
-                return StatusCode(500, new { message = "An error occurred while deleting the drafted VVN." });
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "Database error while deleting drafted VVN.", details = innerMessage });
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "An error occurred while deleting the drafted VVN.", details = innerMessage });
             }
         }
 
@@ -162,7 +203,7 @@ namespace ProjArqsi.Controllers
 
         // Get all accepted/rejected VVNs
         [HttpGet("reviewed")]
-        [Authorize(Roles = "PortAuthorityOfficer, AgentShipRep")]
+        [Authorize(Roles = "PortAuthorityOfficer, ShippingAgentRepresentative")]
         public async Task<ActionResult<IEnumerable<VVNDto>>> GetAllReviewed()
         {
             try
@@ -170,15 +211,16 @@ namespace ProjArqsi.Controllers
                 var vvns = await _service.GetAllReviewedAsync();
                 return Ok(vvns);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while retrieving reviewed vessel visit notifications." });
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "An error occurred while retrieving reviewed vessel visit notifications.", details = innerMessage });
             }
         }
 
         // Get a single accepted/rejected VVN by Id
         [HttpGet("reviewed/{id}")]
-        [Authorize(Roles = "PortAuthorityOfficer, AgentShipRep")]
+        [Authorize(Roles = "PortAuthorityOfficer, ShippingAgentRepresentative")]
         public async Task<ActionResult<VVNDto>> GetReviewedById(Guid id)
         {
             try
@@ -190,15 +232,16 @@ namespace ProjArqsi.Controllers
             {
                 return NotFound(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while retrieving the reviewed VVN." });
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "An error occurred while retrieving the reviewed VVN.", details = innerMessage });
             }
         }
 
         // Get all submitted VVNs
         [HttpGet("submitted")]
-        [Authorize(Roles = "PortAuthorityOfficer, AgentShipRep")]
+        [Authorize(Roles = "PortAuthorityOfficer, ShippingAgentRepresentative")]
         public async Task<ActionResult<IEnumerable<VVNDto>>> GetAllSubmitted()
         {
             try
@@ -206,15 +249,16 @@ namespace ProjArqsi.Controllers
                 var vvns = await _service.GetAllSubmittedAsync();
                 return Ok(vvns);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while retrieving submitted vessel visit notifications." });
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "An error occurred while retrieving submitted vessel visit notifications.", details = innerMessage });
             }
         }
 
         // Get a submitted VVN by Id
         [HttpGet("submitted/{id}")]
-        [Authorize(Roles = "PortAuthorityOfficer, AgentShipRep")]
+        [Authorize(Roles = "PortAuthorityOfficer, ShippingAgentRepresentative")]
         public async Task<ActionResult<VVNDto>> GetSubmittedById(Guid id)
         {
             try
@@ -226,9 +270,10 @@ namespace ProjArqsi.Controllers
             {
                 return NotFound(new { message = ex.Message });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while retrieving the submitted VVN." });
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "An error occurred while retrieving the submitted VVN.", details = innerMessage });
             }
         }
 

@@ -36,7 +36,7 @@ export class VesselTypesComponent implements OnInit {
     this.message = '';
 
     this.http
-      .get<any[]>('http://localhost:5218/api/VesselType', { withCredentials: true })
+      .get<any[]>('http://localhost:5218/api/VesselType')
       .pipe(
         timeout(20000), // 20 second timeout
         catchError((err) => {

@@ -13,10 +13,10 @@ namespace ProjArqsi.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<VesselType> FindByNameAsync(TypeName name)
+        public async Task<VesselType?> FindByNameAsync(TypeName name)
         {
             var result = await _context.VesselTypes.FirstOrDefaultAsync(vt => vt.TypeName.Value == name.Value);
-            return result ?? throw new InvalidOperationException("VesselType not found.");
+            return result;
         }
 
         public async Task<IEnumerable<VesselType>> SearchByNameAsync(TypeName searchTerm)
@@ -38,6 +38,13 @@ namespace ProjArqsi.Infrastructure.Repositories
             return await _context.VesselTypes
                 .Where(vt => vt.TypeName.Value.Contains(searchTerm) || vt.TypeDescription.Value.Contains(searchTerm))
                 .ToListAsync();
+        }
+
+        public async Task<VesselType?> GetByIdAsNoTrackingAsync(VesselTypeId id)
+        {
+            return await _context.VesselTypes
+                .AsNoTracking()
+                .FirstOrDefaultAsync(vt => vt.Id == id);
         }
     }
 }

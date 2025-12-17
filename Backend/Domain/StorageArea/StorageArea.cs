@@ -11,7 +11,7 @@ namespace ProjArqsi.Domain.StorageAreaAggregate
         public AreaType AreaType { get; private set; } = null!;
         public Location Location { get; private set; } = null!;
         public MaxCapacity MaxCapacity { get; private set; } = null!;
-        public CurrentOccupancy CurrentOccupancy { get; } = null!;
+        public CurrentOccupancy CurrentOccupancy { get; private set; } = null!;
         public bool ServesEntirePort { get; private set; } = true;
         public CurrentContainers CurrentContainers { get; private set; } = null!;
         public ServedDocks ServedDocks { get; private set; } = null!;
@@ -24,6 +24,8 @@ namespace ProjArqsi.Domain.StorageAreaAggregate
             AreaType = type;
             Location = location;
             MaxCapacity = maxCapacity;
+            CurrentOccupancy = new CurrentOccupancy(0);
+            CurrentContainers = new CurrentContainers(new List<IsoCode>());
             ServesEntirePort = servesEntirePort;
             ServedDocks = servedDocks;
         }

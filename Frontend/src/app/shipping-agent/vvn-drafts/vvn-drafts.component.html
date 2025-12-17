@@ -1,0 +1,63 @@
+<div class="vvn-drafts-container">
+  <div class="header">
+    <h1>Draft Vessel Visit Notifications</h1>
+    <div class="header-actions">
+      <button (click)="goBack()" class="back-btn">← Back to Dashboard</button>
+      <button (click)="createNew()" class="create-btn">+ Create New VVN</button>
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading && drafts.length > 0" class="search-container">
+    <input
+      type="text"
+      [(ngModel)]="searchTerm"
+      (input)="filterDrafts()"
+      placeholder="Search by vessel IMO or VVN ID..."
+      class="search-input"
+    />
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    <p>Loading drafts...</p>
+  </div>
+
+  <div *ngIf="message && !isLoading" class="message">
+    {{ message }}
+  </div>
+
+  <div *ngIf="!isLoading && drafts.length === 0" class="empty-state">
+    <p>No draft notifications found.</p>
+    <button (click)="createNew()" class="create-btn">Create Your First VVN</button>
+  </div>
+
+  <div *ngIf="!isLoading && filteredDrafts.length === 0 && drafts.length > 0" class="empty-state">
+    <p>No drafts match your search.</p>
+  </div>
+
+  <div *ngIf="!isLoading && filteredDrafts.length > 0" class="drafts-grid">
+    <div *ngFor="let draft of filteredDrafts" class="draft-card">
+      <div class="card-header">
+        <h3>VVN ID: {{ draft.id }}</h3>
+        <span class="status-badge draft">Draft</span>
+      </div>
+      <div class="card-body">
+        <div class="info-row">
+          <span class="label">Vessel IMO:</span>
+          <span class="value">{{ draft.referredVesselId }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Arrival Date:</span>
+          <span class="value">{{ formatDate(draft.arrivalDate) }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Departure Date:</span>
+          <span class="value">{{ formatDate(draft.departureDate) }}</span>
+        </div>
+      </div>
+      <div class="card-actions">
+        <button (click)="editDraft(draft.id)" class="edit-btn">Edit</button>
+        <button (click)="deleteDraft(draft.id)" class="delete-btn">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>

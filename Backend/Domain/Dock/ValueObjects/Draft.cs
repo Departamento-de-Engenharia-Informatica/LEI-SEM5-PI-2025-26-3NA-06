@@ -2,7 +2,7 @@ using ProjArqsi.Domain.Shared;
 
 namespace ProjArqsi.Domain.DockAggregate
 {
-    public class Draft : IValueObject
+    public class Draft : ValueObject
     {
         public double Value { get; private set; }
 
@@ -17,6 +17,11 @@ namespace ProjArqsi.Domain.DockAggregate
                 throw new BusinessRuleValidationException("Max draft must be greater than 0 meters.");
 
             Value = value;
+        }
+
+        protected override IEnumerable<object> GetEqualityComponents()
+        {
+            yield return Value;
         }
     }
 }

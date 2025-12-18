@@ -4,7 +4,7 @@ using ProjArqsi.Infrastructure.Shared;
 
 namespace ProjArqsi.Infrastructure.Repositories
 {
-    public class VesselRepository : BaseRepository<Vessel, IMOnumber>, IVesselRepository
+    public class VesselRepository : BaseRepository<Vessel, VesselId>, IVesselRepository
     {
         private readonly AppDbContext _context;
 
@@ -18,13 +18,6 @@ namespace ProjArqsi.Infrastructure.Repositories
             return await _context.Vessels.FirstOrDefaultAsync(v => v.VesselName.Name.Equals(name.Name, StringComparison.CurrentCultureIgnoreCase));
         }
 
-        public async Task<IEnumerable<Vessel>> SearchByImoAsync(IMOnumber searchTerm)
-        {
-            return await _context.Vessels
-                .Where(v => v.Id.AsString().Contains(searchTerm.AsString()))
-                .ToListAsync();
-        }
-
         public async Task<IEnumerable<Vessel>> SearchByNameAsync(VesselName searchTerm)
         {
             return await _context.Vessels
@@ -32,11 +25,16 @@ namespace ProjArqsi.Infrastructure.Repositories
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Vessel>> SearchByNameOrDescriptionAsync(string searchTerm)
+        public async Task<IEnumerable<Vessel>> SearchByNameOrImoAsync(string searchTerm)
         {
             return await _context.Vessels
-                .Where(v => v.VesselName.Name.Contains(searchTerm) || v.Id.AsString().Contains(searchTerm))
+                .Where(v => v.VesselName.Name.Contains(searchTerm) || v.IMO.Number.Contains(searchTerm))
                 .ToListAsync();
+        }
+
+        public async Task<Vessel?> GetByImoAsync(IMOnumber imo)
+        {
+            return await _context.Vessels.FirstOrDefaultAsync(v => v.IMO.Number == imo.Number);
         }
     }
 }

@@ -17,6 +17,7 @@ export class EditVesselComponent implements OnInit {
   vesselImo: string = '';
   vesselId: string = '';
   vessel = {
+    id: '',
     imo: '',
     vesselName: '',
     capacity: 0,
@@ -88,7 +89,7 @@ export class EditVesselComponent implements OnInit {
     this.message = '';
 
     this.http
-      .get<any>(`http://localhost:5218/api/Vessel/${this.vesselId}`)
+      .get<any>(`http://localhost:5218/api/Vessel/imo/${this.vesselImo}`)
       .pipe(
         timeout(20000),
         catchError((err) => {
@@ -100,6 +101,7 @@ export class EditVesselComponent implements OnInit {
         next: (data) => {
           this.ngZone.run(() => {
             this.vessel = {
+              id: data.id || '',
               imo: data.imo || this.vesselImo,
               vesselName: data.vesselName || '',
               capacity: data.capacity || 0,
@@ -109,6 +111,7 @@ export class EditVesselComponent implements OnInit {
               length: data.length || 0,
               vesselTypeId: data.vesselTypeId || '',
             };
+            this.vesselId = data.id; // Store the actual vessel ID for updates
             this.isLoading = false;
             this.cdr.detectChanges();
           });

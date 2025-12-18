@@ -24,10 +24,10 @@ namespace ProjArqsi.Application.Services
             return _mapper.Map<List<DockDto>>(list);
         }
 
-        public async Task<DockDto> GetByIdAsync(DockId id)
+        public async Task<DockDto> GetByIdAsync(Guid id)
         {
-            var dock = await _repo.GetByIdAsync(id)
-                ?? throw new InvalidOperationException($"Dock with ID '{id.Value}' not found.");
+            var dock = await _repo.GetByIdAsync(new DockId(id))
+                ?? throw new InvalidOperationException($"Dock with ID '{id}' not found.");
             return _mapper.Map<DockDto>(dock);
         }
 
@@ -59,13 +59,9 @@ namespace ProjArqsi.Application.Services
 
         public async Task<DockDto> UpdateAsync(DockId id, DockUpsertDto dto)
         {
-            var dock = await _repo.GetByIdAsync(id);
-
+            var dock = await _repo.GetByIdAsync(id) ?? throw new InvalidOperationException($"Dock with ID '{id}' does not exist.");
+            
             var newDockName = new DockName(dto.DockName);
-            if (dock == null)
-            {
-                throw new InvalidOperationException($"Dock with ID '{id}' does not exist.");
-            }
             
             // Check for duplicate name (only if name is changing)
             if (dock.DockName.Value != dto.DockName)
@@ -77,14 +73,14 @@ namespace ProjArqsi.Application.Services
                 }
             }
 
-            dock.ChangeDockName(newDockName);
-            dock.ChangeLocation(new Location(dto.LocationDescription));
-            dock.ChangeLength(new DockLength(dto.Length));
-            dock.ChangeDepth(new Depth(dto.Depth));
-            dock.ChangeMaxDraft(new Draft(dto.MaxDraft));
-            var allowedVesselTypeGuids = dto.AllowedVesselTypeIds.Select(Guid.Parse).ToList();
-            dock.SetAllowedVesselTypes(new AllowedVesselTypes(allowedVesselTypeGuids));
-
+            dock.UpdateDetails(
+                newDockName,
+                new Location(dto.LocationDescription),
+                new DockLength(dto.Length),
+                new Depth(dto.Depth),
+                new Draft(dto.MaxDraft),
+                new AllowedVesselTypes(dto.AllowedVesselTypeIds.Select(Guid.Parse).ToList())
+            );
             await _unitOfWork.CommitAsync();
 
             return _mapper.Map<DockDto>(dock);

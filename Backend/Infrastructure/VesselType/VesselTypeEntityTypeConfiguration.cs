@@ -12,9 +12,10 @@ namespace ProjArqsi.Infrastructure
 
             builder.Property(v => v.Id)
                 .HasConversion(
-                    id => id.AsGuid(),
+                    id => id.Value,
                     guid => new VesselTypeId(guid)
-                );
+                )
+                .ValueGeneratedNever();
 
             builder.OwnsOne(v => v.TypeName, tn =>
             {

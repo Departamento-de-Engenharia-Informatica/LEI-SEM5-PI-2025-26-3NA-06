@@ -9,7 +9,7 @@ namespace ProjArqsi.Application.Mappings
         public DockMappingProfile()
         {
             CreateMap<Dock, DockDto>()
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id.AsGuid()))
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id.Value))
                 .ForMember(dest => dest.DockName, opt => opt.MapFrom(src => src.DockName.Value))
                 .ForMember(dest => dest.LocationDescription, opt => opt.MapFrom(src => src.Location.Description))
                 .ForMember(dest => dest.Length, opt => opt.MapFrom(src => src.Length.Value))

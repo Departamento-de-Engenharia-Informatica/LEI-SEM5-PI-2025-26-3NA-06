@@ -46,7 +46,7 @@ export class RegisterComponent implements OnInit {
     };
 
     this.http
-      .post('http://localhost:5218/api/Registration/register', this.registrationData)
+      .post('http://localhost:5218/api/User/register', this.registrationData)
       .subscribe({
         next: (response: any) => {
           this.isSuccess = true;

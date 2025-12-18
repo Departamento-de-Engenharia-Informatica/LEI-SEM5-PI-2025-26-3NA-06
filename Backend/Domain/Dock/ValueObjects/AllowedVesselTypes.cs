@@ -2,7 +2,7 @@ using ProjArqsi.Domain.Shared;
 
 namespace ProjArqsi.Domain.DockAggregate
 {
-    public class AllowedVesselTypes : IValueObject
+    public class AllowedVesselTypes : ValueObject
     {
         public List<Guid> VesselTypeIds { get; private set; }
 
@@ -12,5 +12,10 @@ namespace ProjArqsi.Domain.DockAggregate
         }
 
         public AllowedVesselTypes() : this(null) { }
+
+        protected override IEnumerable<object> GetEqualityComponents()
+        {
+            yield return VesselTypeIds;
+        }
     }
 }

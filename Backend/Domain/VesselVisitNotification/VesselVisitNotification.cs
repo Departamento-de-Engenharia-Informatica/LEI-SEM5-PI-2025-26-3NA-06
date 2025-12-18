@@ -3,11 +3,12 @@ using ProjArqsi.Domain.VesselAggregate;
 
 namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
 {
+    // This entity can be saved partially. Only the ReferedVesselId and Status is mandatory at creation.
     public class VesselVisitNotification : Entity<VesselVisitNotificationId>, IAggregateRoot
     {
         public ReferredVesselId ReferredVesselId { get; private set; } = null!;
-        public ArrivalDate ArrivalDate { get; private set; } = null!;
-        public DepartureDate DepartureDate { get; private set; } = null!;
+        public ArrivalDate? ArrivalDate { get; private set; }
+        public DepartureDate? DepartureDate { get; private set; }
 
         //public CargoManifest CargoManifest { get; private set; } = null!;
         //public bool IsHazardous { get; private set; } = false;
@@ -55,18 +56,5 @@ namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
             Status = Statuses.Rejected;
             RejectionReason = new RejectionReason(rejectionReason);
         }
-        public void UpdateCargoManifest(CargoManifest newManifest)
-        {
-            //CargoManifest = newManifest;
-        }
-
-        public void UpdateCrew(CrewMembersList newCrew)
-        {
-            //CrewMembersList = newCrew;
-        }
-
-
     }
-
-    
 }

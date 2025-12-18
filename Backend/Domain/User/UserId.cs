@@ -12,10 +12,6 @@ namespace ProjArqsi.Domain.UserAggregate
 
         public UserId(string value) : base(value) {}
 
-       
-
-       
-
         public Guid AsGuid()
         {
             return (Guid)ObjValue;

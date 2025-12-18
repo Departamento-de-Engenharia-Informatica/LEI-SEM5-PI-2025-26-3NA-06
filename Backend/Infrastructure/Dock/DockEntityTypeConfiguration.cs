@@ -13,8 +13,9 @@ namespace ProjArqsi.Infrastructure
 
             builder.Property(d => d.Id)
                 .HasConversion(
-                    id => id.AsGuid(),
+                    id => id.Value,
                     value => new DockId(value))
+                .ValueGeneratedNever()
                 .IsRequired();
 
             builder.OwnsOne(d => d.DockName, dockName =>

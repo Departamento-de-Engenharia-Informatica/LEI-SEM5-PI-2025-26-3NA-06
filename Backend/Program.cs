@@ -65,7 +65,6 @@ builder.Services.AddScoped<VesselTypeService>();
 builder.Services.AddScoped<VesselService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<EmailService>();
-builder.Services.AddScoped<RegistrationService>();
 builder.Services.AddScoped<DockService>();
 builder.Services.AddScoped<StorageAreaService>();
 builder.Services.AddScoped<VesselVisitNotificationService>();

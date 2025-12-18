@@ -2,7 +2,7 @@ using ProjArqsi.Domain.Shared;
 
 namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
 {
-    public class CrewMembersList : IValueObject
+    public class CrewMembersList : ValueObject
     {
         private readonly List<CrewMember> members = new();
 
@@ -21,9 +21,17 @@ namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
 
         public bool HasCaptain() =>
             members.Any(m => m.Role == CrewMemberRole.Captain);
+
+        protected override IEnumerable<object> GetEqualityComponents()
+        {
+            foreach (var member in members)
+            {
+                yield return member;
+            }
+        }
     }
 
-    public class CrewMember : IValueObject
+    public class CrewMember : ValueObject
     {
         public string Name { get; }
         public string CitizenId { get; }
@@ -36,6 +44,14 @@ namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
             CitizenId = (citizenId ?? string.Empty).Trim();
             Nationality = (nationality ?? string.Empty).Trim();
             Role = role;
+        }
+
+        protected override IEnumerable<object> GetEqualityComponents()
+        {
+            yield return Name;
+            yield return CitizenId;
+            yield return Nationality;
+            yield return Role;
         }
     }
 

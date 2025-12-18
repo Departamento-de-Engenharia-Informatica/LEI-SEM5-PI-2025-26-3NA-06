@@ -11,28 +11,28 @@ namespace ProjArqsi.Domain.VesselTypeAggregate
         public MaxBays MaxBays { get; private set; } = null!;
         public MaxTiers MaxTiers { get; private set; } = null!;
 
-        public VesselType() { }
-        public VesselType(VesselTypeId vesselTypeId, TypeName typeName, TypeDescription typeDescription,
+        protected VesselType() {}
+        public VesselType(TypeName typeName, TypeDescription typeDescription,
                          TypeCapacity typeCapacity, MaxRows maxRows, MaxBays maxBays, MaxTiers maxTiers)
         {
-            Id = vesselTypeId;
-            TypeName = typeName ?? throw new ArgumentNullException(nameof(typeName));
-            TypeDescription = typeDescription ?? throw new ArgumentNullException(nameof(typeDescription));
-            TypeCapacity = typeCapacity ?? throw new ArgumentNullException(nameof(typeCapacity));
-            MaxRows = maxRows ?? throw new ArgumentNullException(nameof(maxRows));
-            MaxBays = maxBays ?? throw new ArgumentNullException(nameof(maxBays));
-            MaxTiers = maxTiers ?? throw new ArgumentNullException(nameof(maxTiers));
+            Id = new VesselTypeId(Guid.NewGuid()); 
+            TypeName = typeName ?? throw new BusinessRuleValidationException("Type name is required.");
+            TypeDescription = typeDescription ?? throw new BusinessRuleValidationException("Type description is required.");
+            TypeCapacity = typeCapacity ?? throw new BusinessRuleValidationException("Type capacity is required.");
+            MaxRows = maxRows ?? throw new BusinessRuleValidationException("Max rows is required.");
+            MaxBays = maxBays ?? throw new BusinessRuleValidationException("Max bays is required.");
+            MaxTiers = maxTiers ?? throw new BusinessRuleValidationException("Max tiers is required.");
         }
 
         public void UpdateDetails(TypeName typeName, TypeDescription typeDescription,
                                  TypeCapacity typeCapacity, MaxRows maxRows, MaxBays maxBays, MaxTiers maxTiers)
         {
-            TypeName = typeName ?? throw new ArgumentNullException(nameof(typeName));
-            TypeDescription = typeDescription ?? throw new ArgumentNullException(nameof(typeDescription));
-            TypeCapacity = typeCapacity ?? throw new ArgumentNullException(nameof(typeCapacity));
-            MaxRows = maxRows ?? throw new ArgumentNullException(nameof(maxRows));
-            MaxBays = maxBays ?? throw new ArgumentNullException(nameof(maxBays));
-            MaxTiers = maxTiers ?? throw new ArgumentNullException(nameof(maxTiers));
+            TypeName = typeName ?? throw new BusinessRuleValidationException("Type name is required.");
+            TypeDescription = typeDescription ?? throw new BusinessRuleValidationException("Type description is required.");
+            TypeCapacity = typeCapacity ?? throw new BusinessRuleValidationException("Type capacity is required.");
+            MaxRows = maxRows ?? throw new BusinessRuleValidationException("Max rows is required.");
+            MaxBays = maxBays ?? throw new BusinessRuleValidationException("Max bays is required.");
+            MaxTiers = maxTiers ?? throw new BusinessRuleValidationException("Max tiers is required.");
         }
     }
 }

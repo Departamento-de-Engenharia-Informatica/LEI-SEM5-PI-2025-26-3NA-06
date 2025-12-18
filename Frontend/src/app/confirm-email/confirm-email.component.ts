@@ -24,7 +24,7 @@ export class ConfirmEmailComponent implements OnInit {
       // Redirect to backend which will initiate Google OAuth
       // After OAuth, backend will verify the user and activate the account
       this.message = 'Redirecting to Google for authentication...';
-      window.location.href = `http://localhost:5218/api/registration/confirm-email?token=${token}`;
+      window.location.href = `http://localhost:5218/api/User/confirm-email?token=${token}`;
     } else {
       this.message = 'Invalid activation link. No token provided.';
       this.success = false;

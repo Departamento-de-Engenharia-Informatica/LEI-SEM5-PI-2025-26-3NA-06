@@ -2,7 +2,7 @@ using ProjArqsi.Domain.Shared;
 
 namespace ProjArqsi.Domain.StorageAreaAggregate
 {
-    public class MaxCapacity : IValueObject
+    public class MaxCapacity : ValueObject
     {
         public int Value { get; }
 
@@ -13,6 +13,9 @@ namespace ProjArqsi.Domain.StorageAreaAggregate
             Value = value;
         }
 
-        
+        protected override IEnumerable<object> GetEqualityComponents()
+        {
+            yield return Value;
+        }
     }
 }

@@ -18,7 +18,7 @@ namespace ProjArqsi.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin,PortAuthorityOfficer,ShippingAgentRepresentative")]
+        [Authorize(Roles = "PortAuthorityOfficer,ShippingAgentRepresentative")]
         public async Task<ActionResult<IEnumerable<VesselDto>>> GetAll()
         {
             try
@@ -32,9 +32,27 @@ namespace ProjArqsi.Controllers
             }
         }
 
-        
-        [HttpGet("{imo}")]
-        [Authorize(Roles = "Admin,PortAuthorityOfficer,ShippingAgentRepresentative")]
+        [HttpGet("{id}")]
+        [Authorize(Roles = "PortAuthorityOfficer,ShippingAgentRepresentative")]
+        public async Task<ActionResult<VesselDto>> GetById(Guid id)
+        {
+            try
+            {
+                var vessel = await _service.GetByIdAsync(id);
+                return Ok(vessel);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("imo/{imo}")]
+        [Authorize(Roles = "PortAuthorityOfficer,ShippingAgentRepresentative")]
         public async Task<ActionResult<VesselDto>> GetByImo(string imo)
         {
             try
@@ -54,13 +72,12 @@ namespace ProjArqsi.Controllers
 
         [HttpPost]
         [Authorize(Roles = "PortAuthorityOfficer")]
-        public async Task<ActionResult<VesselDto>> CreateVesselAsync([FromBody] CreateVesselDto dto)
+        public async Task<ActionResult<VesselDto>> CreateVesselAsync([FromBody] UpsertVesselDto dto)
         {
             try
             {
                 var vessel = await _service.CreateAsync(dto);
-                return CreatedAtAction(nameof(GetByImo), new { imo = vessel.Imo }, vessel);
-            }
+                return CreatedAtAction(nameof(GetById), new { id = vessel.Id }, vessel);}
             catch (BusinessRuleValidationException ex)
             {
                 return BadRequest(new { message = ex.Message });
@@ -75,13 +92,13 @@ namespace ProjArqsi.Controllers
             }
         }
 
-        [HttpPut("{imo}")]
+        [HttpPut("{id}")]
         [Authorize(Roles = "PortAuthorityOfficer")]
-        public async Task<ActionResult<VesselDto>> UpdateVesselAsync(string imo, [FromBody] UpdateVesselDto dto)
+        public async Task<ActionResult<VesselDto>> UpdateVesselAsync(Guid id, [FromBody] UpsertVesselDto dto)
         {
             try
             {
-                var vessel = await _service.UpdateAsync(imo, dto);
+                var vessel = await _service.UpdateAsync(id, dto);
                 return Ok(vessel);
             }
             catch (InvalidOperationException ex)
@@ -98,17 +115,17 @@ namespace ProjArqsi.Controllers
             }
         }
 
-        [HttpDelete("{imo}")]
+        [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult> DeleteVesselAsync(string imo)
+        public async Task<ActionResult> DeleteVesselAsync(Guid id)
         {
             try
             {
-                var result = await _service.DeleteAsync(imo);
+                var result = await _service.DeleteAsync(id);
 
                 if (!result)
                 {
-                    return NotFound(new { message = $"Vessel with IMO '{imo}' not found." });
+                    return NotFound(new { message = $"Vessel with ID '{id}' not found." });
                 }
 
                 return NoContent();

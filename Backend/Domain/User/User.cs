@@ -12,16 +12,15 @@ namespace ProjArqsi.Domain.UserAggregate
         public string ConfirmationToken { get; set; } = string.Empty;
         public DateTime? ConfirmationTokenExpiry { get; set; }
 
-        private User()
-        {
-        }
+        protected User()
+        {}
 
         public User(Username username, Role role, Email email, bool isActive = true, string confirmationToken = "")
         {
             Id = new UserId(Guid.NewGuid());
-            Username = username;
-            Role = role;
-            Email = email;
+            Username = username ?? throw new BusinessRuleValidationException("Username is required.");
+            Role = role ?? throw new BusinessRuleValidationException("Role is required.");
+            Email = email ?? throw new BusinessRuleValidationException("Email is required.");
             IsActive = isActive;
             ConfirmationToken = confirmationToken;
         }
@@ -31,17 +30,17 @@ namespace ProjArqsi.Domain.UserAggregate
 
         public void ChangeRole(Role role)
         {
-            Role = role;
+            Role = role ?? throw new BusinessRuleValidationException("Role is required.");
         }
 
         public void ChangeUsername(Username username)
         {
-            Username = username;
+            Username = username ?? throw new BusinessRuleValidationException("Username is required.");
         }
 
         public void ChangeEmail(Email email)
         {
-            Email = email;
+            Email = email ?? throw new BusinessRuleValidationException("Email is required.");
         }
 
         public void ChangeConfirmationToken(string confirmationToken)

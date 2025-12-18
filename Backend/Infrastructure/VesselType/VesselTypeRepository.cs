@@ -40,6 +40,7 @@ namespace ProjArqsi.Infrastructure.Repositories
                 .ToListAsync();
         }
 
+        // used to fetch when no updates will be made
         public async Task<VesselType?> GetByIdAsNoTrackingAsync(VesselTypeId id)
         {
             return await _context.VesselTypes

@@ -33,11 +33,7 @@ namespace ProjArqsi.Application.Services
 
             foreach (var vessel in vessels)
             {
-                var vesselType = await _vesselTypeRepository.GetByIdAsync(new VesselTypeId(vessel.VesselTypeId));
-                if (vesselType == null)
-                {
-                    throw new BusinessRuleValidationException($"Vessel type with ID '{vessel.VesselTypeId}' does not exist.");
-                }
+                var vesselType = await _vesselTypeRepository.GetByIdAsync(vessel.VesselTypeId) ?? throw new BusinessRuleValidationException($"Vessel type with ID '{vessel.VesselTypeId.Value}' does not exist.");
                 var dto = _mapper.Map<VesselDto>(vessel);
                 dto.VesselTypeName = vesselType.TypeName.Value;
                 vesselDtos.Add(dto);
@@ -46,40 +42,53 @@ namespace ProjArqsi.Application.Services
             return vesselDtos;
         }
 
-        public async Task<VesselDto> GetByImoAsync(string imo)
+        public async Task<VesselDto> GetByIdAsync(Guid id)
         {
-            var vesselId = new IMOnumber(imo);
-            var vessel = await _vesselRepository.GetByIdAsync(vesselId) ?? throw new InvalidOperationException($"Vessel with IMO number '{imo}' does not exist.");
-            var vesselType = await _vesselTypeRepository.GetByIdAsync(new VesselTypeId(vessel.VesselTypeId)) ?? throw new BusinessRuleValidationException($"Vessel type with ID '{vessel.VesselTypeId}' does not exist.");
+            var vessel = await _vesselRepository.GetByIdAsync(new VesselId(id)) ?? throw new InvalidOperationException($"Vessel with ID '{id}' does not exist.");
             var dto = _mapper.Map<VesselDto>(vessel);
+            
+            // Get vessel type name
+            var vesselType = await _vesselTypeRepository.GetByIdAsync(vessel.VesselTypeId) 
+                ?? throw new BusinessRuleValidationException($"Vessel type with ID '{vessel.VesselTypeId.Value}' does not exist.");
             dto.VesselTypeName = vesselType.TypeName.Value;
+            
             return dto;
         }
 
-        public async Task<VesselDto> CreateAsync(CreateVesselDto dto)
+        public async Task<VesselDto> GetByImoAsync(string imo)
         {
-            
-            var imo = dto.Imo;
-
-            // Check if vessel already exists
-            var existingVessel = await _vesselRepository.GetByIdAsync(new IMOnumber(imo));
-            if (existingVessel != null)
-            {
-                throw new BusinessRuleValidationException($"A vessel with IMO number '{imo}' already exists.");
-            }
-            
             var imoNumber = new IMOnumber(imo);
+            var vessel = await _vesselRepository.GetByImoAsync(imoNumber) 
+                ?? throw new InvalidOperationException($"Vessel with IMO number '{imo}' does not exist.");
+            var dto = _mapper.Map<VesselDto>(vessel);
+            
+            // Get vessel type name
+            var vesselType = await _vesselTypeRepository.GetByIdAsync(vessel.VesselTypeId) 
+                ?? throw new BusinessRuleValidationException($"Vessel type with ID '{vessel.VesselTypeId.Value}' does not exist.");
+            dto.VesselTypeName = vesselType.TypeName.Value;
+            
+            return dto;
+        }
+
+        public async Task<VesselDto> CreateAsync(UpsertVesselDto dto)
+        {
+            var imoNumber = new IMOnumber(dto.Imo);
+
+            // Validate unique IMO
+            var existingVessel = await _vesselRepository.GetByImoAsync(imoNumber);
+            if (existingVessel != null) throw new InvalidOperationException($"Vessel with IMO number '{dto.Imo}' already exists.");
+
             var vesselName = new VesselName(dto.VesselName);
             var capacity = new Capacity(dto.Capacity);
             var rows = new Rows(dto.Rows);
             var bays = new Bays(dto.Bays);
             var tiers = new Tiers(dto.Tiers);
             var length = new Length(dto.Length);
-            var vesselTypeId = new Guid(dto.VesselTypeId);
+            var vesselTypeId = new VesselTypeId(Guid.Parse(dto.VesselTypeId));
 
             // Validate vessel type exists and check constraints BEFORE creating vessel
-            var vesselType = await _vesselTypeRepository.GetByIdAsNoTrackingAsync(new VesselTypeId(vesselTypeId))
-                ?? throw new BusinessRuleValidationException($"Vessel type with ID '{vesselTypeId}' does not exist.");
+            var vesselType = await _vesselTypeRepository.GetByIdAsNoTrackingAsync(vesselTypeId)
+                ?? throw new BusinessRuleValidationException($"Vessel type with ID '{vesselTypeId.Value}' does not exist.");
             
             // Validate all constraints in service layer
             if (capacity.Value > vesselType.TypeCapacity.Value)
@@ -100,18 +109,20 @@ namespace ProjArqsi.Application.Services
             await _vesselRepository.AddAsync(vessel);
             await _unitOfWork.CommitAsync();
 
-            return _mapper.Map<VesselDto>(vessel);
+            var result = _mapper.Map<VesselDto>(vessel);
+            result.VesselTypeName = vesselType.TypeName.Value;
+            return result;
         }
 
-        public async Task<VesselDto> UpdateAsync(string imo, UpdateVesselDto dto)
+        public async Task<VesselDto> UpdateAsync(Guid id, UpsertVesselDto dto)
         {
-            var vesselId = new IMOnumber(imo);
-            var vessel = await _vesselRepository.GetByIdAsync(vesselId)
-                ?? throw new InvalidOperationException($"Vessel with IMO number '{imo}' does not exist.");
+            
+            var vessel = await _vesselRepository.GetByIdAsync(new VesselId(id))
+                ?? throw new InvalidOperationException($"Vessel with ID '{id}' does not exist.");
 
             // Validate that vessel type exists and check capacity constraints
-            var vesselType = await _vesselTypeRepository.GetByIdAsNoTrackingAsync(new VesselTypeId(vessel.VesselTypeId)) 
-                ?? throw new BusinessRuleValidationException($"Vessel type with ID '{vessel.VesselTypeId}' does not exist.");
+            var vesselType = await _vesselTypeRepository.GetByIdAsNoTrackingAsync(vessel.VesselTypeId) 
+                ?? throw new BusinessRuleValidationException($"Vessel type with ID '{vessel.VesselTypeId.Value}' does not exist.");
             
             var vesselName = new VesselName(dto.VesselName);
             var capacity = new Capacity(dto.Capacity);
@@ -138,18 +149,18 @@ namespace ProjArqsi.Application.Services
             await _vesselRepository.UpdateAsync(vessel);
             await _unitOfWork.CommitAsync();
 
-            return _mapper.Map<VesselDto>(vessel);
+            var result = _mapper.Map<VesselDto>(vessel);
+            result.VesselTypeName = vesselType.TypeName.Value;
+            return result;
         }
 
-        public async Task<bool> DeleteAsync(string imo)
-        {
-            var vesselId = new IMOnumber(imo);
-            
+        public async Task<bool> DeleteAsync(Guid id)
+        {   
             try
             {
-                var vessel = await _vesselRepository.GetByIdAsync(vesselId)
-                    ?? throw new InvalidOperationException($"Vessel with IMO number '{imo}' does not exist.");
-                await _vesselRepository.DeleteAsync(vesselId);
+                var vessel = await _vesselRepository.GetByIdAsync(new VesselId(id))
+                    ?? throw new InvalidOperationException($"Vessel with ID '{id}' does not exist.");
+                await _vesselRepository.DeleteAsync(new VesselId(id));
                 await _unitOfWork.CommitAsync();
                 return true;
             }

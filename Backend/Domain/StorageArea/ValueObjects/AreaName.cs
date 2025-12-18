@@ -2,7 +2,7 @@ using ProjArqsi.Domain.Shared;
 
 namespace ProjArqsi.Domain.StorageAreaAggregate
 {
-    public class AreaName : IValueObject
+    public class AreaName : ValueObject
     {
         public string Value { get; private set; }
 
@@ -13,6 +13,11 @@ namespace ProjArqsi.Domain.StorageAreaAggregate
             if (value.Length > 100)
                 throw new BusinessRuleValidationException("Area name cannot exceed 100 characters.");
             Value = value.Trim();
+        }
+
+        protected override IEnumerable<object> GetEqualityComponents()
+        {
+            yield return Value;
         }
     }
 }

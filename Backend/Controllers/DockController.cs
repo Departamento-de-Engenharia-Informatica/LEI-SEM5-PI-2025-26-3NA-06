@@ -38,7 +38,7 @@ namespace ProjArqsi.Controllers
         {
             try
             {
-                var dock = await _service.GetByIdAsync(new DockId(id));
+                var dock = await _service.GetByIdAsync(id);
                 return Ok(dock);
             }
             catch (InvalidOperationException ex)

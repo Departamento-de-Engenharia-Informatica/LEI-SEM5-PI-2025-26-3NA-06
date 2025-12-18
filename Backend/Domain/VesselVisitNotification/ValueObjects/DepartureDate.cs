@@ -1,7 +1,8 @@
 using System;
+using ProjArqsi.Domain.Shared;
 namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
 {
-	public class DepartureDate
+	public class DepartureDate : ValueObject
 	{
 		public DateTime? Value { get; private set; }
 
@@ -9,5 +10,10 @@ namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
 		{
 			Value = date;
 		}
-	}
+
+        protected override IEnumerable<object> GetEqualityComponents()
+        {
+            yield return Value;
+        }
+    }
 }

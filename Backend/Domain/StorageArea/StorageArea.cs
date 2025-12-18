@@ -11,7 +11,6 @@ namespace ProjArqsi.Domain.StorageAreaAggregate
         public AreaType AreaType { get; private set; } = null!;
         public Location Location { get; private set; } = null!;
         public MaxCapacity MaxCapacity { get; private set; } = null!;
-        public CurrentOccupancy CurrentOccupancy { get; private set; } = null!;
         public bool ServesEntirePort { get; private set; } = true;
         public CurrentContainers CurrentContainers { get; private set; } = null!;
         public ServedDocks ServedDocks { get; private set; } = null!;
@@ -20,24 +19,23 @@ namespace ProjArqsi.Domain.StorageAreaAggregate
         public StorageArea( AreaName name, AreaType type, Location location, MaxCapacity maxCapacity,bool servesEntirePort, ServedDocks servedDocks)
         {
             Id = new StorageAreaId(Guid.NewGuid());
-            Name = name;
-            AreaType = type;
-            Location = location;
-            MaxCapacity = maxCapacity;
-            CurrentOccupancy = new CurrentOccupancy(0);
-            CurrentContainers = new CurrentContainers(new List<IsoCode>());
+            Name = name ?? throw new BusinessRuleValidationException("Area name is required.");
+            AreaType = type ?? throw new BusinessRuleValidationException("Area type is required.");
+            Location = location ?? throw new BusinessRuleValidationException("Location is required.");
+            MaxCapacity = maxCapacity ?? throw new BusinessRuleValidationException("Max capacity is required.");
+            CurrentContainers = new CurrentContainers([]);
             ServesEntirePort = servesEntirePort;
-            ServedDocks = servedDocks;
+            ServedDocks = servedDocks ?? throw new BusinessRuleValidationException("Served docks are required.");
         }
 
        public void UpdateDetails(AreaName name, AreaType type, Location location, MaxCapacity maxCapacity,bool servesEntirePort, ServedDocks servedDocks)
         {
-            Name = name;
-            AreaType = type;
-            Location = location;
-            MaxCapacity = maxCapacity;
+            Name = name ?? throw new BusinessRuleValidationException("Area name is required.");
+            AreaType = type ?? throw new BusinessRuleValidationException("Area type is required.");
+            Location = location ?? throw new BusinessRuleValidationException("Location is required.");
+            MaxCapacity = maxCapacity ?? throw new BusinessRuleValidationException("Max capacity is required.");
             ServesEntirePort = servesEntirePort;
-            ServedDocks = servedDocks;
+            ServedDocks = servedDocks ?? throw new BusinessRuleValidationException("Served docks are required.");
         }
     }
 

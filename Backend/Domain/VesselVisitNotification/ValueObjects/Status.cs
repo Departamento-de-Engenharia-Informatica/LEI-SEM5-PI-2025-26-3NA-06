@@ -10,7 +10,7 @@ namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
         Rejected = 3
     }
 
-    public class Status : IValueObject
+    public class Status : ValueObject
     {
         public StatusEnum Value { get; private set; }
         public Status(StatusEnum value)
@@ -28,6 +28,11 @@ namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
         public override int GetHashCode()
         {
             return Value.GetHashCode();
+        }
+
+        protected override IEnumerable<object> GetEqualityComponents()
+        {
+            yield return Value;
         }
     }
 

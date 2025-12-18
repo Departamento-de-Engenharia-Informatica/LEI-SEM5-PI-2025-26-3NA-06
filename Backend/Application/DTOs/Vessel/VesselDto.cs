@@ -2,6 +2,7 @@ namespace ProjArqsi.Application.DTOs
 {
     public class VesselDto
     {
+        public required string Id { get; set; }
         public required string Imo { get; set; }
         public required string VesselName { get; set; }
         public required int Capacity { get; set; }

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ProjArqsi.Domain.VesselAggregate;
+using ProjArqsi.Domain.VesselTypeAggregate;
 
 namespace ProjArqsi.Infrastructure
 {
@@ -8,17 +9,28 @@ namespace ProjArqsi.Infrastructure
     {
         public void Configure(EntityTypeBuilder<Vessel> builder)
         {
+            // Map VesselId value object to Guid
             builder.HasKey(v => v.Id);
-
             builder.Property(v => v.Id)
                 .HasConversion(
-                    id => id.AsString(),
-                    str => new IMOnumber(str)
-                );
+                    id => id.Value, // to db
+                    value => new VesselId(value) // from db
+                )
+                .ValueGeneratedNever()
+                .HasColumnName("Id");
 
             builder.Property(v => v.VesselTypeId)
+                .HasConversion(
+                    id => id.Value,
+                    value => new VesselTypeId(value)
+                )
                 .HasColumnName("VesselTypeId")
                 .IsRequired();
+
+            builder.OwnsOne(v => v.IMO, imo =>
+            {
+                imo.Property(p => p.Number).HasColumnName("IMO").IsRequired();
+            });
 
             builder.OwnsOne(v => v.VesselName, vn =>
             {

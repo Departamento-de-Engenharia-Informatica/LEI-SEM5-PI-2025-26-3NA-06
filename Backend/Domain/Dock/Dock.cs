@@ -16,42 +16,22 @@ namespace ProjArqsi.Domain.DockAggregate
         public Dock(DockName dockName, Location location, DockLength length, Depth depth, Draft maxDraft, AllowedVesselTypes allowedVesselTypes)
         {
             Id = new DockId(Guid.NewGuid());
-            DockName = dockName;
-            Location = location;
-            Length = length;
-            Depth = depth;
-            MaxDraft = maxDraft;
-            AllowedVesselTypes = allowedVesselTypes;
+            DockName = dockName ?? throw new BusinessRuleValidationException("Dock name is required.");
+            Location = location ?? throw new BusinessRuleValidationException("Location is required.");
+            Length = length ?? throw new BusinessRuleValidationException("Length is required.");
+            Depth = depth ?? throw new BusinessRuleValidationException("Depth is required.");
+            MaxDraft = maxDraft ?? throw new BusinessRuleValidationException("Max draft is required.");
+            AllowedVesselTypes = allowedVesselTypes ?? throw new BusinessRuleValidationException("Allowed vessel types are required.");
         }
 
-        public void ChangeDockName(DockName newDockName)
+        public void UpdateDetails(DockName dockName, Location location, DockLength length, Depth depth, Draft maxDraft, AllowedVesselTypes allowedVesselTypes)
         {
-            DockName = newDockName;
-        }
-
-        public void ChangeLocation(Location newLocation)
-        {
-            Location = newLocation;
-        }
-
-        public void ChangeLength(DockLength newLength)
-        {
-            Length = newLength;
-        }
-
-        public void ChangeDepth(Depth newDepth)
-        {
-            Depth = newDepth;
-        }
-
-        public void ChangeMaxDraft(Draft newMaxDraft)
-        {
-            MaxDraft = newMaxDraft;
-        }
-
-        public void SetAllowedVesselTypes(AllowedVesselTypes allowedVesselTypes)
-        {
-            AllowedVesselTypes = allowedVesselTypes;
+            DockName = dockName ?? throw new BusinessRuleValidationException("Dock name is required.");
+            Location = location ?? throw new BusinessRuleValidationException("Location is required.");
+            Length = length ?? throw new BusinessRuleValidationException("Length is required.");
+            Depth = depth ?? throw new BusinessRuleValidationException("Depth is required.");
+            MaxDraft = maxDraft ?? throw new BusinessRuleValidationException("Max draft is required.");
+            AllowedVesselTypes = allowedVesselTypes ?? throw new BusinessRuleValidationException("Allowed vessel types are required.");
         }
     }
 }

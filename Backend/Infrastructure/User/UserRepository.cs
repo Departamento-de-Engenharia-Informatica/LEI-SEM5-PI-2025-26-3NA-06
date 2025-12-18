@@ -20,13 +20,9 @@ namespace ProjArqsi.Infrastructure
             return entity;
         }
 
-        public async Task<User> GetUserByConfirmationTokenAsync(string token)
+        public async Task<User?> GetUserByConfirmationTokenAsync(string token)
         {
             var entity = await _context.Users.FirstOrDefaultAsync(u => u.ConfirmationToken.Equals(token));
-            if (entity == null)
-            {
-                throw new InvalidOperationException($"User with confirmation token '{token}' not found.");
-            }
             return entity;
         }
 
@@ -42,14 +38,10 @@ namespace ProjArqsi.Infrastructure
             return _context.Users.AsQueryable();
         }
 
-        public async Task<User> GetUserByUsernameAsync(Username username)
+        public async Task<User?> GetUserByUsernameAsync(Username username)
         {
             var entity = await _context.Users
             .SingleOrDefaultAsync(u => u.Username.Value == username.Value);
-            if (entity == null)
-            {
-                throw new InvalidOperationException($"User with username '{username.Value}' not found.");
-            }
             return entity;
         }
 

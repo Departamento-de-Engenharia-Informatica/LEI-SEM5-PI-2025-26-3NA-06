@@ -83,6 +83,41 @@ namespace ProjArqsi.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpPost("register")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Register([FromBody] UserUpsertDto dto)
+        {
+            try
+            {
+                await _userService.SelfRegisterUserAsync(dto, dto.Email);
+
+                return Ok(new 
+                { 
+                    success = true,
+                    message = "Registration successful! Please wait for an administrator to approve your account and assign you a role."
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet("confirm-email")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ConfirmEmail([FromQuery] string token)
+        {
+            try
+            {
+                await _userService.ConfirmEmailAsync(token);
+                return Ok(new { success = true, message = "Email confirmed successfully! Your account is now active." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
     }
 }
 

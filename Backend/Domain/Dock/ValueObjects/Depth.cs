@@ -2,14 +2,12 @@ using ProjArqsi.Domain.Shared;
 
 namespace ProjArqsi.Domain.DockAggregate
 {
-    public class Depth : IValueObject
+    public class Depth : ValueObject
     {
         public double Value { get; private set; }
 
         protected Depth()
-        {
-            Value = 0;
-        }
+        {}
 
         public Depth(double value)
         {
@@ -17,6 +15,11 @@ namespace ProjArqsi.Domain.DockAggregate
                 throw new BusinessRuleValidationException("Depth must be greater than 0 meters.");
 
             Value = value;
+        }
+
+        protected override IEnumerable<object> GetEqualityComponents()
+        {
+            yield return Value;
         }
     }
 }

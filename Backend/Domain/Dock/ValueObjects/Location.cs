@@ -2,7 +2,7 @@ using ProjArqsi.Domain.Shared;
 
 namespace ProjArqsi.Domain.DockAggregate
 {
-    public class Location : IValueObject
+    public class Location : ValueObject
     {
         public string Description { get; private set; }
 
@@ -16,6 +16,11 @@ namespace ProjArqsi.Domain.DockAggregate
             if (string.IsNullOrWhiteSpace(description))
                 throw new BusinessRuleValidationException("Location description cannot be empty.");
             Description = description.Trim();
+        }
+
+        protected override IEnumerable<object> GetEqualityComponents()
+        {
+            yield return Description;
         }
     }
 }

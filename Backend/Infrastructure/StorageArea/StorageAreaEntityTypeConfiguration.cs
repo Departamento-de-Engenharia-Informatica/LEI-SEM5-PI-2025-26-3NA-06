@@ -51,9 +51,6 @@ namespace ProjArqsi.Infrastructure
                     .IsRequired();
             });
 
-            // Do not persist CurrentOccupancy, as it is a calculated value
-            builder.Ignore(sa => sa.CurrentOccupancy);
-
             builder
                 .Property(sa => sa.ServedDocks)
                 .HasConversion(

@@ -1,7 +1,8 @@
 namespace ProjArqsi.Application.DTOs
 {
-    public class UpdateVesselDto
+    public class UpsertVesselDto
     {
+        public required string Imo { get; set; }
         public required string VesselName { get; set; }
         public required int Capacity { get; set; }
         public required int Rows { get; set; }

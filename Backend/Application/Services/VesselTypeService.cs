@@ -28,7 +28,6 @@ namespace ProjArqsi.Application.Services
 
             // Create domain entity
             var vesselType = new VesselType(
-                new VesselTypeId(Guid.NewGuid()),
                 typeName,
                 new TypeDescription(dto.TypeDescription),
                 new TypeCapacity(dto.TypeCapacity),

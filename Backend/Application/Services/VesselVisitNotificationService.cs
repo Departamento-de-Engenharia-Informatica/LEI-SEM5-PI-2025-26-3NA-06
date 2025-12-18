@@ -94,12 +94,12 @@ namespace ProjArqsi.Application.Services
             return _mapper.Map<List<VVNDto>>(vvns);
         }
 
-        public async Task<VVNDto> GetSubmittedByIdAsync(Guid vesselVisitNotificationId)
+        public async Task<VVNDto> GetSubmittedByIdAsync(Guid id)
         {
-            var vvn = await _repo.GetSubmittedByIdAsync(new VesselVisitNotificationId(vesselVisitNotificationId));
+            var vvn = await _repo.GetSubmittedByIdAsync(new VesselVisitNotificationId(id));
             if (vvn == null)
             {
-                throw new InvalidOperationException($"Vessel Visit Notification with ID '{vesselVisitNotificationId}' not found.");
+                throw new InvalidOperationException($"Vessel Visit Notification with ID '{id}' not found.");
             }
             return _mapper.Map<VVNDto>(vvn);
         }
@@ -110,12 +110,12 @@ namespace ProjArqsi.Application.Services
             return _mapper.Map<List<VVNDto>>(vvns);
         }
 
-        public async Task<VVNDto> GetReviewedByIdAsync(Guid vesselVisitNotificationId)
+        public async Task<VVNDto> GetReviewedByIdAsync(Guid id)
         {
-            var vvn = await _repo.GetReviewedByIdAsync(new VesselVisitNotificationId(vesselVisitNotificationId));
+            var vvn = await _repo.GetReviewedByIdAsync(new VesselVisitNotificationId(id));
             if (vvn == null)
             {
-                throw new InvalidOperationException($"Vessel Visit Notification with ID '{vesselVisitNotificationId}' not found.");
+                throw new InvalidOperationException($"Vessel Visit Notification with ID '{id}' not found.");
             }
             return _mapper.Map<VVNDto>(vvn);
         }

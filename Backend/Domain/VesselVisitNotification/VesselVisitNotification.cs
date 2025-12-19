@@ -11,7 +11,7 @@ namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
         public DepartureDate? DepartureDate { get; private set; }
 
         //public CargoManifest CargoManifest { get; private set; } = null!;
-        //public bool IsHazardous { get; private set; } = false;
+        public bool IsHazardous { get; private set; } = false;
         //public CrewMembersList CrewMembersList { get; private set; } = null!;
         public RejectionReason? RejectionReason { get; private set; }
         public Status Status { get; private set; } = null!;
@@ -32,7 +32,9 @@ namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
         ArrivalDate = new ArrivalDate(arrivalDate);
         DepartureDate = new DepartureDate(departureDate);
         Status = Statuses.InProgress;
-    }        public void Submit()
+    }
+    
+    public void Submit()
         {
             if (!Status.Equals(Statuses.InProgress))
                 throw new InvalidOperationException("Only notifications in progress can be submitted.");

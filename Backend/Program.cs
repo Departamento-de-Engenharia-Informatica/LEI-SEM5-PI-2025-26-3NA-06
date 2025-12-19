@@ -11,6 +11,7 @@ using ProjArqsi.Middleware;
 using Serilog;
 using ProjArqsi.Domain.StorageAreaAggregate;
 using ProjArqsi.Domain.VesselVisitNotificationAggregate;
+using ProjArqsi.Domain.ContainerAggregate;
 using Infrastructure;
 using ProjArqsi.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -59,6 +60,7 @@ builder.Services.AddScoped<IVesselRepository, VesselRepository>();
 builder.Services.AddScoped<IDockRepository, DockRepository>();
 builder.Services.AddScoped<IStorageAreaRepository, StorageAreaRepository>();
 builder.Services.AddScoped<IVesselVisitNotificationRepository, VesselVisitNotificationRepository>();
+builder.Services.AddScoped<IContainerRepository, ContainerRepository>();
 
 // Register application services
 builder.Services.AddScoped<VesselTypeService>();
@@ -68,6 +70,7 @@ builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<DockService>();
 builder.Services.AddScoped<StorageAreaService>();
 builder.Services.AddScoped<VesselVisitNotificationService>();
+builder.Services.AddScoped<ContainerService>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 // Add JWT authentication using shared library

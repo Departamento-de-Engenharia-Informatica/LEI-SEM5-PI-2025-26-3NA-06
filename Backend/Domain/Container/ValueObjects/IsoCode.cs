@@ -2,61 +2,72 @@ using ProjArqsi.Domain.Shared;
 
 namespace ProjArqsi.Domain.ContainerAggregate
 {
-    public class IsoCode : EntityId
+    public class IsoCode : ValueObject
     {
-        public IsoCode(string value) : base(value)
+        public string Value { get; private set; }
+
+        public IsoCode(string value)
         {
+            Value = NormalizeAndValidate(value);
         }
 
-        protected IsoCode() : base(Guid.NewGuid().ToString())
+        protected IsoCode()
         {
+            Value = string.Empty;
         }
 
-        private void ValidateIsoCode(string value)
+        private static string NormalizeAndValidate(string value)
         {
             if (string.IsNullOrWhiteSpace(value))
                 throw new BusinessRuleValidationException("ISO Code cannot be empty.");
 
-            // Remove any hyphens or spaces for validation
-            string cleanCode = value.Replace("-", "").Replace(" ", "").ToUpperInvariant();
+            // Normalize: Trim, ToUpper, remove spaces and hyphens
+            string cleanCode = value.Trim().Replace("-", "").Replace(" ", "").ToUpperInvariant();
 
-            if (cleanCode.Length != 11)
+            ValidateIsoCode(cleanCode);
+            
+            return cleanCode;
+        }
+
+        private static void ValidateIsoCode(string value)
+        {
+            if (value.Length != 11)
                 throw new BusinessRuleValidationException(
                     $"ISO Code must be 11 characters long (format: AAAU123456C). Received: {value}");
 
             // Validate owner code (first 3 characters must be letters)
-            if (!char.IsLetter(cleanCode[0]) || !char.IsLetter(cleanCode[1]) || !char.IsLetter(cleanCode[2]))
+            if (!char.IsLetter(value[0]) || !char.IsLetter(value[1]) || !char.IsLetter(value[2]))
                 throw new BusinessRuleValidationException(
                     "First 3 characters (Owner Code) must be letters.");
 
             // Validate equipment category identifier (4th character must be a letter)
-            if (!char.IsLetter(cleanCode[3]))
+            if (!char.IsLetter(value[3]))
                 throw new BusinessRuleValidationException(
                     "4th character (Equipment Category) must be a letter.");
 
             // Validate serial number (characters 5-10 must be digits)
             for (int i = 4; i < 10; i++)
             {
-                if (!char.IsDigit(cleanCode[i]))
+                if (!char.IsDigit(value[i]))
                     throw new BusinessRuleValidationException(
                         $"Serial number (characters 5-10) must be digits. Invalid character at position {i + 1}.");
             }
 
             // Validate check digit (11th character must be a digit)
-            if (!char.IsDigit(cleanCode[10]))
+            if (!char.IsDigit(value[10]))
                 throw new BusinessRuleValidationException(
                     "Check digit (11th character) must be a digit.");
 
             // Validate check digit calculation according to ISO 6346
-            int calculatedCheckDigit = CalculateCheckDigit(cleanCode.Substring(0, 10));
-            int providedCheckDigit = int.Parse(cleanCode[10].ToString());
+            int calculatedCheckDigit = CalculateCheckDigit(value.Substring(0, 10));
+            int providedCheckDigit = int.Parse(value[10].ToString());
 
             if (calculatedCheckDigit != providedCheckDigit)
                 throw new BusinessRuleValidationException(
                     $"Invalid check digit. Expected: {calculatedCheckDigit}, Provided: {providedCheckDigit}");
         }
 
-        private int CalculateCheckDigit(string code)
+        private static int CalculateCheckDigit(string code)
         {
             // ISO 6346 check digit calculation
             // Each character is assigned a numerical value and multiplied by its position (2^n)
@@ -89,15 +100,19 @@ namespace ProjArqsi.Domain.ContainerAggregate
             return remainder == 10 ? 0 : remainder;
         }
 
+        protected override IEnumerable<object> GetEqualityComponents()
+        {
+            yield return Value;
+        }
+
         public override string ToString()
         {
             // Format as AAAU123456-C for readability
-            string code = AsString();
-            if (code.Length == 11 && !code.Contains("-"))
+            if (Value.Length == 11 && !Value.Contains("-"))
             {
-                return $"{code.Substring(0, 10)}-{code[10]}";
+                return $"{Value.Substring(0, 10)}-{Value[10]}";
             }
-            return code;
+            return Value;
         }
     }
 }

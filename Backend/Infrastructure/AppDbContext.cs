@@ -6,6 +6,7 @@ using ProjArqsi.Domain.VesselAggregate;
 using ProjArqsi.Domain.DockAggregate;
 using ProjArqsi.Domain.StorageAreaAggregate;
 using ProjArqsi.Domain.VesselVisitNotificationAggregate;
+using ProjArqsi.Domain.ContainerAggregate;
 using Infrastructure;
 
 namespace ProjArqsi.Infrastructure
@@ -18,6 +19,7 @@ namespace ProjArqsi.Infrastructure
         public DbSet<Dock> Docks { get; set; }
         public DbSet<StorageArea> StorageAreas { get; set; }
         public DbSet<VesselVisitNotification> VesselVisitNotifications { get; set; }
+        public DbSet<Container> Containers { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -29,6 +31,7 @@ namespace ProjArqsi.Infrastructure
             modelBuilder.ApplyConfiguration(new DockEntityTypeConfiguration());
             modelBuilder.ApplyConfiguration(new StorageAreaEntityTypeConfiguration());
             modelBuilder.ApplyConfiguration(new VesselVisitNotificationEntityTypeConfiguration());
+            modelBuilder.ApplyConfiguration(new ContainerEntityTypeConfiguration());
         }
     }
 

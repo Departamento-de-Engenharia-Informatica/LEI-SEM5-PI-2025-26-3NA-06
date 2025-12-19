@@ -1,0 +1,130 @@
+<div class="container-management">
+  <div class="header">
+    <h1>Container Management</h1>
+    <button class="btn btn-primary" (click)="openCreateForm()">+ Add New Container</button>
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success">
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="errorMessage && !showForm" class="alert alert-error">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="loading && !showForm" class="loading">Loading containers...</div>
+
+  <div *ngIf="!loading && !showForm && containers.length === 0" class="empty-state">
+    <p>No containers found. Create your first container to get started.</p>
+  </div>
+
+  <div *ngIf="!showForm && containers.length > 0" class="containers-table">
+    <table>
+      <thead>
+        <tr>
+          <th>ISO Code</th>
+          <th>Cargo Type</th>
+          <th>Hazardous</th>
+          <th>Description</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let container of containers">
+          <td class="iso-code">{{ formatIsoCode(container.isoCode) }}</td>
+          <td>{{ container.cargoType }}</td>
+          <td>
+            <span [class]="container.isHazardous ? 'badge-hazardous' : 'badge-safe'">
+              {{ container.isHazardous ? '⚠️ Yes' : '✓ No' }}
+            </span>
+          </td>
+          <td class="description">{{ container.description }}</td>
+          <td class="actions">
+            <button class="btn-edit" (click)="openEditForm(container)">Edit</button>
+            <button class="btn-delete" (click)="deleteContainer(container)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Create/Edit Form Modal -->
+  <div *ngIf="showForm" class="modal-overlay" (click)="closeForm()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ editingContainer ? 'Edit Container' : 'Create New Container' }}</h2>
+        <button class="close-btn" (click)="closeForm()">×</button>
+      </div>
+
+      <div *ngIf="errorMessage" class="alert alert-error">
+        {{ errorMessage }}
+      </div>
+
+      <div *ngIf="successMessage" class="alert alert-success">
+        {{ successMessage }}
+      </div>
+
+      <form (ngSubmit)="saveContainer()" class="container-form">
+        <div class="form-group">
+          <label for="isoCode">ISO Code *</label>
+          <input
+            type="text"
+            id="isoCode"
+            [(ngModel)]="containerForm.isoCode"
+            name="isoCode"
+            [disabled]="!!editingContainer"
+            placeholder="e.g., MSKU3881445 or MSKU388144-5"
+            required
+            maxlength="12"
+          />
+          <small>Format: AAAU123456C (Owner code + Category + Serial + Check digit)</small>
+          <small *ngIf="editingContainer" class="warning"
+            >⚠️ ISO code cannot be changed after creation</small
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="cargoType">Cargo Type *</label>
+          <input
+            type="text"
+            id="cargoType"
+            [(ngModel)]="containerForm.cargoType"
+            name="cargoType"
+            placeholder="e.g., Electronics, Machinery, Food"
+            required
+            minlength="3"
+            maxlength="50"
+          />
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" [(ngModel)]="containerForm.isHazardous" name="isHazardous" />
+            <span>This container contains hazardous materials</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description *</label>
+          <textarea
+            id="description"
+            [(ngModel)]="containerForm.description"
+            name="description"
+            placeholder="Detailed description of the container contents"
+            required
+            maxlength="500"
+            rows="4"
+          ></textarea>
+          <small>Max 500 characters</small>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeForm()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="loading">
+            {{ loading ? 'Saving...' : editingContainer ? 'Update' : 'Create' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

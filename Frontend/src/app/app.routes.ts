@@ -26,6 +26,7 @@ import { CreateVvnComponent } from './shipping-agent/create-vvn/create-vvn.compo
 import { VvnDraftsComponent } from './shipping-agent/vvn-drafts/vvn-drafts.component';
 import { VvnSubmittedComponent } from './shipping-agent/vvn-submitted/vvn-submitted.component';
 import { VvnReviewedComponent } from './shipping-agent/vvn-reviewed/vvn-reviewed.component';
+import { ContainerManagementComponent } from './shipping-agent/container-management/container-management.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -90,6 +91,7 @@ export const routes: Routes = [
           { path: 'vvn-drafts', component: VvnDraftsComponent },
           { path: 'vvn-submitted', component: VvnSubmittedComponent },
           { path: 'vvn-reviewed', component: VvnReviewedComponent },
+          { path: 'containers', component: ContainerManagementComponent },
         ],
       },
     ],

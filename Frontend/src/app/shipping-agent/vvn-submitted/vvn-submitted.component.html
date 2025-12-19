@@ -38,25 +38,17 @@
   <div *ngIf="!isLoading && filteredSubmitted.length > 0" class="submitted-grid">
     <div *ngFor="let vvn of filteredSubmitted" class="vvn-card">
       <div class="card-header">
-        <h3>VVN ID: {{ vvn.id }}</h3>
+        <h3>Vessel IMO: {{ vvn.referredVesselId }}</h3>
         <span class="status-badge submitted">Submitted</span>
       </div>
       <div class="card-body">
         <div class="info-row">
-          <span class="label">Vessel IMO:</span>
-          <span class="value">{{ vvn.referredVesselId }}</span>
+          <span class="label">EAD (Estimated Arrival):</span>
+          <span class="value">{{ vvn.arrivalDate ? formatDate(vvn.arrivalDate) : 'To be defined' }}</span>
         </div>
         <div class="info-row">
-          <span class="label">Arrival Date:</span>
-          <span class="value">{{ formatDate(vvn.arrivalDate) }}</span>
-        </div>
-        <div class="info-row">
-          <span class="label">Departure Date:</span>
-          <span class="value">{{ formatDate(vvn.departureDate) }}</span>
-        </div>
-        <div class="info-row">
-          <span class="label">Status:</span>
-          <span class="value">{{ vvn.status }}</span>
+          <span class="label">EDD (Estimated Departure):</span>
+          <span class="value">{{ vvn.departureDate ? formatDate(vvn.departureDate) : 'To be defined' }}</span>
         </div>
       </div>
       <div class="card-footer">

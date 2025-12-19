@@ -3,18 +3,21 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using ProjArqsi.Domain.UserAggregate.ValueObjects;
 using ProjArqsi.Infrastructure;
+using ProjArqsi.Domain.UserAggregate.ValueObjects;
 
 #nullable disable
 
 namespace ProjArqsi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251218211023_AddContainerAndIsHazardous")]
+    partial class AddContainerAndIsHazardous
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -33,7 +36,16 @@ namespace ProjArqsi.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("IsHazardous");
 
+                    b.Property<string>("IsoCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("IsoCode");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("IsoCode")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Container_IsoCode_Unique");
 
                     b.ToTable("Containers", (string)null);
                 });
@@ -132,10 +144,10 @@ namespace ProjArqsi.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime?>("ArrivalDate")
+                    b.Property<DateTime>("ArrivalDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("DepartureDate")
+                    b.Property<DateTime>("DepartureDate")
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsHazardous")
@@ -157,28 +169,6 @@ namespace ProjArqsi.Migrations
 
             modelBuilder.Entity("ProjArqsi.Domain.ContainerAggregate.Container", b =>
                 {
-                    b.OwnsOne("ProjArqsi.Domain.ContainerAggregate.IsoCode", "IsoCode", b1 =>
-                        {
-                            b1.Property<Guid>("ContainerId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasColumnType("nvarchar(450)")
-                                .HasColumnName("IsoCode");
-
-                            b1.HasKey("ContainerId");
-
-                            b1.HasIndex("Value")
-                                .IsUnique()
-                                .HasDatabaseName("IX_Container_IsoCode_Unique");
-
-                            b1.ToTable("Containers");
-
-                            b1.WithOwner()
-                                .HasForeignKey("ContainerId");
-                        });
-
                     b.OwnsOne("ProjArqsi.Domain.ContainerAggregate.ValueObjects.CargoType", "CargoType", b1 =>
                         {
                             b1.Property<Guid>("ContainerId")
@@ -219,9 +209,6 @@ namespace ProjArqsi.Migrations
                         .IsRequired();
 
                     b.Navigation("Description")
-                        .IsRequired();
-
-                    b.Navigation("IsoCode")
                         .IsRequired();
                 });
 

@@ -104,8 +104,11 @@ export class VvnDraftsComponent implements OnInit {
         next: () => {
           this.ngZone.run(() => {
             this.message = 'Draft deleted successfully';
-            this.loadDrafts();
             this.cdr.detectChanges();
+            // Delay reload to allow user to see the success message
+            setTimeout(() => {
+              this.loadDrafts();
+            }, 2000);
           });
         },
         error: (err) => {

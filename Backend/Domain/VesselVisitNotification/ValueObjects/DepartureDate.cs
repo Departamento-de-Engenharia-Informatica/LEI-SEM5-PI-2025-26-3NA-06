@@ -13,7 +13,7 @@ namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
 
         protected override IEnumerable<object> GetEqualityComponents()
         {
-            yield return Value;
+            yield return Value ?? new object();
         }
     }
 }

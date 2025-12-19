@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProjArqsi.Domain.VesselAggregate;
 using ProjArqsi.Domain.VesselVisitNotificationAggregate;
 
@@ -25,16 +26,24 @@ namespace Infrastructure
 
             builder.Property(vvn => vvn.ArrivalDate)
                 .HasConversion(
-                    date => date.Value, // store as DateTime?
-                    value => new ArrivalDate(value) // rehydrate VO
+                    new ValueConverter<ArrivalDate?, DateTime?>(
+                        date => date == null ? null : date.Value,
+                        value => value == null ? null : new ArrivalDate(value)
+                    )
                 )
-                .IsRequired();
+                .IsRequired(false);
 
             builder.Property(vvn => vvn.DepartureDate)
                 .HasConversion(
-                    date => date.Value, // store as DateTime?
-                    value => new DepartureDate(value) // rehydrate VO
+                    new ValueConverter<DepartureDate?, DateTime?>(
+                        date => date == null ? null : date.Value,
+                        value => value == null ? null : new DepartureDate(value)
+                    )
                 )
+                .IsRequired(false);
+
+            builder.Property(vvn => vvn.IsHazardous)
+                .HasColumnName("IsHazardous")
                 .IsRequired();
             
             builder.OwnsOne(vvn => vvn.RejectionReason, rr =>

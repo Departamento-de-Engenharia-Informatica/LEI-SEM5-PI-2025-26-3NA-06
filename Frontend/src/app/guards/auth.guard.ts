@@ -53,7 +53,6 @@ export const authGuard: CanActivateFn = async (route, state) => {
       const response = await firstValueFrom(
         http.post('http://localhost:5218/api/audit/unauthorized-access', logData)
       );
-      console.log('[AuthGuard] ✓ Backend logged successfully:', response);
     } catch (err: any) {
       console.error('[AuthGuard] ✗ Failed to log to backend:', err);
       console.error('[AuthGuard] Error details:', err.message || err);

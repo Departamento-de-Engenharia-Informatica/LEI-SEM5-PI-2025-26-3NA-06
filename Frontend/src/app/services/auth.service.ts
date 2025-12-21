@@ -54,30 +54,29 @@ export class AuthService {
     sessionStorage.setItem(this.tokenExpiryKey, expiryDate.toISOString());
     sessionStorage.setItem(this.userKey, JSON.stringify(response.user));
 
-    console.log('Auth data stored. User role:', response.user.role);
+
     this.currentUserSubject.next(response.user);
   }
 
   getToken(): string | null {
-    console.log('[AuthService] getToken() called');
+    
     const token = sessionStorage.getItem(this.tokenKey);
-    console.log('[AuthService] Token from sessionStorage:', token ? 'EXISTS' : 'NULL');
+    
 
     if (!token) {
-      console.log('[AuthService] No token found in sessionStorage');
       return null;
     }
 
     const expired = this.isTokenExpired();
-    console.log('[AuthService] Token expired?', expired);
+   
 
     if (token && !expired) {
-      console.log('[AuthService] Token retrieved successfully');
+      
       return token;
     }
 
     if (token && expired) {
-      console.warn('[AuthService] Token expired, clearing auth data');
+
       this.clearAuthData();
     }
 
@@ -85,9 +84,9 @@ export class AuthService {
   }
 
   getUser(): User | null {
-    console.log('[AuthService] getUser() called');
+    
     const user = this.getStoredUser();
-    console.log('[AuthService] User from storage:', user ? user.email : 'NULL');
+    
     return user;
   }
 
@@ -107,10 +106,10 @@ export class AuthService {
 
   isTokenExpired(): boolean {
     const expiry = sessionStorage.getItem(this.tokenExpiryKey);
-    console.log('[AuthService] Token expiry from sessionStorage:', expiry);
+    
 
     if (!expiry) {
-      console.log('[AuthService] No expiry date found');
+      
       return true;
     }
 
@@ -118,17 +117,14 @@ export class AuthService {
     const now = new Date();
     const isExpired = expiryDate <= now;
 
-    console.log('[AuthService] Expiry date:', expiryDate.toISOString());
-    console.log('[AuthService] Current time:', now.toISOString());
-    console.log('[AuthService] Is expired?', isExpired);
 
     return isExpired;
   }
 
   isAuthenticated(): boolean {
-    console.log('[AuthService] isAuthenticated() called');
+   
     const authenticated = this.getToken() !== null;
-    console.log('[AuthService] Is authenticated?', authenticated);
+    
     return authenticated;
   }
 

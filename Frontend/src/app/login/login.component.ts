@@ -64,10 +64,7 @@ export class LoginComponent implements OnInit {
 
       console.log('Calling AuthAPI at http://localhost:5001/auth/google');
       this.authService.authenticateWithGoogle(response.credential).subscribe({
-        next: (authResponse) => {
-          console.log('Authentication successful:', authResponse);
-          console.log('User role:', authResponse.user.role);
-          console.log('Redirecting to dashboard...');
+        next: () => {
           this.redirectToDashboard();
         },
         error: (error) => {

@@ -1,11 +1,31 @@
 <div class="create-vvn-container">
-  <div *ngIf="isLoading || isLoadingVessels" class="loading">
-    <p>{{ isLoadingVessels ? 'Loading vessels...' : 'Processing...' }}</p>
+  <div
+    *ngIf="isLoading || isLoadingVessels || isLoadingContainers || isLoadingStorageAreas"
+    class="loading"
+  >
+    <p>
+      {{
+        isLoadingVessels
+          ? 'Loading vessels...'
+          : isLoadingContainers
+          ? 'Loading containers...'
+          : isLoadingStorageAreas
+          ? 'Loading storage areas...'
+          : 'Processing...'
+      }}
+    </p>
   </div>
 
-  <form *ngIf="!isLoading && !isLoadingVessels" class="vvn-form">
+  <form
+    *ngIf="!isLoading && !isLoadingVessels && !isLoadingContainers && !isLoadingStorageAreas"
+    class="vvn-form"
+  >
     <div class="form-header">
-      <h1>Create Vessel Visit Notification</h1>
+      <h1>
+        {{
+          isEditMode ? 'Edit Vessel Visit Notification Draft' : 'Create Vessel Visit Notification'
+        }}
+      </h1>
     </div>
 
     <div class="form-group">
@@ -48,6 +68,130 @@
       <small class="field-note">Optional for draft, required for submission</small>
     </div>
 
+    <!-- Loading Manifest Section -->
+    <div class="manifest-section">
+      <div class="manifest-header">
+        <h2>Loading Manifest (Optional)</h2>
+        <button
+          type="button"
+          (click)="showLoadingManifest = !showLoadingManifest"
+          class="toggle-btn"
+        >
+          {{ showLoadingManifest ? '▼ Hide' : '▶ Show' }}
+        </button>
+      </div>
+
+      <div *ngIf="showLoadingManifest" class="manifest-content">
+        <p class="manifest-description">
+          Containers to be loaded onto the vessel from storage areas
+        </p>
+
+        <div class="add-entry-form">
+          <div class="entry-inputs">
+            <select
+              [(ngModel)]="newLoadEntry.containerId"
+              name="loadContainer"
+              class="form-control"
+            >
+              <option value="">Select Container</option>
+              <option *ngFor="let container of containers" [value]="container.id">
+                {{ container.isoCode }} - {{ container.cargoType
+                }}{{ container.isHazardous ? ' ⚠️ HAZMAT' : '' }}
+              </option>
+            </select>
+
+            <select
+              [(ngModel)]="newLoadEntry.sourceStorageAreaId"
+              name="loadSource"
+              class="form-control"
+            >
+              <option value="">Select Source Storage Area</option>
+              <option *ngFor="let area of storageAreas" [value]="area.id">
+                {{ area.areaName }}
+              </option>
+            </select>
+
+            <button type="button" (click)="addLoadEntry()" class="add-btn">+ Add</button>
+          </div>
+        </div>
+
+        <div *ngIf="loadingEntries.length > 0" class="entries-list">
+          <h3>Loading Entries ({{ loadingEntries.length }})</h3>
+          <div *ngFor="let entry of loadingEntries; let i = index" class="entry-item">
+            <span class="entry-info">
+              <strong>Container:</strong> {{ getContainerDisplay(entry.containerId) }}
+              <br />
+              <strong>From:</strong> {{ getStorageAreaDisplay(entry.sourceStorageAreaId!) }} →
+              <strong>To:</strong> Vessel
+            </span>
+            <button type="button" (click)="removeLoadEntry(i)" class="remove-btn">Remove</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Unloading Manifest Section -->
+    <div class="manifest-section">
+      <div class="manifest-header">
+        <h2>Unloading Manifest (Optional)</h2>
+        <button
+          type="button"
+          (click)="showUnloadingManifest = !showUnloadingManifest"
+          class="toggle-btn"
+        >
+          {{ showUnloadingManifest ? '▼ Hide' : '▶ Show' }}
+        </button>
+      </div>
+
+      <div *ngIf="showUnloadingManifest" class="manifest-content">
+        <p class="manifest-description">
+          Containers to be unloaded from the vessel to storage areas
+        </p>
+
+        <div class="add-entry-form">
+          <div class="entry-inputs">
+            <select
+              [(ngModel)]="newUnloadEntry.containerId"
+              name="unloadContainer"
+              class="form-control"
+            >
+              <option value="">Select Container</option>
+              <option *ngFor="let container of containers" [value]="container.id">
+                {{ container.isoCode }} - {{ container.cargoType
+                }}{{ container.isHazardous ? ' ⚠️ HAZMAT' : '' }}
+              </option>
+            </select>
+
+            <select
+              [(ngModel)]="newUnloadEntry.targetStorageAreaId"
+              name="unloadTarget"
+              class="form-control"
+            >
+              <option value="">Select Target Storage Area</option>
+              <option *ngFor="let area of storageAreas" [value]="area.id">
+                {{ area.areaName }}
+              </option>
+            </select>
+
+            <button type="button" (click)="addUnloadEntry()" class="add-btn">+ Add</button>
+          </div>
+        </div>
+
+        <div *ngIf="unloadingEntries.length > 0" class="entries-list">
+          <h3>Unloading Entries ({{ unloadingEntries.length }})</h3>
+          <div *ngFor="let entry of unloadingEntries; let i = index" class="entry-item">
+            <span class="entry-info">
+              <strong>Container:</strong> {{ getContainerDisplay(entry.containerId) }}
+              <br />
+              <strong>From:</strong> Vessel → <strong>To:</strong>
+              {{ getStorageAreaDisplay(entry.targetStorageAreaId!) }}
+            </span>
+            <button type="button" (click)="removeUnloadEntry(i)" class="remove-btn">Remove</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div *ngIf="message && isSuccess" class="success-message">
       {{ message }}
     </div>
@@ -58,7 +202,9 @@
 
     <div class="form-actions">
       <button type="button" (click)="cancel()" class="cancel-btn">Cancel</button>
-      <button type="button" (click)="saveDraft()" class="draft-btn">Save as Draft</button>
+      <button type="button" (click)="saveDraft()" class="draft-btn">
+        {{ isEditMode ? 'Update Draft' : 'Save as Draft' }}
+      </button>
       <button type="button" (click)="submitVVN()" class="submit-btn">Submit for Review</button>
     </div>
   </form>

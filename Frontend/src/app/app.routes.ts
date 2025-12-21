@@ -21,6 +21,7 @@ import { authGuard } from './guards/auth.guard';
 import { StorageAreasComponent } from './port-authority/storage-areas/storage-areas.component';
 import { CreateStorageAreaComponent } from './port-authority/create-storage-area/create-storage-area.component';
 import { EditStorageAreaComponent } from './port-authority/edit-storage-area/edit-storage-area.component';
+import { VvnPendingComponent } from './port-authority/vvn-pending/vvn-pending.component';
 import { ShippingAgentDashboardComponent } from './shipping-agent/shipping-agent-dashboard.component';
 import { CreateVvnComponent } from './shipping-agent/create-vvn/create-vvn.component';
 import { VvnDraftsComponent } from './shipping-agent/vvn-drafts/vvn-drafts.component';
@@ -68,6 +69,7 @@ export const routes: Routes = [
           { path: 'storage-areas', component: StorageAreasComponent },
           { path: 'create-storage-area', component: CreateStorageAreaComponent },
           { path: 'edit-storage-area/:id', component: EditStorageAreaComponent },
+          { path: 'vvn-pending', component: VvnPendingComponent },
           // Add more port authority child routes here
         ],
       },
@@ -88,6 +90,7 @@ export const routes: Routes = [
           { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
           { path: 'dashboard', component: ShippingAgentDashboardComponent },
           { path: 'create-vvn', component: CreateVvnComponent },
+          { path: 'edit-vvn/:id', component: CreateVvnComponent },
           { path: 'vvn-drafts', component: VvnDraftsComponent },
           { path: 'vvn-submitted', component: VvnSubmittedComponent },
           { path: 'vvn-reviewed', component: VvnReviewedComponent },

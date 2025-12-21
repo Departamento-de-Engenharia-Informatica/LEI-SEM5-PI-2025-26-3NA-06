@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using ProjArqsi.Application.DTOs.VVN;
 using ProjArqsi.Application.Services;
 using ProjArqsi.Domain.Shared;
+using System.Security.Claims;
 
 namespace ProjArqsi.Controllers
 {
@@ -21,15 +22,42 @@ namespace ProjArqsi.Controllers
 
         // ----------PORT AUTHORITY OFFICER METHODS----------
 
-        // Accept a submitted VVN
-        [HttpPost("{id}/accept")]
+        // Get all pending (submitted) VVNs for review
+        [HttpGet("pending")]
         [Authorize(Roles = "PortAuthorityOfficer")]
-        public async Task<ActionResult<VVNDto>> Accept(Guid id)
+        public async Task<ActionResult<IEnumerable<VVNDto>>> GetAllPending()
         {
             try
             {
-                var vvn = await _service.AcceptAsync(id);
+                var vvns = await _service.GetAllPendingAsync();
+                return Ok(vvns);
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "An error occurred while retrieving pending vessel visit notifications.", details = innerMessage });
+            }
+        }
+
+        // Approve a submitted VVN with temporary dock assignment
+        [HttpPost("{id}/approve")]
+        [Authorize(Roles = "PortAuthorityOfficer")]
+        public async Task<ActionResult<VVNDto>> Approve(Guid id, [FromBody] VVNApprovalDto dto)
+        {
+            try
+            {
+                var officerId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                    ?? throw new UnauthorizedAccessException("Officer ID not found in token.");
+
+                if (!Guid.TryParse(dto.TempAssignedDockId, out var dockGuid))
+                    return BadRequest(new { message = "Invalid dock ID format." });
+
+                var vvn = await _service.ApproveVvnAsync(id, dockGuid, officerId);
                 return Ok(vvn);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
             }
             catch (BusinessRuleValidationException ex)
             {
@@ -38,24 +66,31 @@ namespace ProjArqsi.Controllers
             catch (DbUpdateException ex)
             {
                 var innerMessage = ex.InnerException?.Message ?? ex.Message;
-                return StatusCode(500, new { message = "Database error while accepting VVN.", details = innerMessage });
+                return StatusCode(500, new { message = "Database error while approving VVN.", details = innerMessage });
             }
             catch (Exception ex)
             {
                 var innerMessage = ex.InnerException?.Message ?? ex.Message;
-                return StatusCode(500, new { message = "An error occurred while accepting the VVN.", details = innerMessage });
+                return StatusCode(500, new { message = "An error occurred while approving the VVN.", details = innerMessage });
             }
         }
 
-        // Reject a submitted VVN
+        // Reject a submitted VVN with reason
         [HttpPost("{id}/reject")]
         [Authorize(Roles = "PortAuthorityOfficer")]
-        public async Task<ActionResult<VVNDto>> Reject(Guid id, [FromBody] VVNRejectDto dto)
+        public async Task<ActionResult<VVNDto>> Reject(Guid id, [FromBody] VVNRejectionDto dto)
         {
             try
             {
-                var vvn = await _service.RejectAsync(id, dto.RejectionReason);
+                var officerId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                    ?? throw new UnauthorizedAccessException("Officer ID not found in token.");
+
+                var vvn = await _service.RejectVvnAsync(id, dto.RejectionReason, officerId);
                 return Ok(vvn);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
             }
             catch (BusinessRuleValidationException ex)
             {
@@ -142,6 +177,36 @@ namespace ProjArqsi.Controllers
             }
         }
 
+        // Update an existing draft (including manifests)
+        [HttpPut("drafts/{id}")]
+        [Authorize(Roles = "ShippingAgentRepresentative")]
+        public async Task<ActionResult<VVNDraftDtoWId>> UpdateDraft(Guid id, [FromBody] VVNDraftDto dto)
+        {
+            try
+            {
+                var vvn = await _service.UpdateDraftAsync(id, dto);
+                return Ok(vvn);
+            }
+            catch (BusinessRuleValidationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (DbUpdateException ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "Database error while updating draft.", details = innerMessage });
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "An error occurred while updating the draft.", details = innerMessage });
+            }
+        }
+
         [HttpPost("submit")]
         [Authorize(Roles = "ShippingAgentRepresentative")]
         public async Task<ActionResult<VVNDto>> SubmitVVN([FromBody] VVNSubmitDto dto)
@@ -171,7 +236,114 @@ namespace ProjArqsi.Controllers
             }
         }
 
-        
+        // Submit an existing draft by ID
+        [HttpPost("drafts/{id}/submit")]
+        [Authorize(Roles = "ShippingAgentRepresentative")]
+        public async Task<ActionResult<VVNSubmitDtoWId>> SubmitDraft(Guid id)
+        {
+            try
+            {
+                var vvn = await _service.SubmitDraftAsync(id);
+                return Ok(vvn);
+            }
+            catch (BusinessRuleValidationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (DbUpdateException ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "Database error while submitting draft.", details = innerMessage });
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "An error occurred while submitting the draft.", details = innerMessage });
+            }
+        }
+
+        // Resubmit a rejected VVN for a new decision
+        [HttpPost("{id}/resubmit")]
+        [Authorize(Roles = "ShippingAgentRepresentative")]
+        public async Task<ActionResult<VVNDto>> Resubmit(Guid id)
+        {
+            try
+            {
+                var vvn = await _service.ResubmitVvnAsync(id);
+                return Ok(vvn);
+            }
+            catch (BusinessRuleValidationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (DbUpdateException ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "Database error while resubmitting VVN.", details = innerMessage });
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "An error occurred while resubmitting the VVN.", details = innerMessage });
+            }
+        }
+
+        // Update and resubmit a rejected VVN with new data
+        [HttpPut("{id}/resubmit")]
+        [Authorize(Roles = "ShippingAgentRepresentative")]
+        public async Task<ActionResult<VVNDto>> UpdateAndResubmit(Guid id, [FromBody] VVNSubmitDto dto)
+        {
+            try
+            {
+                var vvn = await _service.UpdateAndResubmitVvnAsync(id, dto);
+                return Ok(vvn);
+            }
+            catch (BusinessRuleValidationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (DbUpdateException ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "Database error while updating and resubmitting VVN.", details = innerMessage });
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "An error occurred while updating and resubmitting the VVN.", details = innerMessage });
+            }
+        }
+
+        // Convert rejected VVN back to draft
+        [HttpPut("{id}/convert-to-draft")]
+        [Authorize(Roles = "ShippingAgentRepresentative")]
+        public async Task<ActionResult<VVNDraftDtoWId>> ConvertRejectedToDraft(Guid id, [FromBody] VVNDraftDto dto)
+        {
+            try
+            {
+                var vvn = await _service.ConvertRejectedToDraftAsync(id, dto);
+                return Ok(vvn);
+            }
+            catch (BusinessRuleValidationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (DbUpdateException ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "Database error while converting VVN to draft.", details = innerMessage });
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "An error occurred while converting VVN to draft.", details = innerMessage });
+            }
+        }
+
 
          // For Agent Ship Rep: Delete a drafted VVN
         [HttpDelete("drafts/{id}")]

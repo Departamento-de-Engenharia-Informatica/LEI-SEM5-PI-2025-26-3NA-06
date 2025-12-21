@@ -12,7 +12,7 @@
       type="text"
       [(ngModel)]="searchTerm"
       (input)="filterDrafts()"
-      placeholder="Search by vessel IMO or VVN ID..."
+      placeholder="Search by vessel IMO..."
       class="search-input"
     />
   </div>
@@ -37,17 +37,29 @@
   <div *ngIf="!isLoading && filteredDrafts.length > 0" class="drafts-grid">
     <div *ngFor="let draft of filteredDrafts" class="draft-card">
       <div class="card-header">
-        <h3>Vessel IMO: {{ draft.referredVesselId }}</h3>
+        <h3>{{ getVesselDisplay(draft.referredVesselId) }}</h3>
         <span class="status-badge draft">Draft</span>
       </div>
       <div class="card-body">
         <div class="info-row">
           <span class="label">EAD (Estimated Arrival):</span>
-          <span class="value">{{ draft.arrivalDate ? formatDate(draft.arrivalDate) : 'To be defined' }}</span>
+          <span class="value">{{
+            draft.arrivalDate ? formatDate(draft.arrivalDate) : 'To be defined'
+          }}</span>
         </div>
         <div class="info-row">
           <span class="label">EDD (Estimated Departure):</span>
-          <span class="value">{{ draft.departureDate ? formatDate(draft.departureDate) : 'To be defined' }}</span>
+          <span class="value">{{
+            draft.departureDate ? formatDate(draft.departureDate) : 'To be defined'
+          }}</span>
+        </div>
+        <div *ngIf="draft.loadingManifest || draft.unloadingManifest" class="manifest-summary">
+          <div class="manifest-badge" *ngIf="draft.loadingManifest">
+            📦 Loading: {{ draft.loadingManifest.entries?.length || 0 }} containers
+          </div>
+          <div class="manifest-badge" *ngIf="draft.unloadingManifest">
+            📤 Unloading: {{ draft.unloadingManifest.entries?.length || 0 }} containers
+          </div>
         </div>
       </div>
       <div class="card-actions">

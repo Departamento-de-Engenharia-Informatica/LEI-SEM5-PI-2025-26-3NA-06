@@ -16,6 +16,7 @@ import { throwError } from 'rxjs';
 export class VvnSubmittedComponent implements OnInit {
   submitted: any[] = [];
   filteredSubmitted: any[] = [];
+  vessels: any[] = [];
   searchTerm: string = '';
   isLoading: boolean = true;
   message: string = '';
@@ -28,7 +29,36 @@ export class VvnSubmittedComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.loadVessels();
     this.loadSubmitted();
+  }
+
+  loadVessels() {
+    this.http
+      .get<any[]>('http://localhost:5218/api/Vessel')
+      .pipe(
+        timeout(20000),
+        catchError((err) => {
+          console.error('HTTP error:', err);
+          return throwError(() => err);
+        })
+      )
+      .subscribe({
+        next: (data) => {
+          this.ngZone.run(() => {
+            this.vessels = data;
+            this.cdr.detectChanges();
+          });
+        },
+        error: (err) => {
+          console.error('Failed to load vessels', err);
+        },
+      });
+  }
+
+  getVesselDisplay(imo: string): string {
+    const vessel = this.vessels.find((v) => v.imo === imo);
+    return vessel ? `${vessel.vesselName} (${imo})` : imo;
   }
 
   loadSubmitted() {

@@ -115,14 +115,13 @@ export class ContainerManagementComponent implements OnInit {
       this.containerService.create(this.containerForm).subscribe({
         next: () => {
           this.ngZone.run(() => {
-            this.successMessage = 'Container created successfully. Redirecting...';
+            this.successMessage = 'Container created successfully!';
             this.loading = false;
             this.loadContainers();
-            this.closeForm();
             this.cdr.detectChanges();
-            // Redirect to container list after 2 seconds
+            // Keep form open with success message for 2 seconds before closing
             setTimeout(() => {
-              this.successMessage = '';
+              this.closeForm();
               this.cdr.detectChanges();
             }, 2000);
           });

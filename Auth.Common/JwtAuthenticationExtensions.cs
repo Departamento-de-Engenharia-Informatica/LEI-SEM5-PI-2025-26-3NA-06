@@ -1,4 +1,5 @@
 using System.Text;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,7 +41,10 @@ public static class JwtAuthenticationExtensions
                 ValidIssuer = jwtSettings.Issuer,
                 ValidAudience = jwtSettings.Audience,
                 IssuerSigningKey = securityKey,
-                ClockSkew = TimeSpan.Zero
+                ClockSkew = TimeSpan.Zero,
+                // Ensure role claims are properly recognized
+                RoleClaimType = ClaimTypes.Role,
+                NameClaimType = ClaimTypes.Email
             };
 
             options.Events = new JwtBearerEvents

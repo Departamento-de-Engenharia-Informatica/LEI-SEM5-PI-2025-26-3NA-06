@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProjArqsi.Infrastructure;
 using ProjArqsi.Domain.UserAggregate.ValueObjects;
@@ -12,9 +13,11 @@ using ProjArqsi.Domain.UserAggregate.ValueObjects;
 namespace ProjArqsi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251219222704_AddCargoManifestsToVVN")]
+    partial class AddCargoManifestsToVVN
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -149,10 +152,6 @@ namespace ProjArqsi.Migrations
                     b.Property<int>("StatusValue")
                         .HasColumnType("int")
                         .HasColumnName("Status");
-
-                    b.Property<Guid?>("TempAssignedDockId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("TempAssignedDockId");
 
                     b.HasKey("Id");
 

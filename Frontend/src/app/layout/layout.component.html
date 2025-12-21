@@ -45,6 +45,9 @@
       <li *ngIf="userRole === 'PortAuthorityOfficer'">
         <a routerLink="/port-authority/storage-areas" routerLinkActive="active">Storage Areas</a>
       </li>
+      <li *ngIf="userRole === 'PortAuthorityOfficer'">
+        <a routerLink="/port-authority/vvn-pending" routerLinkActive="active">Pending VVNs</a>
+      </li>
 
       <!-- Logistic Operator Menu -->
       <li *ngIf="userRole === 'LogisticOperator'">
@@ -64,6 +67,9 @@
           [routerLinkActiveOptions]="{ exact: true }"
           >Dashboard</a
         >
+      </li>
+      <li *ngIf="userRole === 'ShippingAgentRepresentative'">
+        <a routerLink="/shipping-agent/containers" routerLinkActive="active">Containers</a>
       </li>
       <li *ngIf="userRole === 'ShippingAgentRepresentative'">
         <a routerLink="/shipping-agent/create-vvn" routerLinkActive="active">Create VVN</a>

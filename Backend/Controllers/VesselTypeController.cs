@@ -17,7 +17,7 @@ namespace ProjArqsi.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin,PortAuthorityOfficer")]
+        [Authorize(Roles = "PortAuthorityOfficer")]
         public async Task<ActionResult<VesselTypeDto>> Create([FromBody] VesselTypeUpsertDto dto)
         {
             try
@@ -32,7 +32,7 @@ namespace ProjArqsi.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin,PortAuthorityOfficer")]
+        [Authorize(Roles = "PortAuthorityOfficer")]
         public async Task<ActionResult<VesselTypeDto>> Update(Guid id, [FromBody] VesselTypeUpsertDto dto)
         {
             try
@@ -51,7 +51,7 @@ namespace ProjArqsi.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin,PortAuthorityOfficer")]
+        [Authorize(Roles = "PortAuthorityOfficer")]
         public async Task<ActionResult<VesselTypeDto>> GetById(Guid id)
         {
             try
@@ -74,7 +74,7 @@ namespace ProjArqsi.Controllers
         }
 
         [HttpGet("search")]
-        [Authorize(Roles = "Admin,PortAuthorityOfficer")]
+        [Authorize(Roles = "PortAuthorityOfficer")]
         public async Task<ActionResult<IEnumerable<VesselTypeDto>>> Search([FromQuery] string searchTerm)
         {
             if (string.IsNullOrWhiteSpace(searchTerm))

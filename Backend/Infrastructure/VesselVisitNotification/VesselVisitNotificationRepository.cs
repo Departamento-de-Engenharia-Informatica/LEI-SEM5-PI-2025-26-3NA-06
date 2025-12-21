@@ -16,34 +16,40 @@ namespace Infrastructure
         public async Task<List<VesselVisitNotification>> GetAllSubmittedAsync()
         {
             return await _context.VesselVisitNotifications
+                .Include(vvn => vvn.CargoManifests)
                 .Where(vvn => vvn.StatusValue == (int)StatusEnum.Submitted)
                 .ToListAsync();
         }
         public async Task<VesselVisitNotification?> GetSubmittedByIdAsync(VesselVisitNotificationId vesselVisitNotificationId)
         {
             return await _context.VesselVisitNotifications
+                .Include(vvn => vvn.CargoManifests)
                 .FirstOrDefaultAsync(vvn => vvn.Id == vesselVisitNotificationId && vvn.StatusValue == (int)StatusEnum.Submitted);
         }
         public async Task<List<VesselVisitNotification>> GetAllReviewedAsync()
         {
             return await _context.VesselVisitNotifications
+                .Include(vvn => vvn.CargoManifests)
                 .Where(vvn => vvn.StatusValue == (int)StatusEnum.Accepted || vvn.StatusValue == (int)StatusEnum.Rejected)
                 .ToListAsync();
         }
         public async Task<VesselVisitNotification?> GetReviewedByIdAsync(VesselVisitNotificationId vesselVisitNotificationId)
         {
             return await _context.VesselVisitNotifications
+                .Include(vvn => vvn.CargoManifests)
                 .FirstOrDefaultAsync(vvn => vvn.Id == vesselVisitNotificationId && (vvn.StatusValue == (int)StatusEnum.Accepted || vvn.StatusValue == (int)StatusEnum.Rejected));
         }
         public async Task<List<VesselVisitNotification>> GetAllDraftsAsync()
         {
             return await _context.VesselVisitNotifications
+                .Include(vvn => vvn.CargoManifests)
                 .Where(vvn => vvn.StatusValue == (int)StatusEnum.InProgress)
                 .ToListAsync();
         }
         public async Task<VesselVisitNotification?> GetDraftByIdAsync(VesselVisitNotificationId vesselVisitNotificationId)
         {
             return await _context.VesselVisitNotifications
+                .Include(vvn => vvn.CargoManifests)
                 .FirstOrDefaultAsync(vvn => vvn.Id == vesselVisitNotificationId && vvn.StatusValue == (int)StatusEnum.InProgress);
         }
         public async Task<VesselVisitNotification> DraftVVN(VesselVisitNotification vesselVisitNotification)
@@ -62,6 +68,7 @@ namespace Infrastructure
         public async Task<VesselVisitNotification?> GetByIdAsync(VesselVisitNotificationId id)
         {
             return await _context.VesselVisitNotifications
+                .Include(vvn => vvn.CargoManifests)
                 .FirstOrDefaultAsync(vvn => vvn.Id == id);
         }
 
@@ -88,7 +95,9 @@ namespace Infrastructure
         }
         public async Task<List<VesselVisitNotification>> GetAllAsync()
         {
-            return await _context.VesselVisitNotifications.ToListAsync();
+            return await _context.VesselVisitNotifications
+                .Include(vvn => vvn.CargoManifests)
+                .ToListAsync();
         }
     }
 }

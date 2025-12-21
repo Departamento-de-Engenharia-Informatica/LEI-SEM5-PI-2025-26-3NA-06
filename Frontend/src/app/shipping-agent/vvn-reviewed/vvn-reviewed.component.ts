@@ -16,10 +16,16 @@ import { throwError } from 'rxjs';
 export class VvnReviewedComponent implements OnInit {
   reviewed: any[] = [];
   filteredReviewed: any[] = [];
+  vessels: any[] = [];
+  docks: any[] = [];
   searchTerm: string = '';
   filterStatus: string = 'all';
+  filterTimeType: string = 'all'; // 'all', 'arrival', 'departure'
+  filterStartDate: string = '';
+  filterEndDate: string = '';
   isLoading: boolean = true;
   message: string = '';
+  successMessage: string = '';
 
   constructor(
     private http: HttpClient,
@@ -29,7 +35,65 @@ export class VvnReviewedComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.loadVessels();
+    this.loadDocks();
     this.loadReviewed();
+  }
+
+  loadVessels() {
+    this.http
+      .get<any[]>('http://localhost:5218/api/Vessel')
+      .pipe(
+        timeout(20000),
+        catchError((err) => {
+          console.error('HTTP error:', err);
+          return throwError(() => err);
+        })
+      )
+      .subscribe({
+        next: (data) => {
+          this.ngZone.run(() => {
+            this.vessels = data;
+            this.cdr.detectChanges();
+          });
+        },
+        error: (err) => {
+          console.error('Failed to load vessels', err);
+        },
+      });
+  }
+
+  getVesselDisplay(imo: string): string {
+    const vessel = this.vessels.find((v) => v.imo === imo);
+    return vessel ? `${vessel.vesselName} (${imo})` : imo;
+  }
+
+  loadDocks() {
+    this.http
+      .get<any[]>('http://localhost:5218/api/Dock')
+      .pipe(
+        timeout(20000),
+        catchError((err) => {
+          console.error('HTTP error:', err);
+          return throwError(() => err);
+        })
+      )
+      .subscribe({
+        next: (data) => {
+          this.ngZone.run(() => {
+            this.docks = data;
+            this.cdr.detectChanges();
+          });
+        },
+        error: (err) => {
+          console.error('Failed to load docks', err);
+        },
+      });
+  }
+
+  getDockDisplay(dockId: string): string {
+    const dock = this.docks.find((d) => d.id === dockId);
+    return dock ? dock.dockName : dockId;
   }
 
   loadReviewed() {
@@ -96,6 +160,33 @@ export class VvnReviewedComponent implements OnInit {
       );
     }
 
+    // Filter by time (arrival or departure)
+    if (this.filterTimeType !== 'all' && (this.filterStartDate || this.filterEndDate)) {
+      filtered = filtered.filter((vvn) => {
+        const dateToCheck = this.filterTimeType === 'arrival' ? vvn.arrivalDate : vvn.departureDate;
+
+        if (!dateToCheck) return false;
+
+        const vvnDate = new Date(dateToCheck);
+
+        if (this.filterStartDate && this.filterEndDate) {
+          const start = new Date(this.filterStartDate);
+          const end = new Date(this.filterEndDate);
+          end.setHours(23, 59, 59, 999); // Include full end day
+          return vvnDate >= start && vvnDate <= end;
+        } else if (this.filterStartDate) {
+          const start = new Date(this.filterStartDate);
+          return vvnDate >= start;
+        } else if (this.filterEndDate) {
+          const end = new Date(this.filterEndDate);
+          end.setHours(23, 59, 59, 999);
+          return vvnDate <= end;
+        }
+
+        return true;
+      });
+    }
+
     this.filteredReviewed = filtered;
   }
 
@@ -110,5 +201,10 @@ export class VvnReviewedComponent implements OnInit {
 
   getStatusClass(status: string): string {
     return status?.toLowerCase() || '';
+  }
+
+  resubmit(vvnId: string) {
+    // Navigate to edit form so user can make changes before resubmitting
+    this.router.navigate(['/shipping-agent/edit-vvn', vvnId]);
   }
 }

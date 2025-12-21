@@ -9,7 +9,7 @@ namespace ProjArqsi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "PortAuthorityOfficer")]
+    [Authorize(Roles = "ShippingAgentRepresentative, PortAuthorityOfficer")]
     public class StorageAreaController : ControllerBase
     {
         private readonly StorageAreaService _service;

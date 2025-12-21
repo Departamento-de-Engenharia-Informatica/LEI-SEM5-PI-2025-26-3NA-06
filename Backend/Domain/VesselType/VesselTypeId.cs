@@ -13,6 +13,10 @@ namespace ProjArqsi.Domain.VesselTypeAggregate
             if (id == Guid.Empty)
                 throw new ArgumentException("VesselTypeId cannot be empty", nameof(id));
         }
+        public Guid AsGuid()
+        {
+            return (Guid)ObjValue;
+        }
 
         public new Guid Value => (Guid)ObjValue;
     }

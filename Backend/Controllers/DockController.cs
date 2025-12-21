@@ -9,7 +9,7 @@ namespace ProjArqsi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "PortAuthorityOfficer")]
+    [Authorize(Roles = "PortAuthorityOfficer, ShippingAgentRepresentative")]
     public class DockController : ControllerBase
     {
         private readonly DockService _service;

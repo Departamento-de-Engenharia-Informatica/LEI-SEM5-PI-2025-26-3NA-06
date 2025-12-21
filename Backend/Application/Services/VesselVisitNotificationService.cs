@@ -2,6 +2,10 @@ using ProjArqsi.Domain.Shared;
 using AutoMapper;
 using ProjArqsi.Domain.VesselVisitNotificationAggregate;
 using ProjArqsi.Application.DTOs.VVN;
+using ProjArqsi.Domain.ContainerAggregate;
+using ProjArqsi.Domain.StorageAreaAggregate;
+using ProjArqsi.Domain.VesselAggregate;
+using ProjArqsi.Domain.DockAggregate;
 
 namespace ProjArqsi.Application.Services
 {
@@ -9,13 +13,31 @@ namespace ProjArqsi.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IVesselVisitNotificationRepository _repo;
+        private readonly IContainerRepository _containerRepo;
+        private readonly IStorageAreaRepository _storageAreaRepo;
+        private readonly IVesselRepository _vesselRepo;
+        private readonly IDockRepository _dockRepo;
         private readonly IMapper _mapper;
+        private readonly ILogger<VesselVisitNotificationService> _logger;
 
-        public VesselVisitNotificationService(IUnitOfWork unitOfWork, IVesselVisitNotificationRepository repo, IMapper mapper)
+        public VesselVisitNotificationService(
+            IUnitOfWork unitOfWork, 
+            IVesselVisitNotificationRepository repo,
+            IContainerRepository containerRepo,
+            IStorageAreaRepository storageAreaRepo,
+            IVesselRepository vesselRepo,
+            IDockRepository dockRepo,
+            IMapper mapper,
+            ILogger<VesselVisitNotificationService> logger)
         {
             _unitOfWork = unitOfWork;
             _repo = repo;
+            _containerRepo = containerRepo;
+            _storageAreaRepo = storageAreaRepo;
+            _vesselRepo = vesselRepo;
+            _dockRepo = dockRepo;
             _mapper = mapper;
+            _logger = logger;
         }
 
         //This stores draft VVN. Only basic checks are performed. The object will suffer changes later.
@@ -23,20 +45,67 @@ namespace ProjArqsi.Application.Services
         {
             if (string.IsNullOrWhiteSpace(dto.ReferredVesselId))
                 throw new ArgumentException("Vessel ID (IMO number) is required.");
-            if (!dto.ArrivalDate.HasValue)
-                throw new ArgumentException("Arrival date is required.");
-            if (!dto.DepartureDate.HasValue)
-                throw new ArgumentException("Departure date is required.");
-            if (dto.DepartureDate.HasValue && dto.ArrivalDate.HasValue && dto.DepartureDate.Value <= dto.ArrivalDate.Value)
-                throw new ArgumentException("Departure date must be after arrival date.");
 
             var draft = new VesselVisitNotification(dto.ReferredVesselId, dto.ArrivalDate, dto.DepartureDate);
+
+            // Process manifests if provided (optional for draft)
+            if (dto.LoadingManifest != null)
+            {
+                var loadManifest = await BuildCargoManifestAsync(dto.LoadingManifest, ManifestTypeEnum.Load, validateReferences: false);
+                draft.SetLoadingManifest(loadManifest);
+            }
+
+            if (dto.UnloadingManifest != null)
+            {
+                var unloadManifest = await BuildCargoManifestAsync(dto.UnloadingManifest, ManifestTypeEnum.Unload, validateReferences: false);
+                draft.SetUnloadingManifest(unloadManifest);
+            }
 
             await _repo.DraftVVN(draft);
             await _unitOfWork.CommitAsync();
 
             return _mapper.Map<VVNDraftDtoWId>(draft);
         }
+
+        // Update an existing draft
+        public async Task<VVNDraftDtoWId> UpdateDraftAsync(Guid id, VVNDraftDto dto)
+        {
+            var draft = await _repo.GetDraftByIdAsync(new VesselVisitNotificationId(id))
+                ?? throw new BusinessRuleValidationException("Draft not found.");
+
+            // Update dates
+            draft.UpdateDates(dto.ArrivalDate, dto.DepartureDate);
+
+            // Update manifests
+            if (dto.LoadingManifest != null)
+            {
+                var loadManifest = await BuildCargoManifestAsync(dto.LoadingManifest, ManifestTypeEnum.Load, validateReferences: false);
+                draft.SetLoadingManifest(loadManifest);
+            }
+            else
+            {
+                draft.RemoveLoadingManifest();
+            }
+
+            if (dto.UnloadingManifest != null)
+            {
+                var unloadManifest = await BuildCargoManifestAsync(dto.UnloadingManifest, ManifestTypeEnum.Unload, validateReferences: false);
+                draft.SetUnloadingManifest(unloadManifest);
+            }
+            else
+            {
+                draft.RemoveUnloadingManifest();
+            }
+
+            // Update hazardous status based on containers
+            var allContainers = await _containerRepo.GetAllAsync();
+            draft.UpdateHazardousStatus(allContainers);
+
+            await _unitOfWork.CommitAsync();
+
+            return _mapper.Map<VVNDraftDtoWId>(draft);
+        }
+
         //This stores finished VVN. All business rules must be validated.
         public async Task<VVNSubmitDtoWId> SubmitVVNAsync(VVNSubmitDto dto)
         {
@@ -49,43 +118,354 @@ namespace ProjArqsi.Application.Services
             if (dto.DepartureDate <= dto.ArrivalDate)
                 throw new ArgumentException("Departure date must be after arrival date.");
            
-            var referredVessel = dto.ReferredVesselId;
-            var arrivalDate = dto.ArrivalDate;
-            var departureDate = dto.DepartureDate;
-         
-            var draft = new VesselVisitNotification(referredVessel,
-                arrivalDate,
-                departureDate
-                );
+            // Validate vessel exists
+            var vessel = await _vesselRepo.GetByImoAsync(new IMOnumber(dto.ReferredVesselId));
+            if (vessel == null)
+                throw new BusinessRuleValidationException($"Vessel with IMO '{dto.ReferredVesselId}' not found.");
+
+            var vvn = new VesselVisitNotification(dto.ReferredVesselId, dto.ArrivalDate, dto.DepartureDate);
+
+            // Process manifests with full validation
+            if (dto.LoadingManifest != null)
+            {
+                var loadManifest = await BuildCargoManifestAsync(dto.LoadingManifest, ManifestTypeEnum.Load, validateReferences: true);
+                vvn.SetLoadingManifest(loadManifest);
+            }
+
+            if (dto.UnloadingManifest != null)
+            {
+                var unloadManifest = await BuildCargoManifestAsync(dto.UnloadingManifest, ManifestTypeEnum.Unload, validateReferences: true);
+                vvn.SetUnloadingManifest(unloadManifest);
+            }
+
+            // Update hazardous status based on containers
+            var allContainers = await _containerRepo.GetAllAsync();
+            vvn.UpdateHazardousStatus(allContainers);
+
+            // Submit (performs domain validation)
+            vvn.Submit();
+            
+            await _repo.AddAsync(vvn);
+            await _unitOfWork.CommitAsync();
+
+            return _mapper.Map<VVNSubmitDtoWId>(vvn);
+        }
+
+        // Submit an existing draft
+        public async Task<VVNSubmitDtoWId> SubmitDraftAsync(Guid id)
+        {
+            var draft = await _repo.GetDraftByIdAsync(new VesselVisitNotificationId(id))
+                ?? throw new BusinessRuleValidationException("Draft not found.");
+
+            // Validate vessel exists
+            var vesselIMO = draft.ReferredVesselId.VesselId.Value;
+            var vessel = await _vesselRepo.GetByImoAsync(new IMOnumber(vesselIMO));
+            if (vessel == null)
+                throw new BusinessRuleValidationException($"Vessel with IMO '{vesselIMO}' not found.");
+
+            // Validate all referenced entities exist
+            await ValidateManifestReferencesAsync(draft);
+
+            // Update hazardous status based on containers
+            var allContainers = await _containerRepo.GetAllAsync();
+            draft.UpdateHazardousStatus(allContainers);
+
+            // Submit (performs domain validation including date checks)
             draft.Submit();
-            await _repo.AddAsync(draft);
+            
             await _unitOfWork.CommitAsync();
 
             return _mapper.Map<VVNSubmitDtoWId>(draft);
         }
 
-         public async Task<VVNDto> AcceptAsync(Guid id)
+        private async Task<CargoManifest> BuildCargoManifestAsync(CargoManifestDto dto, ManifestTypeEnum expectedType, bool validateReferences)
+        {
+            if (!Enum.TryParse<ManifestTypeEnum>(dto.ManifestType, true, out var manifestType))
+                throw new ArgumentException($"Invalid manifest type: {dto.ManifestType}");
+
+            if (manifestType != expectedType)
+                throw new ArgumentException($"Expected manifest type {expectedType}, but got {manifestType}");
+
+            var manifest = new CargoManifest(new ManifestType(manifestType));
+
+            foreach (var entryDto in dto.Entries)
+            {
+                if (!Guid.TryParse(entryDto.ContainerId, out var containerGuid))
+                    throw new ArgumentException($"Invalid container ID: {entryDto.ContainerId}");
+
+                var containerId = new ContainerId(containerGuid);
+
+                // Validate container exists if required
+                if (validateReferences)
+                {
+                    var container = await _containerRepo.GetByIdAsync(containerId);
+                    if (container == null)
+                        throw new BusinessRuleValidationException($"Container with ID '{containerGuid}' not found.");
+                }
+
+                ManifestEntry entry;
+
+                if (manifestType == ManifestTypeEnum.Load)
+                {
+                    if (string.IsNullOrWhiteSpace(entryDto.SourceStorageAreaId))
+                        throw new ArgumentException("Source storage area is required for loading operations.");
+
+                    if (!Guid.TryParse(entryDto.SourceStorageAreaId, out var sourceGuid))
+                        throw new ArgumentException($"Invalid source storage area ID: {entryDto.SourceStorageAreaId}");
+
+                    var sourceStorageAreaId = new StorageAreaId(sourceGuid);
+
+                    // Validate storage area exists if required
+                    if (validateReferences)
+                    {
+                        var storageArea = await _storageAreaRepo.GetByIdAsync(sourceStorageAreaId);
+                        if (storageArea == null)
+                            throw new BusinessRuleValidationException($"Storage area with ID '{sourceGuid}' not found.");
+                    }
+
+                    entry = ManifestEntry.CreateLoadEntry(containerId, sourceStorageAreaId);
+                }
+                else // Unload
+                {
+                    if (string.IsNullOrWhiteSpace(entryDto.TargetStorageAreaId))
+                        throw new ArgumentException("Target storage area is required for unloading operations.");
+
+                    if (!Guid.TryParse(entryDto.TargetStorageAreaId, out var targetGuid))
+                        throw new ArgumentException($"Invalid target storage area ID: {entryDto.TargetStorageAreaId}");
+
+                    var targetStorageAreaId = new StorageAreaId(targetGuid);
+
+                    // Validate storage area exists if required
+                    if (validateReferences)
+                    {
+                        var storageArea = await _storageAreaRepo.GetByIdAsync(targetStorageAreaId);
+                        if (storageArea == null)
+                            throw new BusinessRuleValidationException($"Storage area with ID '{targetGuid}' not found.");
+                    }
+
+                    entry = ManifestEntry.CreateUnloadEntry(containerId, targetStorageAreaId);
+                }
+
+                manifest.AddEntry(entry);
+            }
+
+            return manifest;
+        }
+
+        private async Task ValidateManifestReferencesAsync(VesselVisitNotification vvn)
+        {
+            var allContainerIds = new HashSet<ContainerId>();
+
+            foreach (var manifest in vvn.CargoManifests)
+            {
+                foreach (var entry in manifest.Entries)
+                {
+                    // Validate container exists
+                    var container = await _containerRepo.GetByIdAsync(entry.ContainerId);
+                    if (container == null)
+                        throw new BusinessRuleValidationException($"Container with ID '{entry.ContainerId.AsGuid()}' not found.");
+
+                    allContainerIds.Add(entry.ContainerId);
+
+                    // Validate source storage area if present
+                    if (entry.SourceStorageAreaId != null)
+                    {
+                        var sourceArea = await _storageAreaRepo.GetByIdAsync(entry.SourceStorageAreaId);
+                        if (sourceArea == null)
+                            throw new BusinessRuleValidationException($"Source storage area with ID '{entry.SourceStorageAreaId.AsGuid()}' not found.");
+                    }
+
+                    // Validate target storage area if present
+                    if (entry.TargetStorageAreaId != null)
+                    {
+                        var targetArea = await _storageAreaRepo.GetByIdAsync(entry.TargetStorageAreaId);
+                        if (targetArea == null)
+                            throw new BusinessRuleValidationException($"Target storage area with ID '{entry.TargetStorageAreaId.AsGuid()}' not found.");
+                    }
+                }
+            }
+        }
+
+        public async Task<VVNDto> ApproveVvnAsync(Guid id, Guid tempAssignedDockId, string officerId)
         {
             var vvn = await _repo.GetByIdAsync(new VesselVisitNotificationId(id))
                 ?? throw new BusinessRuleValidationException("Vessel Visit Notification not found.");
-            if (!vvn.Status.Equals(Statuses.Submitted))
-                throw new BusinessRuleValidationException("Only submitted notifications can be accepted.");
-            vvn.Accept();
+
+            // Validate dock exists
+            var dock = await _dockRepo.GetByIdAsync(new DockId(tempAssignedDockId))
+                ?? throw new BusinessRuleValidationException($"Dock with ID '{tempAssignedDockId}' not found.");
+
+            // Get vessel to check its type
+            var vessel = await _vesselRepo.GetByImoAsync(new IMOnumber(vvn.ReferredVesselId.VesselId.Value))
+                ?? throw new BusinessRuleValidationException($"Vessel with IMO '{vvn.ReferredVesselId.VesselId.Value}' not found.");
+
+            // Validate that the dock can accommodate this vessel type
+            if (!dock.AllowedVesselTypes.VesselTypeIds.Contains(vessel.VesselTypeId.AsGuid()))
+            {
+                throw new BusinessRuleValidationException($"The selected dock '{dock.DockName.Value}' cannot accommodate vessels of this type. Please select a different dock.");
+            }
+
+            vvn.Approve(new DockId(tempAssignedDockId), officerId);
             await _unitOfWork.CommitAsync();
+
+            _logger.LogInformation(
+                "VVN APPROVED - VvnId: {VvnId}, Vessel: {VesselImo}, Officer: {OfficerId}, Dock: {DockId}, Timestamp: {Timestamp}",
+                id, vvn.ReferredVesselId.VesselId.Value, officerId, tempAssignedDockId, DateTime.UtcNow);
+
             return _mapper.Map<VVNDto>(vvn);
         }
 
-        public async Task<VVNDto> RejectAsync(Guid id, string rejectionReason)
+        public async Task<VVNDto> RejectVvnAsync(Guid id, string rejectionReason, string officerId)
         {
             var vvn = await _repo.GetByIdAsync(new VesselVisitNotificationId(id))
                 ?? throw new BusinessRuleValidationException("Vessel Visit Notification not found.");
-            if (!vvn.Status.Equals(Statuses.Submitted))
-                throw new BusinessRuleValidationException("Only submitted notifications can be rejected.");
-            if (string.IsNullOrWhiteSpace(rejectionReason))
-                throw new BusinessRuleValidationException("Rejection reason is required.");
-            vvn.Reject(rejectionReason);
+
+            vvn.Reject(rejectionReason, officerId);
             await _unitOfWork.CommitAsync();
+
+            _logger.LogInformation(
+                "VVN REJECTED - VvnId: {VvnId}, Vessel: {VesselImo}, Officer: {OfficerId}, Reason: {Reason}, Timestamp: {Timestamp}",
+                id, vvn.ReferredVesselId.VesselId.Value, officerId, rejectionReason, DateTime.UtcNow);
+
             return _mapper.Map<VVNDto>(vvn);
+        }
+
+        public async Task<VVNDto> ResubmitVvnAsync(Guid id)
+        {
+            var vvn = await _repo.GetByIdAsync(new VesselVisitNotificationId(id))
+                ?? throw new BusinessRuleValidationException("Vessel Visit Notification not found.");
+
+            vvn.Resubmit();
+            await _unitOfWork.CommitAsync();
+
+            _logger.LogInformation(
+                "VVN RESUBMITTED - VvnId: {VvnId}, Vessel: {VesselImo}, Timestamp: {Timestamp}",
+                id, vvn.ReferredVesselId.VesselId.Value, DateTime.UtcNow);
+
+            return _mapper.Map<VVNDto>(vvn);
+        }
+
+        public async Task<VVNDto> UpdateAndResubmitVvnAsync(Guid id, VVNSubmitDto dto)
+        {
+            var vvn = await _repo.GetByIdAsync(new VesselVisitNotificationId(id))
+                ?? throw new BusinessRuleValidationException("Vessel Visit Notification not found.");
+
+            // Validate vessel exists
+            var vessel = await _vesselRepo.GetByImoAsync(new IMOnumber(dto.ReferredVesselId))
+                ?? throw new BusinessRuleValidationException($"Vessel with IMO '{dto.ReferredVesselId}' not found.");
+
+            // Update dates and temporarily set to InProgress
+            vvn.UpdateAndResubmit(dto.ArrivalDate, dto.DepartureDate);
+
+            // Build manifests
+            CargoManifest? loadingManifest = null;
+            CargoManifest? unloadingManifest = null;
+
+            if (dto.LoadingManifest != null && dto.LoadingManifest.Entries.Any())
+            {
+                loadingManifest = new CargoManifest(new ManifestType(ManifestTypeEnum.Load));
+                foreach (var entryDto in dto.LoadingManifest.Entries)
+                {
+                    var container = await _containerRepo.GetByIdAsync(new ContainerId(Guid.Parse(entryDto.ContainerId)))
+                        ?? throw new BusinessRuleValidationException($"Container with ID '{entryDto.ContainerId}' not found.");
+                    
+                    var sourceArea = await _storageAreaRepo.GetByIdAsync(new StorageAreaId(Guid.Parse(entryDto.SourceStorageAreaId)))
+                        ?? throw new BusinessRuleValidationException($"Storage area with ID '{entryDto.SourceStorageAreaId}' not found.");
+
+                    var entry = ManifestEntry.CreateLoadEntry(
+                        new ContainerId(Guid.Parse(entryDto.ContainerId)),
+                        new StorageAreaId(Guid.Parse(entryDto.SourceStorageAreaId)));
+                    loadingManifest.AddEntry(entry);
+                }
+            }
+
+            if (dto.UnloadingManifest != null && dto.UnloadingManifest.Entries.Any())
+            {
+                unloadingManifest = new CargoManifest(new ManifestType(ManifestTypeEnum.Unload));
+                foreach (var entryDto in dto.UnloadingManifest.Entries)
+                {
+                    var container = await _containerRepo.GetByIdAsync(new ContainerId(Guid.Parse(entryDto.ContainerId)))
+                        ?? throw new BusinessRuleValidationException($"Container with ID '{entryDto.ContainerId}' not found.");
+                    
+                    var targetArea = await _storageAreaRepo.GetByIdAsync(new StorageAreaId(Guid.Parse(entryDto.TargetStorageAreaId)))
+                        ?? throw new BusinessRuleValidationException($"Storage area with ID '{entryDto.TargetStorageAreaId}' not found.");
+
+                    var entry = ManifestEntry.CreateUnloadEntry(
+                        new ContainerId(Guid.Parse(entryDto.ContainerId)),
+                        new StorageAreaId(Guid.Parse(entryDto.TargetStorageAreaId)));
+                    unloadingManifest.AddEntry(entry);
+                }
+            }
+
+            // Update manifests
+            vvn.UpdateManifestsForResubmit(loadingManifest, unloadingManifest);
+
+            // Update hazardous status based on containers
+            var allContainersForResubmit = await _containerRepo.GetAllAsync();
+            vvn.UpdateHazardousStatus(allContainersForResubmit);
+
+            // Now resubmit (validates and changes status to Submitted)
+            vvn.Resubmit();
+
+            await _unitOfWork.CommitAsync();
+
+            _logger.LogInformation(
+                "VVN UPDATED AND RESUBMITTED - VvnId: {VvnId}, Vessel: {VesselImo}, Timestamp: {Timestamp}",
+                id, vvn.ReferredVesselId.VesselId.Value, DateTime.UtcNow);
+
+            return _mapper.Map<VVNDto>(vvn);
+        }
+
+        // Convert a rejected VVN back to draft and update it
+        public async Task<VVNDraftDtoWId> ConvertRejectedToDraftAsync(Guid id, VVNDraftDto dto)
+        {
+            var vvn = await _repo.GetByIdAsync(new VesselVisitNotificationId(id))
+                ?? throw new BusinessRuleValidationException("Vessel Visit Notification not found.");
+
+            // Convert to draft (changes status from Rejected to InProgress)
+            vvn.ConvertToDraft();
+
+            // Update dates
+            vvn.UpdateDates(dto.ArrivalDate, dto.DepartureDate);
+
+            // Update manifests
+            if (dto.LoadingManifest != null)
+            {
+                var loadManifest = await BuildCargoManifestAsync(dto.LoadingManifest, ManifestTypeEnum.Load, validateReferences: false);
+                vvn.SetLoadingManifest(loadManifest);
+            }
+            else
+            {
+                vvn.RemoveLoadingManifest();
+            }
+
+            if (dto.UnloadingManifest != null)
+            {
+                var unloadManifest = await BuildCargoManifestAsync(dto.UnloadingManifest, ManifestTypeEnum.Unload, validateReferences: false);
+                vvn.SetUnloadingManifest(unloadManifest);
+            }
+            else
+            {
+                vvn.RemoveUnloadingManifest();
+            }
+
+            // Update hazardous status based on containers
+            var allContainers = await _containerRepo.GetAllAsync();
+            vvn.UpdateHazardousStatus(allContainers);
+
+            await _unitOfWork.CommitAsync();
+
+            _logger.LogInformation(
+                "VVN CONVERTED TO DRAFT - VvnId: {VvnId}, Timestamp: {Timestamp}",
+                id, DateTime.UtcNow);
+
+            return _mapper.Map<VVNDraftDtoWId>(vvn);
+        }
+
+        public async Task<List<VVNDto>> GetAllPendingAsync()
+        {
+            var vvns = await _repo.GetAllSubmittedAsync();
+            return _mapper.Map<List<VVNDto>>(vvns);
         }
 
         public async Task<List<VVNDto>> GetAllSubmittedAsync()
@@ -96,11 +476,7 @@ namespace ProjArqsi.Application.Services
 
         public async Task<VVNDto> GetSubmittedByIdAsync(Guid id)
         {
-            var vvn = await _repo.GetSubmittedByIdAsync(new VesselVisitNotificationId(id));
-            if (vvn == null)
-            {
-                throw new InvalidOperationException($"Vessel Visit Notification with ID '{id}' not found.");
-            }
+            var vvn = await _repo.GetSubmittedByIdAsync(new VesselVisitNotificationId(id)) ?? throw new InvalidOperationException($"Vessel Visit Notification with ID '{id}' not found.");
             return _mapper.Map<VVNDto>(vvn);
         }
 
@@ -112,11 +488,7 @@ namespace ProjArqsi.Application.Services
 
         public async Task<VVNDto> GetReviewedByIdAsync(Guid id)
         {
-            var vvn = await _repo.GetReviewedByIdAsync(new VesselVisitNotificationId(id));
-            if (vvn == null)
-            {
-                throw new InvalidOperationException($"Vessel Visit Notification with ID '{id}' not found.");
-            }
+            var vvn = await _repo.GetReviewedByIdAsync(new VesselVisitNotificationId(id)) ?? throw new InvalidOperationException($"Vessel Visit Notification with ID '{id}' not found.");
             return _mapper.Map<VVNDto>(vvn);
         }
 
@@ -128,11 +500,7 @@ namespace ProjArqsi.Application.Services
 
         public async Task<VVNDto> GetDraftByIdAsync(Guid id)
         {
-            var vvn = await _repo.GetDraftByIdAsync(new VesselVisitNotificationId(id));
-            if (vvn == null)
-            {
-                throw new InvalidOperationException($"Vessel Visit Notification with ID '{id}' not found.");
-            }
+            var vvn = await _repo.GetDraftByIdAsync(new VesselVisitNotificationId(id)) ?? throw new InvalidOperationException($"Vessel Visit Notification with ID '{id}' not found.");
             return _mapper.Map<VVNDto>(vvn);
         }
 

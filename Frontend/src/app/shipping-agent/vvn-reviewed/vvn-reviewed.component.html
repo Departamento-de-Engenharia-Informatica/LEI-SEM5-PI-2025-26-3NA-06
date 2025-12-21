@@ -12,7 +12,7 @@
         type="text"
         [(ngModel)]="searchTerm"
         (input)="applyFilters()"
-        placeholder="Search by vessel IMO or VVN ID..."
+        placeholder="Search by vessel IMO..."
         class="search-input"
       />
     </div>
@@ -29,6 +29,41 @@
         <option value="rejected">Rejected</option>
       </select>
     </div>
+    <div class="time-filter">
+      <label for="filterTimeType">Filter by time:</label>
+      <select
+        id="filterTimeType"
+        [(ngModel)]="filterTimeType"
+        (change)="onFilterChange()"
+        class="filter-select"
+      >
+        <option value="all">All</option>
+        <option value="arrival">Arrival Date</option>
+        <option value="departure">Departure Date</option>
+      </select>
+    </div>
+    <div class="date-range" *ngIf="filterTimeType !== 'all'">
+      <div class="date-input-group">
+        <label for="filterStartDate">From:</label>
+        <input
+          type="date"
+          id="filterStartDate"
+          [(ngModel)]="filterStartDate"
+          (change)="onFilterChange()"
+          class="date-input"
+        />
+      </div>
+      <div class="date-input-group">
+        <label for="filterEndDate">To:</label>
+        <input
+          type="date"
+          id="filterEndDate"
+          [(ngModel)]="filterEndDate"
+          (change)="onFilterChange()"
+          class="date-input"
+        />
+      </div>
+    </div>
   </div>
 
   <div *ngIf="isLoading" class="loading">
@@ -37,6 +72,10 @@
 
   <div *ngIf="message && !isLoading" class="message">
     {{ message }}
+  </div>
+
+  <div *ngIf="successMessage" class="success-message">
+    {{ successMessage }}
   </div>
 
   <div *ngIf="!isLoading && reviewed.length === 0" class="empty-state">
@@ -53,21 +92,44 @@
   <div *ngIf="!isLoading && filteredReviewed.length > 0" class="reviewed-grid">
     <div *ngFor="let vvn of filteredReviewed" class="vvn-card">
       <div class="card-header">
-        <h3>Vessel IMO: {{ vvn.referredVesselId }}</h3>
+        <h3>{{ getVesselDisplay(vvn.referredVesselId) }}</h3>
         <span class="status-badge" [ngClass]="getStatusClass(vvn.status)">{{ vvn.status }}</span>
       </div>
       <div class="card-body">
         <div class="info-row">
           <span class="label">EAD (Estimated Arrival):</span>
-          <span class="value">{{ vvn.arrivalDate ? formatDate(vvn.arrivalDate) : 'To be defined' }}</span>
+          <span class="value">{{
+            vvn.arrivalDate ? formatDate(vvn.arrivalDate) : 'To be defined'
+          }}</span>
         </div>
         <div class="info-row">
           <span class="label">EDD (Estimated Departure):</span>
-          <span class="value">{{ vvn.departureDate ? formatDate(vvn.departureDate) : 'To be defined' }}</span>
+          <span class="value">{{
+            vvn.departureDate ? formatDate(vvn.departureDate) : 'To be defined'
+          }}</span>
+        </div>
+        <div *ngIf="vvn.loadingManifest || vvn.unloadingManifest" class="manifest-summary">
+          <div class="manifest-badge" *ngIf="vvn.loadingManifest">
+            📦 Loading: {{ vvn.loadingManifest.entries?.length || 0 }} containers
+          </div>
+          <div class="manifest-badge" *ngIf="vvn.unloadingManifest">
+            📤 Unloading: {{ vvn.unloadingManifest.entries?.length || 0 }} containers
+          </div>
+        </div>
+        <div
+          *ngIf="vvn.status === 'Accepted' && vvn.tempAssignedDockId"
+          class="info-row assigned-dock"
+        >
+          <span class="label">Assigned Dock:</span>
+          <span class="value dock-name">{{ getDockDisplay(vvn.tempAssignedDockId) }}</span>
         </div>
         <div *ngIf="vvn.rejectionReason" class="rejection-reason">
-          <span class="label">Rejection Reason:</span>
+          \n <span class="label">Rejection Reason:</span>\n
           <p class="reason-text">{{ vvn.rejectionReason }}</p>
+          \n
+        </div>
+        <div *ngIf="vvn.status === 'Rejected'" class="card-actions">
+          <button class="resubmit-btn" (click)="resubmit(vvn.id)">Edit and Resubmit</button>
         </div>
       </div>
     </div>

@@ -1,0 +1,225 @@
+<div class="vvn-pending-container">
+  <div class="vvn-pending-header">
+    <h1>Pending VVNs for Review</h1>
+    <div class="header-actions">
+      <button (click)="goBack()" class="back-btn">← Back to Dashboard</button>
+    </div>
+  </div>
+
+  <!-- Success/Error Messages -->
+  <div *ngIf="successMessage" class="success-message">
+    {{ successMessage }}
+  </div>
+  <div *ngIf="message" class="error-message">
+    {{ message }}
+  </div>
+
+  <!-- Search -->
+  <div *ngIf="!isLoading && pending.length > 0" class="search-container">
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Search by vessel IMO or name..."
+      [(ngModel)]="searchTerm"
+      (ngModelChange)="search()"
+    />
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="text-center">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <!-- Pending VVNs Table -->
+  <table class="table table-striped table-hover" *ngIf="!isLoading">
+    <thead>
+      <tr>
+        <th>Vessel</th>
+        <th>ETA</th>
+        <th>ETD</th>
+        <th>Hazardous</th>
+        <th>Manifests</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let vvn of filteredPending">
+        <td>{{ getVesselDisplay(vvn.referredVesselId) }}</td>
+        <td>{{ vvn.arrivalDate ? (vvn.arrivalDate | date : 'short') : 'N/A' }}</td>
+        <td>{{ vvn.departureDate ? (vvn.departureDate | date : 'short') : 'N/A' }}</td>
+        <td>
+          <span
+            class="badge"
+            [class.bg-danger]="isHazardous(vvn)"
+            [class.bg-success]="!isHazardous(vvn)"
+          >
+            {{ isHazardous(vvn) ? 'Yes' : 'No' }}
+          </span>
+        </td>
+        <td>{{ getManifestCount(vvn) }}</td>
+        <td>
+          <button class="btn btn-primary btn-sm" (click)="openReviewModal(vvn)">Review</button>
+        </td>
+      </tr>
+      <tr *ngIf="filteredPending.length === 0">
+        <td colspan="6" class="text-center">No pending VVNs found.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Review Modal -->
+  <div
+    class="modal"
+    [class.show]="showReviewModal"
+    [style.display]="showReviewModal ? 'block' : 'none'"
+    tabindex="-1"
+  >
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Review VVN</h5>
+          <button type="button" class="btn-close" (click)="closeReviewModal()"></button>
+        </div>
+        <div class="modal-body">
+          <div *ngIf="selectedVvn">
+            <h6>Vessel Details</h6>
+            <p><strong>Vessel:</strong> {{ getVesselDisplay(selectedVvn.referredVesselId) }}</p>
+            <p><strong>ETA:</strong> {{ selectedVvn.arrivalDate | date : 'medium' }}</p>
+            <p><strong>ETD:</strong> {{ selectedVvn.departureDate | date : 'medium' }}</p>
+
+            <h6 class="mt-3">Cargo Manifests</h6>
+
+            <!-- Loading Manifest Details -->
+            <div *ngIf="selectedVvn.loadingManifest" class="manifest-section">
+              <h6 class="manifest-title">
+                📦 Loading Manifest ({{ selectedVvn.loadingManifest.entries.length }} containers)
+              </h6>
+              <div class="manifest-table">
+                <table class="table table-sm table-bordered">
+                  <thead>
+                    <tr>
+                      <th>Container</th>
+                      <th>From Storage Area</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let entry of selectedVvn.loadingManifest.entries">
+                      <td>{{ getContainerDisplay(entry.containerId) }}</td>
+                      <td>{{ getStorageAreaDisplay(entry.sourceStorageAreaId) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Unloading Manifest Details -->
+            <div *ngIf="selectedVvn.unloadingManifest" class="manifest-section">
+              <h6 class="manifest-title">
+                📦 Unloading Manifest ({{
+                  selectedVvn.unloadingManifest.entries.length
+                }}
+                containers)
+              </h6>
+              <div class="manifest-table">
+                <table class="table table-sm table-bordered">
+                  <thead>
+                    <tr>
+                      <th>Container</th>
+                      <th>To Storage Area</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let entry of selectedVvn.unloadingManifest.entries">
+                      <td>{{ getContainerDisplay(entry.containerId) }}</td>
+                      <td>{{ getStorageAreaDisplay(entry.targetStorageAreaId) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div *ngIf="!selectedVvn.loadingManifest && !selectedVvn.unloadingManifest">
+              <p class="text-muted">No cargo manifests</p>
+            </div>
+
+            <!-- Hazardous Indicator -->
+            <div *ngIf="selectedVvn.isHazardous" class="alert alert-warning mt-3">
+              <strong>⚠️ Warning:</strong> This VVN contains hazardous cargo.
+            </div>
+
+            <div *ngIf="errorMessage" class="alert alert-danger mt-3">
+              {{ errorMessage }}
+            </div>
+
+            <!-- Decision Buttons -->
+            <div class="mt-4 d-flex gap-2">
+              <button
+                class="btn btn-success"
+                [class.active]="isApproving"
+                (click)="setApproving(true)"
+              >
+                Approve
+              </button>
+              <button
+                class="btn btn-danger"
+                [class.active]="!isApproving"
+                (click)="setApproving(false)"
+              >
+                Reject
+              </button>
+            </div>
+
+            <!-- Approve Form -->
+            <div *ngIf="isApproving" class="mt-3">
+              <label class="form-label">Select Dock (Temporary Assignment)</label>
+              <select class="form-select" [(ngModel)]="selectedDockId" required>
+                <option value="">-- Select a Dock --</option>
+                <option *ngFor="let dock of docks" [value]="dock.id">
+                  {{ dock.dockName || dock.id }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Reject Form -->
+            <div *ngIf="!isApproving" class="mt-3">
+              <label class="form-label">Rejection Reason</label>
+              <textarea
+                class="form-control"
+                rows="4"
+                [(ngModel)]="rejectionReason"
+                placeholder="Enter reason for rejection..."
+                required
+              ></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeReviewModal()">
+            Close
+          </button>
+          <button
+            *ngIf="isApproving"
+            type="button"
+            class="btn btn-success"
+            (click)="approveVvn()"
+            [disabled]="!selectedDockId"
+          >
+            Confirm Approval
+          </button>
+          <button
+            *ngIf="!isApproving"
+            type="button"
+            class="btn btn-danger"
+            (click)="rejectVvn()"
+            [disabled]="!rejectionReason.trim()"
+          >
+            Confirm Rejection
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade" [class.show]="showReviewModal" *ngIf="showReviewModal"></div>
+</div>

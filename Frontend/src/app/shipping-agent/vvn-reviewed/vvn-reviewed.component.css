@@ -66,13 +66,16 @@
   border-color: #3498db;
 }
 
-.status-filter {
+.status-filter,
+.time-filter {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
+  min-width: 150px;
 }
 
-.status-filter label {
+.status-filter label,
+.time-filter label {
   font-size: 0.9rem;
   font-weight: 600;
   color: #2c3e50;
@@ -91,6 +94,38 @@
   border-color: #3498db;
 }
 
+.date-range {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.date-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.date-input-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.date-input {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  min-width: 150px;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
 .loading {
   text-align: center;
   padding: 3rem;
@@ -103,6 +138,16 @@
   background-color: #fff3cd;
   color: #856404;
   border: 1px solid #ffeeba;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.success-message {
+  padding: 1rem;
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
   border-radius: 6px;
   margin-bottom: 1rem;
   text-align: center;
@@ -214,4 +259,70 @@
   color: #856404;
   font-size: 0.9rem;
   line-height: 1.5;
+}
+
+.card-actions {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.resubmit-btn {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: 600;
+  background-color: #3498db;
+  color: white;
+}
+
+.resubmit-btn:hover {
+  background-color: #2980b9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);
+}
+
+.manifest-summary {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 2px solid #f0f0f0;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.manifest-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.8rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+.assigned-dock {
+  background-color: #e8f5e9;
+  margin-top: 1rem;
+  padding: 0.75rem !important;
+  border-radius: 6px;
+  border-left: 4px solid #4caf50;
+}
+
+.assigned-dock .label {
+  color: #2e7d32;
+  font-weight: 700;
+}
+
+.assigned-dock .dock-name {
+  color: #1b5e20;
+  font-weight: 600;
+  font-size: 1rem;
 }

@@ -17,11 +17,17 @@ using ProjArqsi.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using ProjArqsi.Auth.Common;
 
-// Configure Serilog - only log warnings and errors, suppress all informational logs
+// Configure Serilog - only log unauthorized access and VVN approval/rejection decisions
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Warning()
-    .Filter.ByExcluding(logEvent => 
-        logEvent.MessageTemplate.Text.Contains("Failed to determine the https port"))
+    .MinimumLevel.Information()
+    .Filter.ByIncludingOnly(logEvent => 
+        // Only log VVN approval/rejection decisions
+        logEvent.MessageTemplate.Text.Contains("VVN APPROVED") ||
+        logEvent.MessageTemplate.Text.Contains("VVN REJECTED") ||
+        // And unauthorized access attempts
+        logEvent.MessageTemplate.Text.Contains("UNAUTHORIZED ACCESS") ||
+        logEvent.MessageTemplate.Text.Contains("ACCESS DENIED")
+    )
     .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 

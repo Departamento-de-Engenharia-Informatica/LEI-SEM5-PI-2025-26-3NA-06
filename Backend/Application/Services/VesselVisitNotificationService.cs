@@ -369,12 +369,12 @@ namespace ProjArqsi.Application.Services
                     var container = await _containerRepo.GetByIdAsync(new ContainerId(Guid.Parse(entryDto.ContainerId)))
                         ?? throw new BusinessRuleValidationException($"Container with ID '{entryDto.ContainerId}' not found.");
                     
-                    var sourceArea = await _storageAreaRepo.GetByIdAsync(new StorageAreaId(Guid.Parse(entryDto.SourceStorageAreaId)))
+                    var sourceArea = await _storageAreaRepo.GetByIdAsync(new StorageAreaId(Guid.Parse(entryDto.SourceStorageAreaId!)))
                         ?? throw new BusinessRuleValidationException($"Storage area with ID '{entryDto.SourceStorageAreaId}' not found.");
 
                     var entry = ManifestEntry.CreateLoadEntry(
                         new ContainerId(Guid.Parse(entryDto.ContainerId)),
-                        new StorageAreaId(Guid.Parse(entryDto.SourceStorageAreaId)));
+                        new StorageAreaId(Guid.Parse(entryDto.SourceStorageAreaId!)));
                     loadingManifest.AddEntry(entry);
                 }
             }
@@ -387,12 +387,12 @@ namespace ProjArqsi.Application.Services
                     var container = await _containerRepo.GetByIdAsync(new ContainerId(Guid.Parse(entryDto.ContainerId)))
                         ?? throw new BusinessRuleValidationException($"Container with ID '{entryDto.ContainerId}' not found.");
                     
-                    var targetArea = await _storageAreaRepo.GetByIdAsync(new StorageAreaId(Guid.Parse(entryDto.TargetStorageAreaId)))
+                    var targetArea = await _storageAreaRepo.GetByIdAsync(new StorageAreaId(Guid.Parse(entryDto.TargetStorageAreaId!)))
                         ?? throw new BusinessRuleValidationException($"Storage area with ID '{entryDto.TargetStorageAreaId}' not found.");
 
                     var entry = ManifestEntry.CreateUnloadEntry(
                         new ContainerId(Guid.Parse(entryDto.ContainerId)),
-                        new StorageAreaId(Guid.Parse(entryDto.TargetStorageAreaId)));
+                        new StorageAreaId(Guid.Parse(entryDto.TargetStorageAreaId!)));
                     unloadingManifest.AddEntry(entry);
                 }
             }

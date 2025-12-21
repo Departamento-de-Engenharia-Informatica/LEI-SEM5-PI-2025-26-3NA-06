@@ -62,7 +62,11 @@ namespace ProjArqsi.Infrastructure
                     .HasConversion(
                         v => string.Join(',', v),
                         v => v.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                            .Select(Guid.Parse).ToList())
+                            .Select(Guid.Parse).ToList(),
+                        new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<List<Guid>>(
+                            (c1, c2) => c1!.SequenceEqual(c2!),
+                            c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                            c => c.ToList()))
                     .HasColumnName("AllowedVesselTypeIds");
             });
         }

@@ -35,7 +35,7 @@ namespace ProjArqsi.Middleware
                 var method = context.Request.Method;
 
                 _logger.LogWarning(
-                    "UNAUTHORIZED ACCESS ATTEMPT - Method: {Method}, Path: {Path} - User not authenticated",
+                    "UNAUTHORIZED ACCESS - Method: {Method}, Path: {Path}, Reason: Not authenticated",
                     method, path
                 );
             }
@@ -47,7 +47,7 @@ namespace ProjArqsi.Middleware
                 var method = context.Request.Method;
 
                 _logger.LogWarning(
-                    "FORBIDDEN ACCESS ATTEMPT - User: {Email}, Role: {Role}, Method: {Method}, Path: {Path} - Insufficient permissions",
+                    "ACCESS DENIED - User: {Email}, Role: {Role}, Method: {Method}, Path: {Path}, Reason: Insufficient permissions",
                     email, role, method, path
                 );
             }
@@ -62,7 +62,7 @@ namespace ProjArqsi.Middleware
                     var method = context.Request.Method;
                     
                     _logger.LogWarning(
-                        "UNAUTHORIZED ACCESS ATTEMPT - Method: {Method}, Path: {Path} - Redirected to login (not authenticated)",
+                        "UNAUTHORIZED ACCESS - Method: {Method}, Path: {Path}, Reason: Redirected to login",
                         method, path
                     );
                 }

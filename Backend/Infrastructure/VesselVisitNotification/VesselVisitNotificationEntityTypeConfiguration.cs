@@ -52,7 +52,7 @@ namespace Infrastructure
             builder.OwnsOne(vvn => vvn.RejectionReason, rr =>
             {
                 rr.Property(r => r.Value).HasColumnName("RejectionReason").IsRequired(false);
-            });
+            }).Navigation(vvn => vvn.RejectionReason).IsRequired(false);
 
             // Map TempAssignedDockId as nullable Guid
             builder.Property(vvn => vvn.TempAssignedDockId)

@@ -49,37 +49,56 @@ export class AuthService {
     const expiresIn = response.expiresIn || 3600; // Default 1 hour if not provided
     expiryDate.setSeconds(expiryDate.getSeconds() + expiresIn);
 
-    localStorage.setItem(this.tokenKey, response.accessToken);
-    localStorage.setItem(this.tokenExpiryKey, expiryDate.toISOString());
-    localStorage.setItem(this.userKey, JSON.stringify(response.user));
+    // Use sessionStorage instead of localStorage - clears when browser closes
+    sessionStorage.setItem(this.tokenKey, response.accessToken);
+    sessionStorage.setItem(this.tokenExpiryKey, expiryDate.toISOString());
+    sessionStorage.setItem(this.userKey, JSON.stringify(response.user));
 
     console.log('Auth data stored. User role:', response.user.role);
     this.currentUserSubject.next(response.user);
   }
 
   getToken(): string | null {
-    const token = localStorage.getItem(this.tokenKey);
-    if (token && !this.isTokenExpired()) {
-      console.log('Token retrieved successfully');
+    console.log('[AuthService] getToken() called');
+    const token = sessionStorage.getItem(this.tokenKey);
+    console.log('[AuthService] Token from sessionStorage:', token ? 'EXISTS' : 'NULL');
+
+    if (!token) {
+      console.log('[AuthService] No token found in sessionStorage');
+      return null;
+    }
+
+    const expired = this.isTokenExpired();
+    console.log('[AuthService] Token expired?', expired);
+
+    if (token && !expired) {
+      console.log('[AuthService] Token retrieved successfully');
       return token;
     }
-    if (token && this.isTokenExpired()) {
-      console.warn('Token expired, clearing auth data');
+
+    if (token && expired) {
+      console.warn('[AuthService] Token expired, clearing auth data');
+      this.clearAuthData();
     }
-    this.clearAuthData();
+
     return null;
   }
 
   getUser(): User | null {
-    return this.getStoredUser();
+    console.log('[AuthService] getUser() called');
+    const user = this.getStoredUser();
+    console.log('[AuthService] User from storage:', user ? user.email : 'NULL');
+    return user;
   }
 
   private getStoredUser(): User | null {
-    const userJson = localStorage.getItem(this.userKey);
+    const userJson = sessionStorage.getItem(this.userKey);
     if (userJson) {
       try {
-        return JSON.parse(userJson);
+        const user = JSON.parse(userJson);
+        return user;
       } catch {
+        console.error('[AuthService] Failed to parse user JSON');
         return null;
       }
     }
@@ -87,16 +106,30 @@ export class AuthService {
   }
 
   isTokenExpired(): boolean {
-    const expiry = localStorage.getItem(this.tokenExpiryKey);
+    const expiry = sessionStorage.getItem(this.tokenExpiryKey);
+    console.log('[AuthService] Token expiry from sessionStorage:', expiry);
+
     if (!expiry) {
+      console.log('[AuthService] No expiry date found');
       return true;
     }
+
     const expiryDate = new Date(expiry);
-    return expiryDate <= new Date();
+    const now = new Date();
+    const isExpired = expiryDate <= now;
+
+    console.log('[AuthService] Expiry date:', expiryDate.toISOString());
+    console.log('[AuthService] Current time:', now.toISOString());
+    console.log('[AuthService] Is expired?', isExpired);
+
+    return isExpired;
   }
 
   isAuthenticated(): boolean {
-    return this.getToken() !== null;
+    console.log('[AuthService] isAuthenticated() called');
+    const authenticated = this.getToken() !== null;
+    console.log('[AuthService] Is authenticated?', authenticated);
+    return authenticated;
   }
 
   logout(): void {
@@ -105,8 +138,8 @@ export class AuthService {
   }
 
   private clearAuthData(): void {
-    localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem(this.tokenExpiryKey);
-    localStorage.removeItem(this.userKey);
+    sessionStorage.removeItem(this.tokenKey);
+    sessionStorage.removeItem(this.tokenExpiryKey);
+    sessionStorage.removeItem(this.userKey);
   }
 }

@@ -11,9 +11,5 @@ export class App {
   protected readonly title = signal('ProjArqsiFrontend');
 
   constructor() {
-    window.addEventListener('unload', () => {
-      localStorage.clear();
-      sessionStorage.clear();
-    });
   }
 }

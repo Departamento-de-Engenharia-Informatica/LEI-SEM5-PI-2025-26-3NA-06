@@ -17,9 +17,7 @@ namespace ProjArqsi.Controllers
         [HttpPost("unauthorized-access")]
         [AllowAnonymous]
         public IActionResult LogUnauthorizedAccess([FromBody] UnauthorizedAccessLogDto dto)
-        {
-            Console.WriteLine($"[AUDIT] Received unauthorized access log: {dto.Email} attempted {dto.AttemptedPath}");
-            
+        {            
             _logger.LogWarning(
                 "ACCESS DENIED - User: {Email}, Role: {Role}, Path: {Path}, Required: {RequiredRole}, Timestamp: {Timestamp}",
                 dto.Email, dto.Role, dto.AttemptedPath, dto.RequiredRole, dto.Timestamp);

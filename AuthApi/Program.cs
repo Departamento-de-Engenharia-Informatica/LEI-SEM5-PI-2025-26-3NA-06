@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ProjArqsi.Auth.Common;
 using ProjArqsi.Infrastructure;
+using ProjArqsi.AuthApi.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +35,9 @@ builder.Services.AddJwtAuthentication(builder.Configuration);
 
 // Register JwtTokenGenerator for dependency injection
 builder.Services.AddScoped<JwtTokenGenerator>();
+
+// Register logging classes
+builder.Services.AddScoped<IAuthLogger, AuthLogger>();
 
 // Add controllers
 builder.Services.AddControllers();

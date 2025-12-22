@@ -7,6 +7,7 @@ namespace ProjArqsi.Application.DTOs.StorageArea
         public required string AreaType { get; set; }
         public required string Location { get; set; }
         public required int MaxCapacity { get; set; }
+        public int CurrentOccupancy { get; set; } = 0; // Derived field for current TEU usage
         public required bool ServesEntirePort { get; set; }
         public required List<string> ServedDockIds { get; set; }
     }

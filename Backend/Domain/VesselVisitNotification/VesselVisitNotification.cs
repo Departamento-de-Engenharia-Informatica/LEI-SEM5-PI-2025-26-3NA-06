@@ -174,7 +174,7 @@ namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
         Status = Statuses.Accepted;
         TempAssignedDockId = new TempAssignedDockId(tempAssignedDockId);
         RejectionReason = null;
-        // Log the decision
+    
     }
 
     public void Reject(string rejectionReason, string officerId)

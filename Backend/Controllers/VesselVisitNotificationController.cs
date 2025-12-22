@@ -449,5 +449,22 @@ namespace ProjArqsi.Controllers
             }
         }
 
+        // Get all approved VVNs for a specific date (for scheduling)
+        [HttpGet("approved")]
+        [Authorize(Roles = "LogisticOperator, PortAuthorityOfficer")]
+        public async Task<ActionResult<IEnumerable<VVNDto>>> GetApprovedForDate([FromQuery] DateTime date)
+        {
+            try
+            {
+                var vvns = await _service.GetApprovedVVNsForDateAsync(date);
+                return Ok(vvns);
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "An error occurred while retrieving approved VVNs.", details = innerMessage });
+            }
+        }
+
     }
 }

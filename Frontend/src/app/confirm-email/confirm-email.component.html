@@ -1,10 +1,52 @@
 <div class="confirm-email-container">
-  <h2>Email Confirmation</h2>
-  <p [ngClass]="{ success: success, error: !success && message !== 'Confirming your email...' }">
-    {{ message }}
-  </p>
-  <div *ngIf="message === 'Confirming your email...'" class="loading-spinner">
-    <div class="spinner"></div>
+  <div class="confirmation-card">
+    <div *ngIf="success" class="icon-container success-icon">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        width="64"
+        height="64"
+      >
+        <path
+          d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+        />
+      </svg>
+    </div>
+
+    <div *ngIf="!success && !message.includes('Activating')" class="icon-container error-icon">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        width="64"
+        height="64"
+      >
+        <path
+          d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+        />
+      </svg>
+    </div>
+
+    <h2>Email Confirmation</h2>
+
+    <p
+      [ngClass]="{
+        'success-message': success,
+        'error-message': !success && showLoginLink,
+        'info-message': !showLoginLink
+      }"
+    >
+      {{ message }}
+    </p>
+
+    <div *ngIf="message.includes('Activating')" class="loading-spinner">
+      <div class="spinner"></div>
+      <p class="loading-text">Please wait...</p>
+    </div>
+
+    <div class="actions" *ngIf="showLoginLink">
+      <a routerLink="/login" class="btn btn-primary">Go to Login</a>
+    </div>
   </div>
-  <a *ngIf="success" routerLink="/dashboard" class="login-link">Go to Dashboard</a>
 </div>

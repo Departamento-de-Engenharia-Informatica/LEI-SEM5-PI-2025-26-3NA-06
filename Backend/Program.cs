@@ -1,4 +1,5 @@
 using ProjArqsi.Application.Services;
+using ProjArqsi.Application.Logging;
 using ProjArqsi.Domain.VesselTypeAggregate;
 using ProjArqsi.Domain.VesselAggregate;
 using ProjArqsi.Domain.DockAggregate;
@@ -78,6 +79,9 @@ builder.Services.AddScoped<StorageAreaService>();
 builder.Services.AddScoped<VesselVisitNotificationService>();
 builder.Services.AddScoped<ContainerService>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+// Register logging classes
+builder.Services.AddScoped<ICoreApiLogger, CoreApiLogger>();
 
 // Add JWT authentication using shared library
 builder.Services.AddJwtAuthentication(builder.Configuration);

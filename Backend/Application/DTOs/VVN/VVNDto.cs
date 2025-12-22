@@ -17,6 +17,7 @@ namespace ProjArqsi.Application.DTOs.VVN
         public string? RejectionReason { get; set; }
         public string? TempAssignedDockId { get; set; }
         public bool IsHazardous { get; set; }
+        public int EstimatedTeu { get; set; }
     }
 
     public class CrewMemberDto

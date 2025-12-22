@@ -33,6 +33,15 @@ namespace Infrastructure
                 .Where(vvn => vvn.StatusValue == (int)StatusEnum.Accepted || vvn.StatusValue == (int)StatusEnum.Rejected)
                 .ToListAsync();
         }
+
+        public async Task<List<VesselVisitNotification>> GetAllApprovedAsync()
+        {
+            return await _context.VesselVisitNotifications
+                .Include(vvn => vvn.CargoManifests)
+                .Where(vvn => vvn.StatusValue == (int)StatusEnum.Accepted)
+                .ToListAsync();
+        }
+
         public async Task<VesselVisitNotification?> GetReviewedByIdAsync(VesselVisitNotificationId vesselVisitNotificationId)
         {
             return await _context.VesselVisitNotifications

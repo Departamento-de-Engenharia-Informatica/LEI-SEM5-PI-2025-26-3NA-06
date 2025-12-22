@@ -6,6 +6,7 @@ using ProjArqsi.Domain.ContainerAggregate;
 using ProjArqsi.Domain.StorageAreaAggregate;
 using ProjArqsi.Domain.VesselAggregate;
 using ProjArqsi.Domain.DockAggregate;
+using ProjArqsi.Application.Logging;
 
 namespace ProjArqsi.Application.Services
 {
@@ -18,7 +19,7 @@ namespace ProjArqsi.Application.Services
         private readonly IVesselRepository _vesselRepo;
         private readonly IDockRepository _dockRepo;
         private readonly IMapper _mapper;
-        private readonly ILogger<VesselVisitNotificationService> _logger;
+        private readonly ICoreApiLogger _apiLogger;
 
         public VesselVisitNotificationService(
             IUnitOfWork unitOfWork, 
@@ -28,7 +29,7 @@ namespace ProjArqsi.Application.Services
             IVesselRepository vesselRepo,
             IDockRepository dockRepo,
             IMapper mapper,
-            ILogger<VesselVisitNotificationService> logger)
+            ICoreApiLogger apiLogger)
         {
             _unitOfWork = unitOfWork;
             _repo = repo;
@@ -37,7 +38,7 @@ namespace ProjArqsi.Application.Services
             _vesselRepo = vesselRepo;
             _dockRepo = dockRepo;
             _mapper = mapper;
-            _logger = logger;
+            _apiLogger = apiLogger;
         }
 
         //This stores draft VVN. Only basic checks are performed. The object will suffer changes later.
@@ -308,9 +309,7 @@ namespace ProjArqsi.Application.Services
             vvn.Approve(new DockId(tempAssignedDockId), officerId);
             await _unitOfWork.CommitAsync();
 
-            _logger.LogInformation(
-                "VVN APPROVED - VvnId: {VvnId}, Vessel: {VesselImo}, Officer: {OfficerId}, Dock: {DockId}, Timestamp: {Timestamp}",
-                id, vvn.ReferredVesselId.VesselId.Value, officerId, tempAssignedDockId, DateTime.UtcNow);
+            _apiLogger.LogVvnApproved(id, tempAssignedDockId, officerId);
 
             return _mapper.Map<VVNDto>(vvn);
         }
@@ -323,9 +322,7 @@ namespace ProjArqsi.Application.Services
             vvn.Reject(rejectionReason, officerId);
             await _unitOfWork.CommitAsync();
 
-            _logger.LogInformation(
-                "VVN REJECTED - VvnId: {VvnId}, Vessel: {VesselImo}, Officer: {OfficerId}, Reason: {Reason}, Timestamp: {Timestamp}",
-                id, vvn.ReferredVesselId.VesselId.Value, officerId, rejectionReason, DateTime.UtcNow);
+            _apiLogger.LogVvnRejected(id, rejectionReason, officerId);
 
             return _mapper.Map<VVNDto>(vvn);
         }
@@ -338,9 +335,7 @@ namespace ProjArqsi.Application.Services
             vvn.Resubmit();
             await _unitOfWork.CommitAsync();
 
-            _logger.LogInformation(
-                "VVN RESUBMITTED - VvnId: {VvnId}, Vessel: {VesselImo}, Timestamp: {Timestamp}",
-                id, vvn.ReferredVesselId.VesselId.Value, DateTime.UtcNow);
+            _apiLogger.LogVvnResubmitted(id);
 
             return _mapper.Map<VVNDto>(vvn);
         }
@@ -409,9 +404,7 @@ namespace ProjArqsi.Application.Services
 
             await _unitOfWork.CommitAsync();
 
-            _logger.LogInformation(
-                "VVN UPDATED AND RESUBMITTED - VvnId: {VvnId}, Vessel: {VesselImo}, Timestamp: {Timestamp}",
-                id, vvn.ReferredVesselId.VesselId.Value, DateTime.UtcNow);
+            _apiLogger.LogVvnResubmitted(id);
 
             return _mapper.Map<VVNDto>(vvn);
         }
@@ -455,9 +448,7 @@ namespace ProjArqsi.Application.Services
 
             await _unitOfWork.CommitAsync();
 
-            _logger.LogInformation(
-                "VVN CONVERTED TO DRAFT - VvnId: {VvnId}, Timestamp: {Timestamp}",
-                id, DateTime.UtcNow);
+            _apiLogger.LogVvnUpdated(id);
 
             return _mapper.Map<VVNDraftDtoWId>(vvn);
         }
@@ -508,6 +499,19 @@ namespace ProjArqsi.Application.Services
         {
             await _repo.DeleteAsync(new VesselVisitNotificationId(id));
             await _unitOfWork.CommitAsync();
+        }
+
+        // Get all approved VVNs for a specific date (for scheduling)
+        public async Task<List<VVNDto>> GetApprovedVVNsForDateAsync(DateTime date)
+        {
+            var allApproved = await _repo.GetAllApprovedAsync();
+            
+            // Filter by arrival date matching the requested date
+            var filtered = allApproved.Where(v => 
+                v.ArrivalDate != null && 
+                v.ArrivalDate.Value.Value.Date == date.Date).ToList();
+            
+            return _mapper.Map<List<VVNDto>>(filtered);
         }
     }
 }

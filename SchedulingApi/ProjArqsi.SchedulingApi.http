@@ -1,0 +1,52 @@
+### Scheduling API - HTTP Requests
+### Base URL: http://localhost:5002
+
+### Health Check (No Auth Required)
+GET http://localhost:5002/api/Scheduling/health
+
+###
+
+### Generate Daily Schedule for Today (Requires LogisticsOperator Role)
+# Replace YOUR_JWT_TOKEN_HERE with an actual JWT token from AuthApi
+POST http://localhost:5002/api/Scheduling/daily?date=2025-12-22
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+###
+
+### Generate Daily Schedule for Specific Date (Requires LogisticsOperator Role)
+POST http://localhost:5002/api/Scheduling/daily?date=2025-12-23
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+
+###
+
+### Generate Schedule (Legacy - Requires LogisticsOperator Role)
+POST http://localhost:5002/api/Scheduling/generate
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "targetDate": "2025-12-23",
+  "algorithm": "FCFS"
+}
+
+###
+
+# Example Response for Daily Schedule:
+# {
+#   "date": "2025-12-23",
+#   "isFeasible": true,
+#   "warnings": [],
+#   "assignments": [
+#     {
+#       "vvnId": "123e4567-e89b-12d3-a456-426614174000",
+#       "vesselId": "987fcdeb-51a2-43d1-b789-123456789abc",
+#       "vesselImo": "9863382",
+#       "vesselName": "MSC Oscar",
+#       "dockId": "456e7890-e12b-34d5-c678-901234567def",
+#       "dockName": "Dock A",
+#       "eta": "2025-12-23T08:00:00",
+#       "etd": "2025-12-23T14:00:00",
+#       "estimatedTeu": 150
+#     }
+#   ]
+# }

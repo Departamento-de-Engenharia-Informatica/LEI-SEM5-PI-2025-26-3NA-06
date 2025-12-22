@@ -56,5 +56,9 @@ namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
             if (duplicates.Any())
                 throw new BusinessRuleValidationException($"Duplicate containers found in manifest: {string.Join(", ", duplicates)}");
         }
+        public int CalculateEstimatedTeu()
+        {
+            return _entries.Count;
+        }
     }
 }

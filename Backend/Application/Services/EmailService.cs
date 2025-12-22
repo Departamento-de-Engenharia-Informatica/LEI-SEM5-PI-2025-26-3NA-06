@@ -8,8 +8,8 @@ namespace ProjArqsi.Application.Services
     {
         public async Task SendConfirmationEmailAsync(User user, string email, string token)
         {
-            // Direct link to Backend activation endpoint
-            var confirmationLink = $"http://localhost:5218/api/Activation/confirm?token={token}";
+            // Corrected link to use the actual UserController endpoint
+            var confirmationLink = $"http://localhost:5218/api/User/confirm-email?token={token}";
             var subject = "Activate Your Account | ProjArqsi";
             
             var body = $@"
@@ -59,10 +59,8 @@ namespace ProjArqsi.Application.Services
                     await client.SendMailAsync(mailMessage);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // Handle any exceptions that occur during the email sending process
-                Console.WriteLine($"Failed to send email: {ex.Message}");
                 throw;
             }
         }

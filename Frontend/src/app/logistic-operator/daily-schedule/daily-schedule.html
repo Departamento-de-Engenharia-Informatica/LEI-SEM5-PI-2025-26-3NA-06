@@ -1,0 +1,78 @@
+<div class="schedule-container">
+  <h1>Daily Schedule Generator</h1>
+
+  <div class="form-section">
+    <div class="form-group">
+      <label for="dateInput">Select Date:</label>
+      <input type="date" id="dateInput" [(ngModel)]="selectedDate" class="form-control" />
+    </div>
+
+    <button class="btn btn-primary" (click)="generateSchedule()" [disabled]="loading">
+      {{ loading ? 'Generating...' : 'Generate Schedule' }}
+    </button>
+  </div>
+
+  <div *ngIf="error" class="alert alert-error">
+    {{ error }}
+  </div>
+
+  <div *ngIf="schedule" class="results-section">
+    <div class="schedule-header">
+      <h2>Schedule for {{ schedule.date }}</h2>
+      <div
+        class="status-badge"
+        [class.feasible]="schedule.isFeasible"
+        [class.not-feasible]="!schedule.isFeasible"
+      >
+        {{ schedule.isFeasible ? '✓ Feasible' : '✗ Not Feasible' }}
+      </div>
+    </div>
+
+    <div *ngIf="schedule.warnings.length > 0" class="warnings-section">
+      <h3>⚠️ Warnings</h3>
+      <ul>
+        <li *ngFor="let warning of schedule.warnings">{{ warning }}</li>
+      </ul>
+    </div>
+
+    <div class="assignments-section">
+      <h3>Dock Assignments ({{ schedule.assignments.length }})</h3>
+
+      <div *ngIf="schedule.assignments.length === 0" class="no-assignments">
+        No approved vessel visits for this date.
+      </div>
+
+      <div class="assignments-grid">
+        <div *ngFor="let assignment of schedule.assignments" class="assignment-card">
+          <div class="assignment-header">
+            <h4>{{ assignment.vesselName || 'Unknown Vessel' }}</h4>
+            <span class="imo-badge">IMO: {{ assignment.vesselImo }}</span>
+          </div>
+
+          <div class="assignment-details">
+            <div class="detail-row">
+              <span class="label">🚢 VVN ID:</span>
+              <span class="value">{{ assignment.vvnId }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">⚓ Dock:</span>
+              <span class="value">{{ assignment.dockName || 'N/A' }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">📥 ETA:</span>
+              <span class="value">{{ formatDateTime(assignment.eta) }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">📤 ETD:</span>
+              <span class="value">{{ formatDateTime(assignment.etd) }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="label">📦 Estimated TEU:</span>
+              <span class="value teu-badge">{{ assignment.estimatedTeu }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

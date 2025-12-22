@@ -28,6 +28,8 @@ import { VvnDraftsComponent } from './shipping-agent/vvn-drafts/vvn-drafts.compo
 import { VvnSubmittedComponent } from './shipping-agent/vvn-submitted/vvn-submitted.component';
 import { VvnReviewedComponent } from './shipping-agent/vvn-reviewed/vvn-reviewed.component';
 import { ContainerManagementComponent } from './shipping-agent/container-management/container-management.component';
+import { LogisticOperatorDashboard } from './logistic-operator/logistic-operator-dashboard/logistic-operator-dashboard';
+import { DailySchedule } from './logistic-operator/daily-schedule/daily-schedule';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -78,8 +80,9 @@ export const routes: Routes = [
         data: { role: 'LogisticOperator' },
         canActivate: [authGuard],
         children: [
-          { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-          // Add logistic operator routes here
+          { path: '', component: LogisticOperatorDashboard },
+          { path: 'dashboard', component: LogisticOperatorDashboard },
+          { path: 'daily-schedule', component: DailySchedule },
         ],
       },
       {

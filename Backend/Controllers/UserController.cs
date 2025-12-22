@@ -111,11 +111,14 @@ namespace ProjArqsi.Controllers
             try
             {
                 await _userService.ConfirmEmailAsync(token);
-                return Ok(new { success = true, message = "Email confirmed successfully! Your account is now active." });
+                
+                // Redirect to frontend confirm-email page with success status
+                return Redirect($"http://localhost:4200/confirm-email?status=success");
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, message = ex.Message });
+                // Redirect to frontend confirm-email page with error
+                return Redirect($"http://localhost:4200/confirm-email?status=error&message={Uri.EscapeDataString(ex.Message)}");
             }
         }
     }

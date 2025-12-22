@@ -18,7 +18,7 @@ namespace ProjArqsi.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "PortAuthorityOfficer,ShippingAgentRepresentative")]
+        [Authorize(Roles = "PortAuthorityOfficer,ShippingAgentRepresentative,LogisticOperator")]
         public async Task<ActionResult<IEnumerable<VesselDto>>> GetAll()
         {
             try
@@ -33,7 +33,7 @@ namespace ProjArqsi.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "PortAuthorityOfficer,ShippingAgentRepresentative")]
+        [Authorize(Roles = "PortAuthorityOfficer,ShippingAgentRepresentative,LogisticOperator")]
         public async Task<ActionResult<VesselDto>> GetById(Guid id)
         {
             try
@@ -52,7 +52,7 @@ namespace ProjArqsi.Controllers
         }
 
         [HttpGet("imo/{imo}")]
-        [Authorize(Roles = "PortAuthorityOfficer,ShippingAgentRepresentative")]
+        [Authorize(Roles = "PortAuthorityOfficer,ShippingAgentRepresentative,LogisticOperator")]
         public async Task<ActionResult<VesselDto>> GetByImo(string imo)
         {
             try

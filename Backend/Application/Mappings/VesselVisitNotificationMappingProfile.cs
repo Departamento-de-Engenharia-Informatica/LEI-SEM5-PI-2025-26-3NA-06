@@ -50,7 +50,9 @@ namespace ProjArqsi.Application.Mappings
                 .ForMember(dest => dest.TempAssignedDockId, opt => opt.MapFrom(src => src.TempAssignedDockId != null ? src.TempAssignedDockId.AsGuid().ToString() : null))
                 .ForMember(dest => dest.LoadingManifest, opt => opt.MapFrom(src => src.CargoManifests.FirstOrDefault(m => m.ManifestType.Value == ManifestTypeEnum.Load)))
                 .ForMember(dest => dest.UnloadingManifest, opt => opt.MapFrom(src => src.CargoManifests.FirstOrDefault(m => m.ManifestType.Value == ManifestTypeEnum.Unload)))
-                .ForMember(dest => dest.IsHazardous, opt => opt.MapFrom(src => src.IsHazardous));
+                .ForMember(dest => dest.IsHazardous, opt => opt.MapFrom(src => src.IsHazardous))
+                .ForMember(dest => dest.EstimatedTeu, opt => opt.MapFrom(src => 
+                    src.CargoManifests.Sum(m => m.CalculateEstimatedTeu())));
         }
     }
 }

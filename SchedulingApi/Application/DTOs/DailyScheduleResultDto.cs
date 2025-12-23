@@ -5,6 +5,13 @@ namespace ProjArqsi.SchedulingApi.DTOs
         public string Date { get; set; } = string.Empty;
         public bool IsFeasible { get; set; }
         public List<string> Warnings { get; set; } = [];
+        public List<DailyDockScheduleDto> DockSchedules { get; set; } = [];
+    }
+
+    public class DailyDockScheduleDto
+    {
+        public Guid DockId { get; set; }
+        public string DockName { get; set; } = string.Empty;
         public List<DockAssignmentDto> Assignments { get; set; } = [];
     }
 

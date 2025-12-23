@@ -504,14 +504,22 @@ namespace ProjArqsi.Application.Services
         // Get all approved VVNs for a specific date (for scheduling)
         public async Task<List<VVNDto>> GetApprovedVVNsForDateAsync(DateTime date)
         {
-            var allApproved = await _repo.GetAllApprovedAsync();
+            Console.WriteLine($"[VVNService] GetApprovedVVNsForDateAsync called with date: {date:yyyy-MM-dd}");
+            var vvns = await _repo.GetAllApprovedForDateAsync(date);
+            Console.WriteLine($"[VVNService] Repository returned {vvns.Count} VVNs");
             
-            // Filter by arrival date matching the requested date
-            var filtered = allApproved.Where(v => 
-                v.ArrivalDate != null && 
-                v.ArrivalDate.Value.Value.Date == date.Date).ToList();
+            if (vvns.Any())
+            {
+                Console.WriteLine("[VVNService] VVN Details:");
+                foreach (var vvn in vvns)
+                {
+                    Console.WriteLine($"  - VVN {vvn.Id}: ArrivalDate={vvn.ArrivalDate?.Value}, Status={vvn.StatusValue}");
+                }
+            }
             
-            return _mapper.Map<List<VVNDto>>(filtered);
+            var result = _mapper.Map<List<VVNDto>>(vvns);
+            Console.WriteLine($"[VVNService] Mapped to {result.Count} DTOs");
+            return result;
         }
     }
 }

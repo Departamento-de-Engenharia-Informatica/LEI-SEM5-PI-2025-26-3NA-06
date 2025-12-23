@@ -22,7 +22,7 @@ builder.Services.AddJwtAuthentication(builder.Configuration);
 var coreApiBaseUrl = builder.Configuration["CoreApiSettings:BaseUrl"] 
     ?? throw new InvalidOperationException("CoreApiSettings:BaseUrl is not configured.");
 
-builder.Services.AddHttpClient<ICoreApiClient, CoreApiClientService>(client =>
+builder.Services.AddHttpClient<ICoreApiClientService, CoreApiClientService>(client =>
 {
     client.BaseAddress = new Uri(coreApiBaseUrl);
     client.Timeout = TimeSpan.FromSeconds(30);

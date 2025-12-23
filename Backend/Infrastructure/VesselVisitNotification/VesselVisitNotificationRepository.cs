@@ -108,5 +108,39 @@ namespace Infrastructure
                 .Include(vvn => vvn.CargoManifests)
                 .ToListAsync();
         }
+
+        public async Task<List<VesselVisitNotification>> GetAllApprovedForDateAsync(DateTime date)
+        {
+            Console.WriteLine($"[Repository] GetAllApprovedForDateAsync called with date: {date:yyyy-MM-dd}");
+            Console.WriteLine($"[Repository] Querying for: StatusValue = {(int)StatusEnum.Accepted}, Date = {date.Date}");
+            
+            // First, get all approved VVNs (EF Core can translate this)
+            var approvedVvns = await _context.VesselVisitNotifications
+                .Include(vvn => vvn.CargoManifests)
+                .Where(vvn => vvn.StatusValue == (int)StatusEnum.Accepted &&
+                              vvn.ArrivalDate != null)
+                .ToListAsync();
+            
+            Console.WriteLine($"[Repository] Total approved VVNs: {approvedVvns.Count}");
+            
+            // Then filter by date in memory (EF Core cannot translate Value.Value.Date)
+            var result = approvedVvns
+                .Where(vvn => vvn.ArrivalDate?.Value != null &&
+                              vvn.ArrivalDate.Value.Value.Date == date.Date)
+                .ToList();
+            
+            Console.WriteLine($"[Repository] Filtered VVNs for date {date.Date}: {result.Count}");
+            
+            if (result.Any())
+            {
+                Console.WriteLine("[Repository] Matched VVNs:");
+                foreach (var vvn in result)
+                {
+                    Console.WriteLine($"  - VVN {vvn.Id.AsGuid()}: ArrivalDate={vvn.ArrivalDate?.Value:yyyy-MM-dd HH:mm}");
+                }
+            }
+            
+            return result;
+        }
     }
 }

@@ -5,7 +5,7 @@ using ProjArqsi.SchedulingApi.Logging;
 
 namespace ProjArqsi.SchedulingApi.Services
 {
-    public interface ICoreApiClient
+    public interface ICoreApiClientService
     {
         Task<List<VesselVisitNotificationDto>> GetApprovedVVNsForDateAsync(DateTime date, string accessToken);
         Task<List<DockDto>> GetAllDocksAsync(string accessToken);
@@ -14,52 +14,64 @@ namespace ProjArqsi.SchedulingApi.Services
         Task<VesselDto?> GetVesselByImoAsync(string imo, string accessToken);
     }
 
-    public class CoreApiClientService : ICoreApiClient
+    public class CoreApiClientService : ICoreApiClientService
     {
         private readonly HttpClient _httpClient;
-        private readonly ISchedulingLogger _schedulingLogger;
         private readonly JsonSerializerOptions _jsonOptions;
 
         public CoreApiClientService(HttpClient httpClient, ISchedulingLogger schedulingLogger)
         {
             _httpClient = httpClient;
-            _schedulingLogger = schedulingLogger;
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             };
         }
 
-        public async Task<List<VesselVisitNotificationDto>> GetApprovedVVNsForDateAsync(DateTime date, string accessToken)
+        public async Task<List<VesselVisitNotificationDto>> GetApprovedVVNsForDateAsync(DateTime date, string accessToken)    
         {
+            if (string.IsNullOrEmpty(accessToken))
+                throw new UnauthorizedAccessException("Access token is required");
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Get, 
-                    $"/api/VesselVisitNotification/approved?date={date:yyyy-MM-dd}");
+                var endpoint = $"/api/VesselVisitNotification/approved?date={date:yyyy-MM-dd}";
+                Console.WriteLine($"[CoreApiClient] Calling Core API: {endpoint}");
+                
+                var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
                 var response = await _httpClient.SendAsync(request);
                 
+                Console.WriteLine($"[CoreApiClient] Response Status: {response.StatusCode}");
+                
                 if (!response.IsSuccessStatusCode)
                 {
-                    _schedulingLogger.LogCoreApiCallFailed("/api/VesselVisitNotification/approved", (int)response.StatusCode, $"Failed to fetch approved VVNs");
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"[CoreApiClient] ERROR - Status {response.StatusCode}: {errorContent}");
                     return new List<VesselVisitNotificationDto>();
                 }
 
                 var content = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[CoreApiClient] Response Content Length: {content.Length}");
+                Console.WriteLine($"[CoreApiClient] Response Content: {content}");
+                
                 var vvns = JsonSerializer.Deserialize<List<VesselVisitNotificationDto>>(content, _jsonOptions);
+                Console.WriteLine($"[CoreApiClient] Deserialized {vvns?.Count ?? 0} VVNs");
                 
                 return vvns ?? new List<VesselVisitNotificationDto>();
             }
             catch (Exception ex)
             {
-                _schedulingLogger.LogCoreApiException("/api/VesselVisitNotification/approved", ex);
+                Console.WriteLine($"[CoreApiClient] EXCEPTION: {ex.Message}");
+                Console.WriteLine($"[CoreApiClient] Stack Trace: {ex.StackTrace}");
                 throw;
             }
         }
 
         public async Task<DockDto?> GetDockByIdAsync(Guid dockId, string accessToken)
         {
+             if (string.IsNullOrEmpty(accessToken))
+                throw new UnauthorizedAccessException("Access token is required");
             try
             {
                 var request = new HttpRequestMessage(HttpMethod.Get, $"/api/Dock/{dockId}");
@@ -69,22 +81,22 @@ namespace ProjArqsi.SchedulingApi.Services
                 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _schedulingLogger.LogCoreApiCallFailed($"/api/Dock/{dockId}", (int)response.StatusCode, $"Failed to fetch dock {dockId}");
                     return null;
                 }
 
                 var content = await response.Content.ReadAsStringAsync();
                 return JsonSerializer.Deserialize<DockDto>(content, _jsonOptions);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _schedulingLogger.LogCoreApiException($"/api/Dock/{dockId}", ex);
                 return null;
             }
         }
 
         public async Task<VesselDto?> GetVesselByImoAsync(string imo, string accessToken)
         {
+             if (string.IsNullOrEmpty(accessToken))
+                throw new UnauthorizedAccessException("Access token is required");
             try
             {
                 var request = new HttpRequestMessage(HttpMethod.Get, $"/api/Vessel/imo/{imo}");
@@ -94,22 +106,22 @@ namespace ProjArqsi.SchedulingApi.Services
                 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _schedulingLogger.LogCoreApiCallFailed($"/api/Vessel/imo/{imo}", (int)response.StatusCode, $"Failed to fetch vessel {imo}");
                     return null;
                 }
 
                 var content = await response.Content.ReadAsStringAsync();
                 return JsonSerializer.Deserialize<VesselDto>(content, _jsonOptions);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _schedulingLogger.LogCoreApiException($"/api/Vessel/imo/{imo}", ex);
                 return null;
             }
         }
 
         public async Task<List<DockDto>> GetAllDocksAsync(string accessToken)
         {
+             if (string.IsNullOrEmpty(accessToken))
+                throw new UnauthorizedAccessException("Access token is required");
             try
             {
                 var request = new HttpRequestMessage(HttpMethod.Get, "/api/Dock");
@@ -119,7 +131,6 @@ namespace ProjArqsi.SchedulingApi.Services
                 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _schedulingLogger.LogCoreApiCallFailed("/api/Dock", (int)response.StatusCode, "Failed to fetch all docks");
                     return new List<DockDto>();
                 }
 
@@ -128,15 +139,17 @@ namespace ProjArqsi.SchedulingApi.Services
                 
                 return docks ?? new List<DockDto>();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _schedulingLogger.LogCoreApiException("/api/Dock", ex);
                 throw;
             }
         }
 
         public async Task<List<StorageAreaDto>> GetAllStorageAreasAsync(string accessToken)
         {
+            if (string.IsNullOrEmpty(accessToken))
+                throw new UnauthorizedAccessException("Access token is required");
+        
             try
             {
                 var request = new HttpRequestMessage(HttpMethod.Get, "/api/StorageArea");
@@ -146,7 +159,6 @@ namespace ProjArqsi.SchedulingApi.Services
                 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _schedulingLogger.LogCoreApiCallFailed("/api/StorageArea", (int)response.StatusCode, "Failed to fetch all storage areas");
                     return new List<StorageAreaDto>();
                 }
 
@@ -155,9 +167,8 @@ namespace ProjArqsi.SchedulingApi.Services
                 
                 return areas ?? new List<StorageAreaDto>();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _schedulingLogger.LogCoreApiException("/api/StorageArea", ex);
                 throw;
             }
         }

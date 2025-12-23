@@ -456,11 +456,14 @@ namespace ProjArqsi.Controllers
         {
             try
             {
+                Console.WriteLine($"[Backend] GET /api/VesselVisitNotification/approved called with date: {date:yyyy-MM-dd}");
                 var vvns = await _service.GetApprovedVVNsForDateAsync(date);
+                Console.WriteLine($"[Backend] Service returned {vvns.Count} VVNs");
                 return Ok(vvns);
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[Backend] ERROR in GetApprovedForDate: {ex.Message}");
                 var innerMessage = ex.InnerException?.Message ?? ex.Message;
                 return StatusCode(500, new { message = "An error occurred while retrieving approved VVNs.", details = innerMessage });
             }

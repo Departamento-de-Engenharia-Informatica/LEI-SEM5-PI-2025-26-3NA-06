@@ -13,5 +13,6 @@ namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
         Task<VesselVisitNotification?> GetDraftByIdAsync(VesselVisitNotificationId vesselVisitNotificationId);
         Task<VesselVisitNotification> DraftVVN(VesselVisitNotification vesselVisitNotification);    
         Task<VesselVisitNotification> SubmitVVN(VesselVisitNotification vesselVisitNotification);
+        Task<List<VesselVisitNotification>> GetAllApprovedForDateAsync(DateTime date);
     }
 }

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import {
   SchedulingService,
   DailyScheduleResult,
+  DailyDockSchedule,
   DockAssignment,
 } from '../../services/scheduling.service';
 

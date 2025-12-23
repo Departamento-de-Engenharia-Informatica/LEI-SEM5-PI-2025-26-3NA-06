@@ -124,9 +124,9 @@
           <span class="value dock-name">{{ getDockDisplay(vvn.tempAssignedDockId) }}</span>
         </div>
         <div *ngIf="vvn.rejectionReason" class="rejection-reason">
-          \n <span class="label">Rejection Reason:</span>\n
+           <span class="label">Rejection Reason:</span>
           <p class="reason-text">{{ vvn.rejectionReason }}</p>
-          \n
+          
         </div>
         <div *ngIf="vvn.status === 'Rejected'" class="card-actions">
           <button class="resubmit-btn" (click)="resubmit(vvn.id)">Edit and Resubmit</button>

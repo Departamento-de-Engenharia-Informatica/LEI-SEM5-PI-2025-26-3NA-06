@@ -34,9 +34,12 @@ class OperationPlanResponseDto {
       assignments: operationPlan.assignments.map((a) => ({
         vvnId: a.vvnId,
         dockId: a.dockId,
+        dockName: a.dockName,
         eta: a.eta instanceof Date ? a.eta.toISOString() : a.eta,
         etd: a.etd instanceof Date ? a.etd.toISOString() : a.etd,
         estimatedTeu: a.estimatedTeu,
+        vesselName: a.vesselName,
+        vesselImo: a.vesselImo,
       })),
       algorithm: operationPlan.algorithm,
       creationDate: operationPlan.creationDate,

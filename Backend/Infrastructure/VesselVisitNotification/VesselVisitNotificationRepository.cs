@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ProjArqsi.Domain.VesselVisitNotificationAggregate;
+using ProjArqsi.Domain.VesselAggregate;
 using ProjArqsi.Infrastructure;
 
 namespace Infrastructure
@@ -141,6 +142,49 @@ namespace Infrastructure
             }
             
             return result;
+        }
+
+        public async Task<List<VesselVisitNotification>> GetConflictingVvnsForVesselAsync(
+            IMOnumber vesselImo, 
+            DateTime arrivalDate, 
+            DateTime departureDate, 
+            VesselVisitNotificationId? excludeId = null)
+        {
+            // Get all VVNs that are not rejected and not in draft (fetch to client first)
+            // EF Core cannot translate complex value object navigation in WHERE clause
+            var allActiveVvns = await _context.VesselVisitNotifications
+                .Include(vvn => vvn.CargoManifests)
+                .Where(vvn => vvn.StatusValue != (int)StatusEnum.Rejected &&
+                              vvn.StatusValue != (int)StatusEnum.InProgress &&
+                              vvn.ArrivalDate != null &&
+                              vvn.DepartureDate != null)
+                .ToListAsync();
+
+            // Filter by vessel IMO in memory
+            var vesselVvns = allActiveVvns
+                .Where(vvn => vvn.ReferredVesselId.VesselId.Value == vesselImo.Value)
+                .ToList();
+
+            // Filter in memory for time overlap and exclude current VVN if provided
+            var conflicts = vesselVvns
+                .Where(vvn => 
+                {
+                    // Exclude the current VVN being updated
+                    if (excludeId != null && vvn.Id.Equals(excludeId))
+                        return false;
+
+                    var existingArrival = vvn.ArrivalDate!.Value!.Value;
+                    var existingDeparture = vvn.DepartureDate!.Value!.Value;
+
+                    // Check for time overlap: two periods overlap if one starts before the other ends
+                    // Period A: [arrivalDate, departureDate]
+                    // Period B: [existingArrival, existingDeparture]
+                    // Overlap if: A.start < B.end AND B.start < A.end
+                    return arrivalDate < existingDeparture && existingArrival < departureDate;
+                })
+                .ToList();
+
+            return conflicts;
         }
     }
 }

@@ -69,6 +69,16 @@ export class OemService {
     });
   }
 
+  replaceOperationPlan(request: SaveOperationPlanRequest): Observable<SaveOperationPlanResponse> {
+    return this.http.post<SaveOperationPlanResponse>(
+      `${this.oemApiUrl}/operation-plans/replace`,
+      request,
+      {
+        headers: this.getHeaders(),
+      }
+    );
+  }
+
   validateFeasibility(request: SaveOperationPlanRequest): Observable<any> {
     return this.http.post<any>(`${this.oemApiUrl}/operation-plans/validate`, request, {
       headers: this.getHeaders(),

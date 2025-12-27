@@ -157,4 +157,32 @@ export class OperationPlansListComponent implements OnInit {
   closeDetails() {
     this.selectedPlan = null;
   }
+
+  formatWarning(warning: string): string {
+    // Replace [Dock X] with styled badge
+    return warning.replace(/\[Dock ([^\]]+)\]:/g, '<strong class="dock-badge">Dock $1</strong>:');
+  }
+
+  getDockGroups(): any[] {
+    if (!this.selectedPlan || !this.selectedPlan.assignments) {
+      return [];
+    }
+
+    // Group assignments by dockId
+    const dockMap = new Map<string, any>();
+
+    this.selectedPlan.assignments.forEach((assignment: any) => {
+      const dockId = assignment.dockId;
+      if (!dockMap.has(dockId)) {
+        dockMap.set(dockId, {
+          dockId: dockId,
+          dockName: assignment.dockName || `Dock ${dockId.substring(0, 8)}...`,
+          assignments: [],
+        });
+      }
+      dockMap.get(dockId).assignments.push(assignment);
+    });
+
+    return Array.from(dockMap.values());
+  }
 }

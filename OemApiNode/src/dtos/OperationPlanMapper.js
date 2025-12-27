@@ -16,9 +16,12 @@ class OperationPlanMapper {
         new Assignment({
           vvnId: a.vvnId,
           dockId: a.dockId,
+          dockName: a.dockName,
           eta: a.eta,
           etd: a.etd,
           estimatedTeu: a.estimatedTeu || 0,
+          vesselName: a.vesselName,
+          vesselImo: a.vesselImo,
         })
     );
 

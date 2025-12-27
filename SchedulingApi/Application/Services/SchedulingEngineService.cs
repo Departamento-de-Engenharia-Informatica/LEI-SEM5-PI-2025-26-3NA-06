@@ -106,7 +106,7 @@ namespace ProjArqsi.SchedulingApi.Services
                 }
                 catch (Exception ex)
                 {
-                    result.Warnings.Add($"VVN {vvn.Id}: Failed to process - {ex.Message}");
+                    result.Warnings.Add($"Failed to process vessel visit for IMO {vvn.ReferredVesselId}: {ex.Message}");
                     result.IsFeasible = false;
                 }
             }
@@ -186,7 +186,17 @@ namespace ProjArqsi.SchedulingApi.Services
                 if (conflicts.Any())
                 {
                     result.IsFeasible = false;
-                    result.Warnings.Add($"VVN {vvn.Id}: Time window conflict on dock '{assignedDock.DockName}' with VVN(s): {string.Join(", ", conflicts)}");
+                    var vesselInfo = !string.IsNullOrEmpty(vessel?.VesselName) 
+                        ? $"{vessel.VesselName} ({vessel.Imo})"
+                        : vessel?.Imo ?? vvn.ReferredVesselId;
+                    
+                    var conflictMessages = conflicts.Select(c => 
+                        $"VVN from {c.Eta:HH:mm} to {c.Etd:HH:mm} ({c.VesselInfo})"
+                    );
+                    
+                    result.Warnings.Add(
+                        $"[Dock {assignedDock.DockName}]: VVN from {eta:HH:mm} to {etd:HH:mm} ({vesselInfo}) has conflict with {string.Join(" and ", conflictMessages)}"
+                    );
                 }
             }
 
@@ -206,7 +216,7 @@ namespace ProjArqsi.SchedulingApi.Services
 
             if (vessel == null)
             {
-                result.Warnings.Add($"VVN {vvn.Id}: Vessel details not found for IMO {vvn.ReferredVesselId}");
+                result.Warnings.Add($"Vessel details not found for IMO {vvn.ReferredVesselId} (ETA: {eta:HH:mm})");
             }
 
             return assignment;
@@ -216,9 +226,9 @@ namespace ProjArqsi.SchedulingApi.Services
         /// Detects time window conflicts between a new assignment and existing assignments.
         /// Two time windows conflict if they overlap: [eta1, etd1] overlaps [eta2, etd2] if eta1 < etd2 AND eta2 < etd1
         /// </summary>
-        private List<Guid> DetectTimeConflicts(DateTime eta, DateTime etd, List<DockAssignmentDto> existingAssignments)
+        private List<(string VesselInfo, DateTime Eta, DateTime Etd)> DetectTimeConflicts(DateTime eta, DateTime etd, List<DockAssignmentDto> existingAssignments)
         {
-            var conflicts = new List<Guid>();
+            var conflicts = new List<(string VesselInfo, DateTime Eta, DateTime Etd)>();
 
             foreach (var existing in existingAssignments)
             {
@@ -227,7 +237,10 @@ namespace ProjArqsi.SchedulingApi.Services
                 
                 if (overlaps)
                 {
-                    conflicts.Add(existing.VvnId);
+                    var vesselInfo = !string.IsNullOrEmpty(existing.VesselName) 
+                        ? $"{existing.VesselName} ({existing.VesselImo})"
+                        : existing.VesselImo ?? "Unknown Vessel";
+                    conflicts.Add((vesselInfo, existing.Eta, existing.Etd));
                 }
             }
 

@@ -24,7 +24,6 @@ namespace ProjArqsi.Infrastructure
 				.HasColumnName("Email")
 				.IsRequired();
 
-			// Add index on Email for faster login lookups
 			builder.HasIndex(u => u.Email)
 				.IsUnique();
 

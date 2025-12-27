@@ -82,6 +82,7 @@ export class DailySchedule implements OnInit {
       dock.assignments.map((assignment: any) => ({
         id: assignment.vvnId,
         vesselName: assignment.vesselName,
+        vesselImo: assignment.vesselImo,
         eta: assignment.eta,
         etd: assignment.etd,
         assignedDockId: dock.dockId,
@@ -112,7 +113,50 @@ export class DailySchedule implements OnInit {
       error: (err) => {
         this.ngZone.run(() => {
           console.error('Error saving operation plan:', err);
-          this.error = err.error?.error || err.error?.message || 'Failed to save operation plan';
+          const errorMsg =
+            err.error?.error || err.error?.message || 'Failed to save operation plan';
+
+          // Check if plan already exists
+          if (errorMsg.includes('already exists')) {
+            // Show confirmation dialog
+            const confirmReplace = confirm(
+              `An operation plan for ${this.selectedDate} already exists. Are you sure you want to replace it with the current one?`
+            );
+
+            if (confirmReplace) {
+              // User confirmed, replace the plan
+              this.replaceOperationPlan(request);
+              return;
+            }
+          }
+
+          this.error = errorMsg;
+          this.saving = false;
+          this.cdr.detectChanges();
+        });
+      },
+    });
+  }
+
+  replaceOperationPlan(request: SaveOperationPlanRequest) {
+    this.oemService.replaceOperationPlan(request).subscribe({
+      next: (response) => {
+        this.ngZone.run(() => {
+          if (response.success) {
+            this.saveSuccess = `Operation Plan replaced successfully!`;
+            console.log('Operation Plan replaced:', response.data);
+          } else {
+            this.error = response.error || 'Failed to replace operation plan';
+          }
+          this.saving = false;
+          this.cdr.detectChanges();
+        });
+      },
+      error: (err) => {
+        this.ngZone.run(() => {
+          console.error('Error replacing operation plan:', err);
+          console.error('Full error object:', JSON.stringify(err.error, null, 2));
+          this.error = err.error?.error || err.error?.message || 'Failed to replace operation plan';
           this.saving = false;
           this.cdr.detectChanges();
         });
@@ -126,5 +170,10 @@ export class DailySchedule implements OnInit {
 
   formatDateTime(dateStr: string): string {
     return new Date(dateStr).toLocaleString();
+  }
+
+  formatWarning(warning: string): string {
+    // Replace [Dock X] with styled badge
+    return warning.replace(/\[Dock ([^\]]+)\]:/g, '<strong class="dock-badge">Dock $1</strong>:');
   }
 }

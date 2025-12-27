@@ -1,6 +1,7 @@
 const operationPlanRepository = require("../infrastructure/OperationPlanRepository");
 const OperationPlanMapper = require("../dtos/OperationPlanMapper");
 const UpsertOperationPlanDto = require("../dtos/UpsertOperationPlanDto");
+const backendApiClient = require("./BackendApiClient");
 const logger = require("../utils/logger");
 
 class OperationPlanService {
@@ -81,6 +82,11 @@ class OperationPlanService {
         };
       }
 
+      // Enrich assignments with vessel and dock information from Backend
+      plan.assignments = await backendApiClient.enrichAssignmentsAsync(
+        plan.assignments
+      );
+
       const responseDto = OperationPlanMapper.toResponseDto(plan);
 
       return {
@@ -110,6 +116,11 @@ class OperationPlanService {
         };
       }
 
+      // Enrich assignments with vessel and dock information from Backend
+      plan.assignments = await backendApiClient.enrichAssignmentsAsync(
+        plan.assignments
+      );
+
       const responseDto = OperationPlanMapper.toResponseDto(plan);
 
       return {
@@ -135,6 +146,13 @@ class OperationPlanService {
     try {
       const plans = await operationPlanRepository.searchAsync(filters);
 
+      // Enrich all plans with vessel and dock information from Backend
+      for (const plan of plans) {
+        plan.assignments = await backendApiClient.enrichAssignmentsAsync(
+          plan.assignments
+        );
+      }
+
       const responseDtos = plans.map((p) =>
         OperationPlanMapper.toResponseDto(p)
       );
@@ -149,6 +167,64 @@ class OperationPlanService {
       return {
         success: false,
         error: error.message,
+      };
+    }
+  }
+
+  /**
+   * Replace operation plan by date (delete existing and create new one)
+   */
+  async replaceOperationPlanByDateAsync(requestBody, userId, username) {
+    try {
+      // Convert request to DTO
+      const dto = OperationPlanMapper.fromRequest(requestBody);
+      dto.validate();
+
+      // Check if plan exists for this date
+      const existingPlan = await operationPlanRepository.getByDateAsync(
+        dto.planDate
+      );
+
+      if (existingPlan) {
+        // Delete existing plan
+        await operationPlanRepository.deleteAsync(existingPlan.planDate);
+        logger.info(
+          `Deleted existing operation plan for ${dto.planDate} before replacement`
+        );
+      }
+
+      // Convert DTO to domain entity
+      const operationPlan = OperationPlanMapper.toDomain(dto);
+
+      // Set audit metadata
+      operationPlan.algorithm = "FIFO";
+      operationPlan.creationDate = new Date();
+      operationPlan.author = username || "Unknown";
+
+      logger.info(
+        `Replacing operation plan for ${dto.planDate}: isFeasible=${operationPlan.isFeasible}, warnings=${operationPlan.warnings.length}, author=${operationPlan.author}`
+      );
+
+      // Persist to database
+      const savedPlan = await operationPlanRepository.createAsync(
+        operationPlan
+      );
+
+      logger.info(`Operation plan replaced successfully for ${dto.planDate}`);
+
+      // Convert to response DTO
+      const responseDto = OperationPlanMapper.toResponseDto(savedPlan);
+
+      return {
+        success: true,
+        data: responseDto,
+        message: "Operation plan replaced successfully",
+      };
+    } catch (error) {
+      logger.error("Error replacing operation plan:", error);
+      return {
+        success: false,
+        error: error.message || error.toString() || "Unknown error occurred",
       };
     }
   }

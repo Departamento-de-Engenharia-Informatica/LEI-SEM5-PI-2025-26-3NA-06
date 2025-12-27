@@ -63,6 +63,11 @@
           >Daily Schedule</a
         >
       </li>
+      <li *ngIf="userRole === 'LogisticOperator'">
+        <a routerLink="/logistic-operator/operation-plans" routerLinkActive="active"
+          >Operation Plans</a
+        >
+      </li>
 
       <!-- Shipping Agent Representative Menu -->
       <li *ngIf="userRole === 'ShippingAgentRepresentative'">

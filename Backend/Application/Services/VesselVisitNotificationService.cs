@@ -124,6 +124,20 @@ namespace ProjArqsi.Application.Services
             if (vessel == null)
                 throw new BusinessRuleValidationException($"Vessel with IMO '{dto.ReferredVesselId}' not found.");
 
+            // Check for conflicting VVNs
+            var conflicts = await _repo.GetConflictingVvnsForVesselAsync(
+                new IMOnumber(dto.ReferredVesselId), 
+                dto.ArrivalDate, 
+                dto.DepartureDate);
+            
+            if (conflicts.Any())
+            {
+                var conflictDetails = conflicts.Select(c => 
+                    $"VVN {c.Id.AsGuid()} from {c.ArrivalDate?.Value:yyyy-MM-dd HH:mm} to {c.DepartureDate?.Value:yyyy-MM-dd HH:mm}");
+                throw new BusinessRuleValidationException(
+                    $"Vessel with IMO '{dto.ReferredVesselId}' already has conflicting visit notification(s) during this time period: {string.Join(", ", conflictDetails)}");
+            }
+
             var vvn = new VesselVisitNotification(dto.ReferredVesselId, dto.ArrivalDate, dto.DepartureDate);
 
             // Process manifests with full validation
@@ -163,6 +177,24 @@ namespace ProjArqsi.Application.Services
             var vessel = await _vesselRepo.GetByImoAsync(new IMOnumber(vesselIMO));
             if (vessel == null)
                 throw new BusinessRuleValidationException($"Vessel with IMO '{vesselIMO}' not found.");
+
+            // Check for conflicting VVNs
+            if (draft.ArrivalDate != null && draft.DepartureDate != null)
+            {
+                var conflicts = await _repo.GetConflictingVvnsForVesselAsync(
+                    new IMOnumber(vesselIMO),
+                    draft.ArrivalDate.Value!.Value,
+                    draft.DepartureDate.Value!.Value,
+                    draft.Id);
+                
+                if (conflicts.Any())
+                {
+                    var conflictDetails = conflicts.Select(c => 
+                        $"VVN {c.Id.AsGuid()} from {c.ArrivalDate?.Value:yyyy-MM-dd HH:mm} to {c.DepartureDate?.Value:yyyy-MM-dd HH:mm}");
+                    throw new BusinessRuleValidationException(
+                        $"Vessel with IMO '{vesselIMO}' already has conflicting visit notification(s) during this time period: {string.Join(", ", conflictDetails)}");
+                }
+            }
 
             // Validate all referenced entities exist
             await ValidateManifestReferencesAsync(draft);
@@ -348,6 +380,22 @@ namespace ProjArqsi.Application.Services
             // Validate vessel exists
             var vessel = await _vesselRepo.GetByImoAsync(new IMOnumber(dto.ReferredVesselId))
                 ?? throw new BusinessRuleValidationException($"Vessel with IMO '{dto.ReferredVesselId}' not found.");
+
+            // Check for conflicting VVNs (exclude current VVN)
+        
+            var conflicts = await _repo.GetConflictingVvnsForVesselAsync(
+                new IMOnumber(dto.ReferredVesselId),
+                dto.ArrivalDate,
+                dto.DepartureDate,
+                vvn.Id);
+                
+                if (conflicts.Any())
+                    {
+                    var conflictDetails = conflicts.Select(c => 
+                        $"VVN {c.Id.AsGuid()} from {c.ArrivalDate?.Value:yyyy-MM-dd HH:mm} to {c.DepartureDate?.Value:yyyy-MM-dd HH:mm}");
+                    throw new BusinessRuleValidationException(
+                        $"Vessel with IMO '{dto.ReferredVesselId}' already has conflicting visit notification(s) during this time period: {string.Join(", ", conflictDetails)}");
+                }
 
             // Update dates and temporarily set to InProgress
             vvn.UpdateAndResubmit(dto.ArrivalDate, dto.DepartureDate);

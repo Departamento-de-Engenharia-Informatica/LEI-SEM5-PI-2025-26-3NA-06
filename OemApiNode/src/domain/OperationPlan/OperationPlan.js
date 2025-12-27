@@ -17,7 +17,8 @@ class OperationPlan {
     author = null,
   }) {
     this.id = id || uuidv4();
-    this.planDate = planDate;
+    // Normalize planDate to YYYY-MM-DD string format
+    this.planDate = this.normalizePlanDate(planDate);
     this.isFeasible = isFeasible;
     this.warnings = Array.isArray(warnings) ? warnings : [];
     this.assignments = assignments.map((a) =>
@@ -28,6 +29,32 @@ class OperationPlan {
     this.author = author;
 
     this.validate();
+  }
+
+  /**
+   * Normalize planDate to YYYY-MM-DD string format
+   */
+  normalizePlanDate(planDate) {
+    if (!planDate) {
+      return null;
+    }
+
+    // If already a string in YYYY-MM-DD format, return as is
+    if (typeof planDate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(planDate)) {
+      return planDate;
+    }
+
+    // If it's a Date object or other format, convert to YYYY-MM-DD
+    const date = new Date(planDate);
+    if (isNaN(date.getTime())) {
+      return planDate; // Return as is, validation will catch it
+    }
+
+    // Format as YYYY-MM-DD
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   }
 
   validate() {
@@ -92,14 +119,29 @@ class OperationPlan {
           const a2 = dockAssignments[j];
 
           if (a1.overlapsWith(a2)) {
+            const vessel1 = a1.vesselName
+              ? `${a1.vesselName} (${a1.vesselImo || "Unknown IMO"})`
+              : a1.vesselImo || "Unknown Vessel";
+            const vessel2 = a2.vesselName
+              ? `${a2.vesselName} (${a2.vesselImo || "Unknown IMO"})`
+              : a2.vesselImo || "Unknown Vessel";
+
+            const formatTime = (date) => {
+              const d = new Date(date);
+              return `${d.getHours().toString().padStart(2, "0")}:${d
+                .getMinutes()
+                .toString()
+                .padStart(2, "0")}`;
+            };
+
             conflicts.push(
-              `VVN ${a1.vvnId.substring(
-                0,
-                8
-              )}... conflicts on Dock ${dockId.substring(
-                0,
-                8
-              )}... with VVN ${a2.vvnId.substring(0, 8)}...`
+              `[Dock ${dockId.substring(0, 8)}...]: VVN from ${formatTime(
+                a1.eta
+              )} to ${formatTime(
+                a1.etd
+              )} (${vessel1}) has conflict with VVN from ${formatTime(
+                a2.eta
+              )} to ${formatTime(a2.etd)} (${vessel2})`
             );
           }
         }
@@ -136,7 +178,23 @@ class OperationPlan {
    * Create from database row
    */
   static fromDatabase(row) {
-    const assignments = JSON.parse(row.Assignments || "[]");
+    const assignmentsData = JSON.parse(row.Assignments || "[]");
+    const Assignment = require("./Assignment");
+
+    // Reconstruct Assignment objects to ensure all properties are properly set
+    const assignments = assignmentsData.map(
+      (a) =>
+        new Assignment({
+          vvnId: a.vvnId,
+          dockId: a.dockId,
+          dockName: a.dockName || null,
+          eta: a.eta,
+          etd: a.etd,
+          estimatedTeu: a.estimatedTeu || 0,
+          vesselName: a.vesselName || null,
+          vesselImo: a.vesselImo || null,
+        })
+    );
 
     return new OperationPlan({
       id: row.Id,

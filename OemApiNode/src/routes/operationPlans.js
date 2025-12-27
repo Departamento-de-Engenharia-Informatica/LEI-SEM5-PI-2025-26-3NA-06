@@ -50,6 +50,48 @@ router.post(
 
 /**
  * @swagger
+ * /api/oem/operation-plans/replace:
+ *   post:
+ *     summary: Replace an existing Operation Plan
+ *     description: Delete existing Operation Plan for a date and create a new one
+ *     tags: [Operation Plans]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               planDate:
+ *                 type: string
+ *                 format: date
+ *               isFeasible:
+ *                 type: boolean
+ *               warnings:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               vesselVisitNotifications:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *     responses:
+ *       200:
+ *         description: Operation Plan replaced successfully
+ *       401:
+ *         description: Unauthorized
+ */
+router.post(
+  "/replace",
+  authenticateJWT,
+  authorizeRole("LogisticOperator"),
+  operationPlanController.replace
+);
+
+/**
+ * @swagger
  * /api/oem/operation-plans:
  *   get:
  *     summary: Search and list Operation Plans

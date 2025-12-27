@@ -3,6 +3,49 @@ const database = require("../config/database");
 const logger = require("../utils/logger");
 const OperationPlan = require("../domain/OperationPlan/OperationPlan");
 
+/**
+ * Parse and validate date string to Date object
+ * @param {string|Date} dateInput - Date string or Date object
+ * @returns {Date} Valid Date object
+ * @throws {Error} If date is invalid
+ */
+function parseAndValidateDate(dateInput) {
+  if (dateInput instanceof Date) {
+    if (isNaN(dateInput.getTime())) {
+      throw new Error("Invalid date object");
+    }
+    return dateInput;
+  }
+
+  // Handle string date input in YYYY-MM-DD format
+  if (typeof dateInput === "string") {
+    // If it's in YYYY-MM-DD format, parse it explicitly to avoid timezone issues
+    const match = dateInput.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      const year = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10) - 1; // JS months are 0-indexed
+      const day = parseInt(match[3], 10);
+      const parsed = new Date(year, month, day);
+
+      if (isNaN(parsed.getTime())) {
+        throw new Error(
+          `Validation failed for parameter 'planDate'. Invalid date: ${dateInput}`
+        );
+      }
+      return parsed;
+    }
+  }
+
+  // Fallback to standard Date parsing
+  const parsed = new Date(dateInput);
+  if (isNaN(parsed.getTime())) {
+    throw new Error(
+      `Validation failed for parameter 'planDate'. Invalid date: ${dateInput}`
+    );
+  }
+  return parsed;
+}
+
 class OperationPlanRepository {
   /**
    * Create operation plan table if not exists
@@ -102,9 +145,25 @@ class OperationPlanRepository {
 
     const dbData = operationPlan.toDatabase();
 
+    // Log the date being processed for debugging
+    logger.info(
+      `Creating operation plan - Raw PlanDate: ${
+        dbData.PlanDate
+      }, Type: ${typeof dbData.PlanDate}`
+    );
+
+    const parsedDate = parseAndValidateDate(dbData.PlanDate);
+    logger.info(
+      `Parsed date for SQL: ${parsedDate.toISOString()}, ${parsedDate}`
+    );
+
     const params = [
       { name: "id", type: TYPES.UniqueIdentifier, value: dbData.Id },
-      { name: "planDate", type: TYPES.Date, value: new Date(dbData.PlanDate) },
+      {
+        name: "planDate",
+        type: TYPES.Date,
+        value: parsedDate,
+      },
       { name: "isFeasible", type: TYPES.Bit, value: dbData.IsFeasible ? 1 : 0 },
       { name: "warnings", type: TYPES.NVarChar, value: dbData.Warnings },
       {
@@ -173,7 +232,11 @@ class OperationPlanRepository {
   async getByDateAsync(planDate) {
     const query = "SELECT * FROM OperationPlans WHERE PlanDate = @planDate";
     const params = [
-      { name: "planDate", type: TYPES.Date, value: new Date(planDate) },
+      {
+        name: "planDate",
+        type: TYPES.Date,
+        value: parseAndValidateDate(planDate),
+      },
     ];
 
     try {
@@ -203,7 +266,7 @@ class OperationPlanRepository {
       params.push({
         name: "startDate",
         type: TYPES.Date,
-        value: new Date(startDate),
+        value: parseAndValidateDate(startDate),
       });
     }
 
@@ -212,7 +275,7 @@ class OperationPlanRepository {
       params.push({
         name: "endDate",
         type: TYPES.Date,
-        value: new Date(endDate),
+        value: parseAndValidateDate(endDate),
       });
     }
 

@@ -111,48 +111,88 @@
 
   <!-- Plan Details Modal -->
   <div *ngIf="selectedPlan" class="modal-overlay" (click)="closeDetails()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-content details-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>Operation Plan Details</h3>
-        <button (click)="closeDetails()" class="btn-close">&times;</button>
+        <button (click)="closeDetails()" class="btn-close" title="Close">&times;</button>
       </div>
       <div class="modal-body">
-        <div class="detail-group">
-          <label>Plan Date:</label>
-          <span>{{ selectedPlan.planDate | date : 'dd/MM/yyyy' }}</span>
+        <div class="schedule-header">
+          <h2>Operation Plan - {{ selectedPlan.planDate | date : 'dd/MM/yyyy' }}</h2>
+          <div
+            class="status-badge"
+            [class.feasible]="selectedPlan.isFeasible"
+            [class.not-feasible]="!selectedPlan.isFeasible"
+          >
+            {{ selectedPlan.isFeasible ? '✓ Feasible' : '✗ Not Feasible' }}
+          </div>
         </div>
-        <div class="detail-group">
-          <label>Feasible:</label>
-          <span [class]="selectedPlan.isFeasible ? 'text-success' : 'text-danger'">
-            {{ selectedPlan.isFeasible ? '✓ Yes' : '✗ No' }}
-          </span>
+
+        <div class="metadata-section">
+          <div class="metadata-item">
+            <span class="metadata-label">Algorithm:</span>
+            <span class="metadata-value">{{ selectedPlan.algorithm }}</span>
+          </div>
+          <div class="metadata-item">
+            <span class="metadata-label">Created:</span>
+            <span class="metadata-value">{{
+              selectedPlan.creationDate | date : 'dd/MM/yyyy HH:mm:ss'
+            }}</span>
+          </div>
+          <div class="metadata-item">
+            <span class="metadata-label">Author:</span>
+            <span class="metadata-value">{{ selectedPlan.author }}</span>
+          </div>
         </div>
-        <div class="detail-group" *ngIf="selectedPlan.warnings && selectedPlan.warnings.length > 0">
-          <label>Warnings:</label>
+
+        <div
+          *ngIf="selectedPlan.warnings && selectedPlan.warnings.length > 0"
+          class="warnings-section"
+        >
+          <h3>⚠️ Warnings</h3>
           <ul>
-            <li *ngFor="let warning of selectedPlan.warnings">{{ warning }}</li>
+            <li
+              *ngFor="let warning of selectedPlan.warnings"
+              [innerHTML]="formatWarning(warning)"
+            ></li>
           </ul>
         </div>
-        <div class="detail-group">
-          <label>Algorithm:</label>
-          <span>{{ selectedPlan.algorithm }}</span>
-        </div>
-        <div class="detail-group">
-          <label>Created:</label>
-          <span>{{ selectedPlan.creationDate | date : 'dd/MM/yyyy HH:mm:ss' }}</span>
-        </div>
-        <div class="detail-group">
-          <label>Author:</label>
-          <span>{{ selectedPlan.author }}</span>
-        </div>
-        <div class="detail-group">
-          <label>Assignments ({{ selectedPlan.assignments.length }}):</label>
-          <div class="assignments-list">
-            <div *ngFor="let assignment of selectedPlan.assignments" class="assignment-item">
-              <strong>VVN:</strong> {{ assignment.vvnId | slice : 0 : 8 }}... |
-              <strong>Dock:</strong> {{ assignment.dockId | slice : 0 : 8 }}... |
-              <strong>ETA:</strong> {{ assignment.eta | date : 'dd/MM HH:mm' }} |
-              <strong>ETD:</strong> {{ assignment.etd | date : 'dd/MM HH:mm' }}
+
+        <div class="dock-schedules-section">
+          <h3>Dock Schedules ({{ getDockGroups().length }} Dock(s))</h3>
+
+          <div *ngIf="getDockGroups().length === 0" class="no-assignments">
+            No vessel assignments in this plan.
+          </div>
+
+          <!-- Group by Dock -->
+          <div *ngFor="let dockGroup of getDockGroups()" class="dock-section">
+            <div class="dock-header">
+              <h4>🏭 {{ dockGroup.dockName || 'Unknown Dock' }}</h4>
+              <span class="vvn-count-badge">{{ dockGroup.assignments.length }} VVN(s)</span>
+            </div>
+
+            <div class="assignments-grid">
+              <div *ngFor="let assignment of dockGroup.assignments" class="assignment-card">
+                <div class="assignment-header">
+                  <h5>{{ assignment.vesselName || 'Unknown Vessel' }}</h5>
+                  <span class="imo-badge">IMO: {{ assignment.vesselImo || 'N/A' }}</span>
+                </div>
+
+                <div class="assignment-details">
+                  <div class="detail-row">
+                    <span class="label">📥 ETA:</span>
+                    <span class="value">{{ assignment.eta | date : 'dd/MM/yyyy HH:mm' }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="label">📤 ETD:</span>
+                    <span class="value">{{ assignment.etd | date : 'dd/MM/yyyy HH:mm' }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="label">📦 Estimated TEU:</span>
+                    <span class="value teu-badge">{{ assignment.estimatedTeu }}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

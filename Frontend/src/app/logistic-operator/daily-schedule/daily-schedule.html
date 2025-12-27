@@ -44,7 +44,7 @@
     <div *ngIf="schedule.warnings.length > 0" class="warnings-section">
       <h3>⚠️ Warnings</h3>
       <ul>
-        <li *ngFor="let warning of schedule.warnings">{{ warning }}</li>
+        <li *ngFor="let warning of schedule.warnings" [innerHTML]="formatWarning(warning)"></li>
       </ul>
     </div>
 
@@ -70,10 +70,6 @@
             </div>
 
             <div class="assignment-details">
-              <div class="detail-row">
-                <span class="label">🚢 VVN ID:</span>
-                <span class="value">{{ assignment.vvnId }}</span>
-              </div>
               <div class="detail-row">
                 <span class="label">📥 ETA:</span>
                 <span class="value">{{ formatDateTime(assignment.eta) }}</span>

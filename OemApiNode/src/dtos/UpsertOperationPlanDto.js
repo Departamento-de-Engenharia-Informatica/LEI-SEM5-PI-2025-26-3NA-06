@@ -68,9 +68,12 @@ class UpsertOperationPlanDto {
         dockSchedule.assignments.map((a) => ({
           vvnId: a.vvnId,
           dockId: a.dockId || dockSchedule.dockId,
+          dockName: a.dockName || dockSchedule.dockName,
           eta: a.eta,
           etd: a.etd,
           estimatedTeu: a.estimatedTeu || 0,
+          vesselName: a.vesselName,
+          vesselImo: a.vesselImo,
         }))
       );
     }
@@ -83,9 +86,12 @@ class UpsertOperationPlanDto {
       assignments = requestBody.vesselVisitNotifications.map((vvn) => ({
         vvnId: vvn.id || vvn.vvnId,
         dockId: vvn.assignedDockId || vvn.dockId,
+        dockName: vvn.dockName,
         eta: vvn.eta,
         etd: vvn.etd,
         estimatedTeu: vvn.estimatedTeu || 0,
+        vesselName: vvn.vesselName,
+        vesselImo: vvn.vesselImo,
       }));
     }
 

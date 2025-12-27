@@ -1,4 +1,5 @@
 using ProjArqsi.Domain.Shared;
+using ProjArqsi.Domain.VesselAggregate;
 
 namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
 {
@@ -14,5 +15,6 @@ namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
         Task<VesselVisitNotification> DraftVVN(VesselVisitNotification vesselVisitNotification);    
         Task<VesselVisitNotification> SubmitVVN(VesselVisitNotification vesselVisitNotification);
         Task<List<VesselVisitNotification>> GetAllApprovedForDateAsync(DateTime date);
+        Task<List<VesselVisitNotification>> GetConflictingVvnsForVesselAsync(IMOnumber vesselImo, DateTime arrivalDate, DateTime departureDate, VesselVisitNotificationId? excludeId = null);
     }
 }

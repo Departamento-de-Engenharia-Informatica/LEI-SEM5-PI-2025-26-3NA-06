@@ -3,12 +3,24 @@
  * Represents a vessel assignment to a dock
  */
 class Assignment {
-  constructor({ vvnId, dockId, eta, etd, estimatedTeu = 0 }) {
+  constructor({
+    vvnId,
+    dockId,
+    dockName = null,
+    eta,
+    etd,
+    estimatedTeu = 0,
+    vesselName = null,
+    vesselImo = null,
+  }) {
     this.vvnId = vvnId;
     this.dockId = dockId;
+    this.dockName = dockName;
     this.eta = new Date(eta);
     this.etd = new Date(etd);
     this.estimatedTeu = estimatedTeu;
+    this.vesselName = vesselName;
+    this.vesselImo = vesselImo;
 
     this.validate();
   }
@@ -61,9 +73,12 @@ class Assignment {
     return {
       vvnId: this.vvnId,
       dockId: this.dockId,
+      dockName: this.dockName,
       eta: this.eta.toISOString(),
       etd: this.etd.toISOString(),
       estimatedTeu: this.estimatedTeu,
+      vesselName: this.vesselName,
+      vesselImo: this.vesselImo,
     };
   }
 }

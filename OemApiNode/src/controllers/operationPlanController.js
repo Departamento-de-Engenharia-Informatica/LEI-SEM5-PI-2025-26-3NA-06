@@ -24,6 +24,29 @@ exports.create = async (req, res, next) => {
   }
 };
 
+exports.replace = async (req, res, next) => {
+  try {
+    const userId = req.user.sub || req.user.id;
+    const username =
+      req.user.name || req.user.email || req.user.preferred_username || userId;
+
+    const result = await operationPlanService.replaceOperationPlanByDateAsync(
+      req.body,
+      userId,
+      username
+    );
+
+    if (result.success) {
+      res.status(200).json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (error) {
+    logger.error("Error in replace operation plan controller:", error);
+    next(error);
+  }
+};
+
 exports.search = async (req, res, next) => {
   try {
     const { startDate, endDate, vesselIMO, skip, take } = req.query;

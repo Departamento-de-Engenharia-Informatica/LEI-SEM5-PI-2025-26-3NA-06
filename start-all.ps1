@@ -1,0 +1,5 @@
+Start-Process powershell -ArgumentList 'cd "C:\Users\jjjos\Desktop\arqsi\projeto\ProjArqsi\Backend"; dotnet run'
+Start-Process powershell -ArgumentList 'cd "C:\Users\jjjos\Desktop\arqsi\projeto\ProjArqsi\AuthApi"; dotnet run'
+Start-Process powershell -ArgumentList 'cd "C:\Users\jjjos\Desktop\arqsi\projeto\ProjArqsi\SchedulingApi"; dotnet run'
+Start-Process powershell -ArgumentList 'cd "C:\Users\jjjos\Desktop\arqsi\projeto\ProjArqsi\OemApiNode"; npm start'
+Start-Process powershell -ArgumentList 'cd "C:\Users\jjjos\Desktop\arqsi\projeto\ProjArqsi\Frontend"; npm start'

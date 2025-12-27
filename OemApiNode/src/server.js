@@ -1,13 +1,15 @@
+// Load environment variables FIRST
+const dotenv = require("dotenv");
+dotenv.config();
+
 const express = require("express");
 const cors = require("cors");
-const dotenv = require("dotenv");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./config/swagger");
 const logger = require("./utils/logger");
 const { errorHandler } = require("./middleware/errorHandler");
-
-// Load environment variables
-dotenv.config();
+const database = require("./config/database");
+const operationPlanService = require("./services/OperationPlanService");
 
 const app = express();
 const PORT = process.env.PORT || 5004;
@@ -40,12 +42,27 @@ app.use("/api/oem/task-categories", require("./routes/taskCategories"));
 // Error handling middleware
 app.use(errorHandler);
 
-// Start server
-app.listen(PORT, () => {
-  logger.info(`✓ OEM API (Node.js) is ready`);
-  logger.info(`  Server: http://localhost:${PORT}`);
-  logger.info(`  Swagger: http://localhost:${PORT}/swagger`);
-  logger.info(`  Health: http://localhost:${PORT}/api/oem/health`);
-});
+// Start server with database initialization
+async function startServer() {
+  try {
+    // Connect to database
+    await database.connect();
+
+    // Initialize services (create tables if needed)
+    await operationPlanService.initializeAsync();
+
+    app.listen(PORT, () => {
+      logger.info(`✓ OEM API (Node.js) is ready`);
+      logger.info(`  Server: http://localhost:${PORT}`);
+      logger.info(`  Swagger: http://localhost:${PORT}/swagger`);
+      logger.info(`  Health: http://localhost:${PORT}/api/oem/health`);
+    });
+  } catch (error) {
+    logger.error("Failed to start server:", error);
+    process.exit(1);
+  }
+}
+
+startServer();
 
 module.exports = app;

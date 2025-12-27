@@ -1,41 +1,52 @@
 const logger = require("../utils/logger");
-
-// Placeholder controller for Operation Plans
-// This will be expanded with full CRUD logic and database integration
+const operationPlanService = require("../services/OperationPlanService");
 
 exports.create = async (req, res, next) => {
   try {
-    logger.info("Creating Operation Plan");
+    const userId = req.user.sub || req.user.id;
+    const username =
+      req.user.name || req.user.email || req.user.preferred_username || userId;
 
-    // TODO: Implement Operation Plan creation logic
-    // - Validate input data
-    // - Store in database
-    // - Record metadata (creation date, author, algorithm)
+    const result = await operationPlanService.createOperationPlanAsync(
+      req.body,
+      userId,
+      username
+    );
 
-    res.status(501).json({
-      message: "Operation Plan creation - Not fully implemented yet",
-      data: req.body,
-    });
+    if (result.success) {
+      res.status(201).json(result);
+    } else {
+      res.status(400).json(result);
+    }
   } catch (error) {
+    logger.error("Error in create operation plan controller:", error);
     next(error);
   }
 };
 
 exports.search = async (req, res, next) => {
   try {
-    const { startDate, endDate, vesselId } = req.query;
-    logger.info(`Searching Operation Plans: ${JSON.stringify(req.query)}`);
+    const { startDate, endDate, vesselIMO, skip, take } = req.query;
 
-    // TODO: Implement search logic
-    // - Query database with filters
-    // - Support sorting
-    // - Return paginated results
+    const filters = {
+      startDate,
+      endDate,
+      vesselIMO,
+      skip: skip ? parseInt(skip) : 0,
+      take: take ? parseInt(take) : 50,
+    };
 
-    res.status(501).json({
-      message: "Operation Plan search - Not fully implemented yet",
-      filters: { startDate, endDate, vesselId },
-    });
+    const result = await operationPlanService.searchOperationPlansAsync(
+      filters
+    );
+
+    if (result.success) {
+      res.status(200).json(result);
+    } else {
+      res.status(400).json(result);
+    }
   } catch (error) {
+    logger.error("Error in search operation plans controller:", error);
     next(error);
   }
 };
@@ -43,15 +54,31 @@ exports.search = async (req, res, next) => {
 exports.getById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    logger.info(`Getting Operation Plan: ${id}`);
+    const result = await operationPlanService.getOperationPlanByIdAsync(id);
 
-    // TODO: Query database for specific plan
-
-    res.status(501).json({
-      message: "Get Operation Plan by ID - Not fully implemented yet",
-      id,
-    });
+    if (result.success) {
+      res.status(200).json(result);
+    } else {
+      res.status(404).json(result);
+    }
   } catch (error) {
+    logger.error("Error in get operation plan by ID controller:", error);
+    next(error);
+  }
+};
+
+exports.getByDate = async (req, res, next) => {
+  try {
+    const { date } = req.params;
+    const result = await operationPlanService.getOperationPlanByDateAsync(date);
+
+    if (result.success) {
+      res.status(200).json(result);
+    } else {
+      res.status(404).json(result);
+    }
+  } catch (error) {
+    logger.error("Error in get operation plan by date controller:", error);
     next(error);
   }
 };
@@ -59,35 +86,59 @@ exports.getById = async (req, res, next) => {
 exports.update = async (req, res, next) => {
   try {
     const { id } = req.params;
-    logger.info(`Updating Operation Plan: ${id}`);
+    const userId = req.user.sub || req.user.id;
 
-    // TODO: Implement update logic
-    // - Validate changes
-    // - Check for conflicts
-    // - Log changes with author and reason
-
-    res.status(501).json({
-      message: "Operation Plan update - Not fully implemented yet",
+    const result = await operationPlanService.updateOperationPlanAsync(
       id,
-      data: req.body,
-    });
+      req.body,
+      userId
+    );
+
+    if (result.success) {
+      res.status(200).json(result);
+    } else {
+      res.status(400).json(result);
+    }
   } catch (error) {
+    logger.error("Error in update operation plan controller:", error);
     next(error);
   }
 };
 
 exports.delete = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    logger.info(`Deleting Operation Plan: ${id}`);
+    const { date } = req.params;
+    const userId = req.user.sub || req.user.id;
 
-    // TODO: Implement soft delete or hard delete
+    const result = await operationPlanService.deleteOperationPlanAsync(
+      date,
+      userId
+    );
 
-    res.status(501).json({
-      message: "Operation Plan deletion - Not fully implemented yet",
-      id,
-    });
+    if (result.success) {
+      res.status(204).send();
+    } else {
+      res.status(400).json(result);
+    }
   } catch (error) {
+    logger.error("Error in delete operation plan controller:", error);
+    next(error);
+  }
+};
+
+exports.validateFeasibility = async (req, res, next) => {
+  try {
+    const result = await operationPlanService.validateFeasibilityAsync(
+      req.body
+    );
+
+    if (result.success) {
+      res.status(200).json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (error) {
+    logger.error("Error in validate feasibility controller:", error);
     next(error);
   }
 };

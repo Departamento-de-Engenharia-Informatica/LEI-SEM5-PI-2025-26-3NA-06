@@ -1,0 +1,162 @@
+<div class="operation-plans-container">
+  <h2>Operation Plans</h2>
+
+  <!-- Filter Section -->
+  <div class="filters-card">
+    <h3>Search & Filter</h3>
+    <div class="filter-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="startDate">Start Date:</label>
+          <input type="date" id="startDate" [(ngModel)]="filters.startDate" class="form-control" />
+        </div>
+
+        <div class="form-group">
+          <label for="endDate">End Date:</label>
+          <input type="date" id="endDate" [(ngModel)]="filters.endDate" class="form-control" />
+        </div>
+
+        <div class="form-actions">
+          <button (click)="searchPlans()" class="btn btn-primary">
+            <i class="fas fa-search"></i> Search
+          </button>
+          <button (click)="clearFilters()" class="btn btn-secondary">
+            <i class="fas fa-times"></i> Clear
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-spinner">
+    <i class="fas fa-spinner fa-spin"></i> Loading operation plans...
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="alert alert-danger">
+    <i class="fas fa-exclamation-triangle"></i> {{ error }}
+  </div>
+
+  <!-- Results Table -->
+  <div *ngIf="!loading && operationPlans.length > 0" class="results-section">
+    <h3>Results ({{ operationPlans.length }})</h3>
+
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th (click)="sortBy('planDate')" class="sortable">
+              Plan Date
+              <i class="fas" [ngClass]="getSortIcon('planDate')"></i>
+            </th>
+            <th (click)="sortBy('isFeasible')" class="sortable">
+              Feasible
+              <i class="fas" [ngClass]="getSortIcon('isFeasible')"></i>
+            </th>
+            <th>Warnings</th>
+            <th (click)="sortBy('assignmentsCount')" class="sortable">
+              Assignments
+              <i class="fas" [ngClass]="getSortIcon('assignmentsCount')"></i>
+            </th>
+            <th>Algorithm</th>
+            <th (click)="sortBy('creationDate')" class="sortable">
+              Created
+              <i class="fas" [ngClass]="getSortIcon('creationDate')"></i>
+            </th>
+            <th>Author</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let plan of operationPlans">
+            <td>{{ plan.planDate | date : 'dd/MM/yyyy' }}</td>
+            <td>
+              <span [class]="plan.isFeasible ? 'badge badge-success' : 'badge badge-danger'">
+                {{ plan.isFeasible ? '✓ Yes' : '✗ No' }}
+              </span>
+            </td>
+            <td>
+              <span
+                *ngIf="plan.warnings && plan.warnings.length > 0"
+                class="badge badge-warning"
+                [title]="plan.warnings.join('; ')"
+              >
+                {{ plan.warnings.length }} warning(s)
+              </span>
+              <span *ngIf="!plan.warnings || plan.warnings.length === 0" class="text-muted">
+                None
+              </span>
+            </td>
+            <td>{{ plan.assignments?.length || 0 }} VVN(s)</td>
+            <td>{{ plan.algorithm || 'N/A' }}</td>
+            <td>{{ plan.creationDate | date : 'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ plan.author || 'Unknown' }}</td>
+            <td>
+              <button (click)="viewDetails(plan)" class="btn btn-info" title="View Details">
+                <i class="fas fa-eye"></i> View
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- No Results -->
+  <div *ngIf="!loading && operationPlans.length === 0 && searched" class="no-results">
+    <i class="fas fa-inbox"></i>
+    <p>No operation plans found matching your criteria.</p>
+  </div>
+
+  <!-- Plan Details Modal -->
+  <div *ngIf="selectedPlan" class="modal-overlay" (click)="closeDetails()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Operation Plan Details</h3>
+        <button (click)="closeDetails()" class="btn-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-group">
+          <label>Plan Date:</label>
+          <span>{{ selectedPlan.planDate | date : 'dd/MM/yyyy' }}</span>
+        </div>
+        <div class="detail-group">
+          <label>Feasible:</label>
+          <span [class]="selectedPlan.isFeasible ? 'text-success' : 'text-danger'">
+            {{ selectedPlan.isFeasible ? '✓ Yes' : '✗ No' }}
+          </span>
+        </div>
+        <div class="detail-group" *ngIf="selectedPlan.warnings && selectedPlan.warnings.length > 0">
+          <label>Warnings:</label>
+          <ul>
+            <li *ngFor="let warning of selectedPlan.warnings">{{ warning }}</li>
+          </ul>
+        </div>
+        <div class="detail-group">
+          <label>Algorithm:</label>
+          <span>{{ selectedPlan.algorithm }}</span>
+        </div>
+        <div class="detail-group">
+          <label>Created:</label>
+          <span>{{ selectedPlan.creationDate | date : 'dd/MM/yyyy HH:mm:ss' }}</span>
+        </div>
+        <div class="detail-group">
+          <label>Author:</label>
+          <span>{{ selectedPlan.author }}</span>
+        </div>
+        <div class="detail-group">
+          <label>Assignments ({{ selectedPlan.assignments.length }}):</label>
+          <div class="assignments-list">
+            <div *ngFor="let assignment of selectedPlan.assignments" class="assignment-item">
+              <strong>VVN:</strong> {{ assignment.vvnId | slice : 0 : 8 }}... |
+              <strong>Dock:</strong> {{ assignment.dockId | slice : 0 : 8 }}... |
+              <strong>ETA:</strong> {{ assignment.eta | date : 'dd/MM HH:mm' }} |
+              <strong>ETD:</strong> {{ assignment.etd | date : 'dd/MM HH:mm' }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

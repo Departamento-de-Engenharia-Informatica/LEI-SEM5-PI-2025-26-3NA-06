@@ -31,6 +31,7 @@ import { ContainerManagementComponent } from './shipping-agent/container-managem
 import { LogisticOperatorDashboard } from './logistic-operator/logistic-operator-dashboard/logistic-operator-dashboard';
 import { DailySchedule } from './logistic-operator/daily-schedule/daily-schedule';
 import { OemTest } from './logistic-operator/oem-test/oem-test';
+import { OperationPlansListComponent } from './logistic-operator/operation-plans-list/operation-plans-list';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -84,6 +85,7 @@ export const routes: Routes = [
           { path: '', component: LogisticOperatorDashboard },
           { path: 'dashboard', component: LogisticOperatorDashboard },
           { path: 'daily-schedule', component: DailySchedule },
+          { path: 'operation-plans', component: OperationPlansListComponent },
           { path: 'oem-test', component: OemTest },
         ],
       },

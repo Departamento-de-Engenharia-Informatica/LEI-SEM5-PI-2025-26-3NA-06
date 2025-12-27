@@ -53,7 +53,7 @@ router.post(
  * /api/oem/operation-plans:
  *   get:
  *     summary: Search and list Operation Plans
- *     description: Query Operation Plans by date range or vessel (US 4.1.3)
+ *     description: Query Operation Plans by date range and/or vessel identifier (US 4.1.3)
  *     tags: [Operation Plans]
  *     security:
  *       - bearerAuth: []
@@ -63,18 +63,33 @@ router.post(
  *         schema:
  *           type: string
  *           format: date
+ *         description: Filter plans from this date (inclusive)
  *       - in: query
  *         name: endDate
  *         schema:
  *           type: string
  *           format: date
+ *         description: Filter plans until this date (inclusive)
  *       - in: query
- *         name: vesselId
+ *         name: vesselIMO
  *         schema:
  *           type: string
+ *         description: Filter by vessel IMO or vessel ID (searches in assignments)
+ *       - in: query
+ *         name: skip
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Number of records to skip (pagination)
+ *       - in: query
+ *         name: take
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Number of records to return (pagination)
  *     responses:
  *       200:
- *         description: List of Operation Plans
+ *         description: List of Operation Plans with sortable results
  *       401:
  *         description: Unauthorized
  */
@@ -171,6 +186,60 @@ router.delete(
   authenticateJWT,
   authorizeRole("LogisticOperator"),
   operationPlanController.delete
+);
+
+/**
+ * @swagger
+ * /api/oem/operation-plans/date/{date}:
+ *   get:
+ *     summary: Get Operation Plan by date
+ *     tags: [Operation Plans]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: date
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *     responses:
+ *       200:
+ *         description: Operation Plan for specific date
+ *       404:
+ *         description: Not found
+ */
+router.get(
+  "/date/:date",
+  authenticateJWT,
+  authorizeRole("LogisticOperator"),
+  operationPlanController.getByDate
+);
+
+/**
+ * @swagger
+ * /api/oem/operation-plans/validate:
+ *   post:
+ *     summary: Validate operation plan feasibility
+ *     description: Check if an operation plan is feasible without saving it
+ *     tags: [Operation Plans]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Validation result
+ */
+router.post(
+  "/validate",
+  authenticateJWT,
+  authorizeRole("LogisticOperator"),
+  operationPlanController.validateFeasibility
 );
 
 module.exports = router;

@@ -10,10 +10,23 @@
     <button class="btn btn-primary" (click)="generateSchedule()" [disabled]="loading">
       {{ loading ? 'Generating...' : 'Generate Schedule' }}
     </button>
+
+    <button
+      *ngIf="schedule"
+      class="btn btn-success"
+      (click)="saveOperationPlan()"
+      [disabled]="!canSaveOperationPlan()"
+    >
+      {{ saving ? 'Saving...' : '💾 Save Operation Plan' }}
+    </button>
   </div>
 
   <div *ngIf="error" class="alert alert-error">
     {{ error }}
+  </div>
+
+  <div *ngIf="saveSuccess" class="alert alert-success">
+    {{ saveSuccess }}
   </div>
 
   <div *ngIf="schedule" class="results-section">

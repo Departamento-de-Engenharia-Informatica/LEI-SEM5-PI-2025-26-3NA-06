@@ -15,6 +15,32 @@ export interface OemHealthResponse {
   };
 }
 
+export interface SaveOperationPlanRequest {
+  planDate: string;
+  isFeasible: boolean;
+  warnings: string[];
+  algorithmUsed?: string;
+  vesselVisitNotifications: any[];
+}
+
+export interface SaveOperationPlanResponse {
+  success: boolean;
+  data?: {
+    id: string;
+    planDate: string;
+    algorithmUsed: string;
+    createdBy: string;
+    createdAt: string;
+    status: string;
+    isFeasible: boolean;
+    conflicts: any[];
+    vesselVisitNotifications: any[];
+    totalVessels: number;
+  };
+  message?: string;
+  error?: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -35,5 +61,40 @@ export class OemService {
     return this.http.get<OemHealthResponse>(`${this.oemApiUrl}/health`, {
       headers: this.getHeaders(),
     });
+  }
+
+  saveOperationPlan(request: SaveOperationPlanRequest): Observable<SaveOperationPlanResponse> {
+    return this.http.post<SaveOperationPlanResponse>(`${this.oemApiUrl}/operation-plans`, request, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  validateFeasibility(request: SaveOperationPlanRequest): Observable<any> {
+    return this.http.post<any>(`${this.oemApiUrl}/operation-plans/validate`, request, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  getOperationPlanByDate(date: string): Observable<SaveOperationPlanResponse> {
+    return this.http.get<SaveOperationPlanResponse>(
+      `${this.oemApiUrl}/operation-plans/date/${date}`,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  searchOperationPlans(params: {
+    startDate?: string;
+    endDate?: string;
+    vesselIMO?: string;
+  }): Observable<any> {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('startDate', params.startDate);
+    if (params.endDate) queryParams.append('endDate', params.endDate);
+    if (params.vesselIMO) queryParams.append('vesselIMO', params.vesselIMO);
+
+    const url = `${this.oemApiUrl}/operation-plans${
+      queryParams.toString() ? '?' + queryParams.toString() : ''
+    }`;
+    return this.http.get<any>(url, { headers: this.getHeaders() });
   }
 }

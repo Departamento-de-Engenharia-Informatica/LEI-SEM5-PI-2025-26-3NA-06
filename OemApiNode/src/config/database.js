@@ -45,8 +45,9 @@ class Database {
       const results = [];
       const request = new Request(query, (err, rowCount) => {
         if (err) {
-          logger.error("Query execution error:", err);
-          reject(err);
+          const errorMessage = err.message || (err.errors && err.errors.map(e => e.message).join('; ')) || err.toString();
+          logger.error("Query execution error:", { message: errorMessage, fullError: err });
+          reject(new Error(errorMessage));
         } else {
           resolve(results);
         }

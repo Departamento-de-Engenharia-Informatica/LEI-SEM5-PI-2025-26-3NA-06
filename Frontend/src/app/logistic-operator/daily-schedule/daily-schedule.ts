@@ -7,6 +7,7 @@ import {
   DailyDockSchedule,
   DockAssignment,
 } from '../../services/scheduling.service';
+import { OemService, SaveOperationPlanRequest } from '../../services/oem.service';
 
 @Component({
   selector: 'app-daily-schedule',
@@ -19,10 +20,13 @@ export class DailySchedule implements OnInit {
   selectedDate: string = '';
   schedule: DailyScheduleResult | null = null;
   loading: boolean = false;
+  saving: boolean = false;
   error: string | null = null;
+  saveSuccess: string | null = null;
 
   constructor(
     private schedulingService: SchedulingService,
+    private oemService: OemService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone
   ) {}
@@ -41,6 +45,7 @@ export class DailySchedule implements OnInit {
 
     this.loading = true;
     this.error = null;
+    this.saveSuccess = null;
     this.schedule = null;
 
     this.schedulingService.generateDailySchedule(this.selectedDate).subscribe({
@@ -60,6 +65,63 @@ export class DailySchedule implements OnInit {
         });
       },
     });
+  }
+
+  saveOperationPlan() {
+    if (!this.schedule || !this.selectedDate) {
+      this.error = 'No schedule to save';
+      return;
+    }
+
+    this.saving = true;
+    this.error = null;
+    this.saveSuccess = null;
+
+    // Prepare VVN data from dockSchedules
+    const vesselVisitNotifications = this.schedule.dockSchedules.flatMap((dock: any) =>
+      dock.assignments.map((assignment: any) => ({
+        id: assignment.vvnId,
+        vesselName: assignment.vesselName,
+        eta: assignment.eta,
+        etd: assignment.etd,
+        assignedDockId: dock.dockId,
+        dockName: dock.dockName,
+      }))
+    );
+
+    const request: SaveOperationPlanRequest = {
+      planDate: this.selectedDate,
+      isFeasible: this.schedule.isFeasible,
+      warnings: this.schedule.warnings || [],
+      vesselVisitNotifications: vesselVisitNotifications,
+    };
+
+    this.oemService.saveOperationPlan(request).subscribe({
+      next: (response) => {
+        this.ngZone.run(() => {
+          if (response.success) {
+            this.saveSuccess = `Operation Plan saved successfully!`;
+            console.log('Operation Plan saved:', response.data);
+          } else {
+            this.error = response.error || 'Failed to save operation plan';
+          }
+          this.saving = false;
+          this.cdr.detectChanges();
+        });
+      },
+      error: (err) => {
+        this.ngZone.run(() => {
+          console.error('Error saving operation plan:', err);
+          this.error = err.error?.error || err.error?.message || 'Failed to save operation plan';
+          this.saving = false;
+          this.cdr.detectChanges();
+        });
+      },
+    });
+  }
+
+  canSaveOperationPlan(): boolean {
+    return !!(this.schedule && this.schedule.dockSchedules.length > 0 && !this.saving);
   }
 
   formatDateTime(dateStr: string): string {

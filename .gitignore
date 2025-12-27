@@ -80,6 +80,7 @@ artifacts/
 *.cache
 *.dll
 *.exe
+.ps1
 
 # Configuration files with secrets
 **/appsettings.Development.json

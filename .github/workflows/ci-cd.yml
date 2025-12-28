@@ -11,7 +11,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        project: [Backend, AuthApi, SchedulingApi]
+        include:
+          - project: Backend
+            csproj: ProjArqsi.csproj
+          - project: AuthApi
+            csproj: ProjArqsi.AuthApi.csproj
+          - project: SchedulingApi
+            csproj: ProjArqsi.SchedulingApi.csproj
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,7 +41,7 @@ jobs:
         continue-on-error: true
 
       - name: Publish - ${{ matrix.project }}
-        run: dotnet publish --no-build -c Release -o ./publish
+        run: dotnet publish ${{ matrix.csproj }} --no-build -c Release -o ./publish
         working-directory: ./${{ matrix.project }}
 
       - name: Upload build artifacts - ${{ matrix.project }}

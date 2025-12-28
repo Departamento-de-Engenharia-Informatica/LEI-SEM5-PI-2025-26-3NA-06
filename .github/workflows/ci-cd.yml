@@ -35,7 +35,7 @@ jobs:
         continue-on-error: true
 
       - name: Publish - ${{ matrix.project }}
-        run: dotnet publish -c Release -o ./publish
+        run: dotnet publish *.csproj -c Release -o ./publish
         working-directory: ./${{ matrix.project }}
 
       - name: Upload build artifacts - ${{ matrix.project }}
@@ -58,10 +58,6 @@ jobs:
 
       - name: Install dependencies - OemApiNode
         run: npm ci
-        working-directory: ./OemApiNode
-
-      - name: Build - OemApiNode
-        run: npm run build
         working-directory: ./OemApiNode
 
       - name: Upload build artifacts - OemApiNode

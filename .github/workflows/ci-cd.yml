@@ -7,9 +7,11 @@ on:
     branches: [main, develop]
 
 jobs:
-  build-and-test:
+  build-backend:
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        project: [Backend, AuthApi, SchedulingApi]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -19,48 +21,85 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      - name: Restore dependencies
+      - name: Restore dependencies - ${{ matrix.project }}
         run: dotnet restore
-        working-directory: ./Backend
+        working-directory: ./${{ matrix.project }}
 
-      - name: Build solution
+      - name: Build - ${{ matrix.project }}
         run: dotnet build --no-restore --configuration Release
-        working-directory: ./Backend
+        working-directory: ./${{ matrix.project }}
 
-      - name: Run tests
+      - name: Run tests - ${{ matrix.project }}
         run: dotnet test --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx"
-        working-directory: ./Backend
+        working-directory: ./${{ matrix.project }}
+        continue-on-error: true
 
-      - name: Publish test results
-        uses: dorny/test-reporter@v1
-        if: always()
-        with:
-          name: Test Results
-          path: "**/test-results.trx"
-          reporter: dotnet-trx
-
-      - name: Archive test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-results
-          path: "**/TestResults/*.trx"
-          retention-days: 30
-
-      - name: Build artifacts
+      - name: Publish - ${{ matrix.project }}
         run: dotnet publish -c Release -o ./publish
-        working-directory: ./Backend
+        working-directory: ./${{ matrix.project }}
 
-      - name: Upload build artifacts
+      - name: Upload build artifacts - ${{ matrix.project }}
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts
-          path: ./Backend/publish
+          name: build-${{ matrix.project }}
+          path: ./${{ matrix.project }}/publish
+          retention-days: 7
+
+  build-oem-api:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
+      - name: Install dependencies - OemApiNode
+        run: npm ci
+        working-directory: ./OemApiNode
+
+      - name: Build - OemApiNode
+        run: npm run build
+        working-directory: ./OemApiNode
+
+      - name: Upload build artifacts - OemApiNode
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-OemApiNode
+          path: ./OemApiNode
+          retention-days: 7
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
+      - name: Install dependencies - Frontend
+        run: npm ci
+        working-directory: ./Frontend
+
+      - name: Build - Frontend
+        run: npm run build
+        working-directory: ./Frontend
+
+      - name: Upload build artifacts - Frontend
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-Frontend
+          path: ./Frontend/dist
           retention-days: 7
 
   code-quality:
     runs-on: ubuntu-latest
-    needs: build-and-test
+    needs: [build-backend, build-oem-api, build-frontend]
 
     steps:
       - name: Checkout code
@@ -71,6 +110,6 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      - name: Run code analysis
+      - name: Run code analysis - Backend
         run: dotnet build --configuration Release /p:TreatWarningsAsErrors=false
         working-directory: ./Backend

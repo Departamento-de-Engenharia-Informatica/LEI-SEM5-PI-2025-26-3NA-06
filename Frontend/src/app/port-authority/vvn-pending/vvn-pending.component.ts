@@ -223,7 +223,7 @@ export class VvnPendingComponent implements OnInit {
     this.errorMessage = '';
   }
 
-  approveVvn() {
+  approveVvn(confirmConflict: boolean = false) {
     if (!this.selectedDockId) {
       this.errorMessage = 'Please select a dock for approval.';
       return;
@@ -232,6 +232,7 @@ export class VvnPendingComponent implements OnInit {
     this.http
       .post(`http://localhost:5218/api/VesselVisitNotification/${this.selectedVvn.id}/approve`, {
         tempAssignedDockId: this.selectedDockId,
+        confirmDockConflict: confirmConflict,
       })
       .pipe(
         timeout(20000),
@@ -252,7 +253,20 @@ export class VvnPendingComponent implements OnInit {
         },
         error: (err) => {
           this.ngZone.run(() => {
-            this.errorMessage = err.error?.message || 'Failed to approve VVN';
+            // Check if this is a dock conflict error (HTTP 409)
+            if (err.status === 409 && err.error?.requiresConfirmation) {
+              const conflictMessage = err.error.message;
+              const confirmed = confirm(
+                `⚠️ DOCK CONFLICT WARNING ⚠️\n\n${conflictMessage}\n\nDo you want to approve this VVN anyway?`
+              );
+
+              if (confirmed) {
+                // Retry with confirmation flag
+                this.approveVvn(true);
+              }
+            } else {
+              this.errorMessage = err.error?.message || 'Failed to approve VVN';
+            }
             this.cdr.detectChanges();
           });
         },

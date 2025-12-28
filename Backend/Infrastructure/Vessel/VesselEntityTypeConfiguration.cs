@@ -30,6 +30,7 @@ namespace ProjArqsi.Infrastructure
             builder.OwnsOne(v => v.IMO, imo =>
             {
                 imo.Property(p => p.Number).HasColumnName("IMO").IsRequired();
+                imo.HasIndex(p => p.Number).IsUnique();
             });
 
             builder.OwnsOne(v => v.VesselName, vn =>

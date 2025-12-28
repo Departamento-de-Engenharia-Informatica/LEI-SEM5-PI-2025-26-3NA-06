@@ -16,5 +16,6 @@ namespace ProjArqsi.Domain.VesselVisitNotificationAggregate
         Task<VesselVisitNotification> SubmitVVN(VesselVisitNotification vesselVisitNotification);
         Task<List<VesselVisitNotification>> GetAllApprovedForDateAsync(DateTime date);
         Task<List<VesselVisitNotification>> GetConflictingVvnsForVesselAsync(IMOnumber vesselImo, DateTime arrivalDate, DateTime departureDate, VesselVisitNotificationId? excludeId = null);
+        Task<List<VesselVisitNotification>> GetConflictingVvnsForDockAsync(Guid dockId, DateTime arrivalDate, DateTime departureDate, VesselVisitNotificationId? excludeId = null);
     }
 }

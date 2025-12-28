@@ -123,6 +123,15 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     dbContext.Database.Migrate();
+    
+    // Check if --seed argument was passed
+    if (args.Contains("--seed"))
+    {
+        Console.WriteLine("\n=== Running Bootstrap Data Seeding ===\n");
+        await ProjArqsi.BootstrapData.SeedDataAsync(dbContext);
+        Console.WriteLine("\n=== Bootstrap Completed ===\n");
+        return; // Exit after seeding
+    }
 }
 
 // Use CORS before authentication

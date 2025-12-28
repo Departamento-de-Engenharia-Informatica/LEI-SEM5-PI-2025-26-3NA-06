@@ -20,6 +20,7 @@ namespace ProjArqsi.Infrastructure
             builder.OwnsOne(v => v.TypeName, tn =>
             {
                 tn.Property(p => p.Value).HasColumnName("TypeName").IsRequired();
+                tn.HasIndex(p => p.Value).IsUnique();
             });
 
             builder.OwnsOne(v => v.TypeDescription, td =>

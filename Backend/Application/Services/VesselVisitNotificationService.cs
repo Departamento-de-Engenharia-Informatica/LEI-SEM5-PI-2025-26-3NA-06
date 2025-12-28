@@ -319,7 +319,7 @@ namespace ProjArqsi.Application.Services
             }
         }
 
-        public async Task<VVNDto> ApproveVvnAsync(Guid id, Guid tempAssignedDockId, string officerId)
+        public async Task<VVNDto> ApproveVvnAsync(Guid id, Guid tempAssignedDockId, string officerId, bool confirmDockConflict = false)
         {
             var vvn = await _repo.GetByIdAsync(new VesselVisitNotificationId(id))
                 ?? throw new BusinessRuleValidationException("Vessel Visit Notification not found.");
@@ -338,12 +338,74 @@ namespace ProjArqsi.Application.Services
                 throw new BusinessRuleValidationException($"The selected dock '{dock.DockName.Value}' cannot accommodate vessels of this type. Please select a different dock.");
             }
 
+            // Check for dock conflicts if dates are present
+            if (vvn.ArrivalDate != null && vvn.DepartureDate != null)
+            {
+                var dockConflicts = await _repo.GetConflictingVvnsForDockAsync(
+                    tempAssignedDockId,
+                    vvn.ArrivalDate.Value!.Value,
+                    vvn.DepartureDate.Value!.Value,
+                    vvn.Id);
+
+                if (dockConflicts.Any() && !confirmDockConflict)
+                {
+                    var conflictDetails = dockConflicts.Select(c =>
+                        $"VVN {c.Id.AsGuid()} (Vessel IMO: {c.ReferredVesselId.VesselId.Value}) from {c.ArrivalDate?.Value:yyyy-MM-dd HH:mm} to {c.DepartureDate?.Value:yyyy-MM-dd HH:mm}");
+                    
+                    throw new BusinessRuleValidationException(
+                        $"DOCK_CONFLICT: Dock '{dock.DockName.Value}' is already assigned to other vessel(s) during this time period: {string.Join("; ", conflictDetails)}. Set ConfirmDockConflict=true to approve anyway.");
+                }
+            }
+
             vvn.Approve(new DockId(tempAssignedDockId), officerId);
             await _unitOfWork.CommitAsync();
 
             _apiLogger.LogVvnApproved(id, tempAssignedDockId, officerId);
 
             return _mapper.Map<VVNDto>(vvn);
+        }
+
+        public async Task<DockConflictInfoDto> CheckDockConflictsAsync(Guid vvnId, Guid dockId)
+        {
+            var vvn = await _repo.GetByIdAsync(new VesselVisitNotificationId(vvnId))
+                ?? throw new BusinessRuleValidationException("Vessel Visit Notification not found.");
+
+            if (vvn.ArrivalDate == null || vvn.DepartureDate == null)
+            {
+                return new DockConflictInfoDto { HasConflicts = false };
+            }
+
+            var conflicts = await _repo.GetConflictingVvnsForDockAsync(
+                dockId,
+                vvn.ArrivalDate.Value!.Value,
+                vvn.DepartureDate.Value!.Value,
+                vvn.Id);
+
+            if (!conflicts.Any())
+            {
+                return new DockConflictInfoDto { HasConflicts = false };
+            }
+
+            var conflictingVvns = new List<ConflictingVvnDto>();
+            foreach (var conflict in conflicts)
+            {
+                var vessel = await _vesselRepo.GetByImoAsync(new IMOnumber(conflict.ReferredVesselId.VesselId.Value));
+                
+                conflictingVvns.Add(new ConflictingVvnDto
+                {
+                    VvnId = conflict.Id.AsGuid().ToString(),
+                    VesselImo = conflict.ReferredVesselId.VesselId.Value,
+                    VesselName = vessel?.VesselName.Name ?? "Unknown",
+                    ArrivalDate = conflict.ArrivalDate!.Value!.Value,
+                    DepartureDate = conflict.DepartureDate!.Value!.Value
+                });
+            }
+
+            return new DockConflictInfoDto
+            {
+                HasConflicts = true,
+                ConflictingVvns = conflictingVvns
+            };
         }
 
         public async Task<VVNDto> RejectVvnAsync(Guid id, string rejectionReason, string officerId)

@@ -186,5 +186,43 @@ namespace Infrastructure
 
             return conflicts;
         }
+
+        public async Task<List<VesselVisitNotification>> GetConflictingVvnsForDockAsync(
+            Guid dockId,
+            DateTime arrivalDate,
+            DateTime departureDate,
+            VesselVisitNotificationId? excludeId = null)
+        {
+            // Get all approved VVNs for this dock
+            var dockVvns = await _context.VesselVisitNotifications
+                .Include(vvn => vvn.CargoManifests)
+                .Where(vvn => vvn.StatusValue == (int)StatusEnum.Accepted &&
+                              vvn.TempAssignedDockId != null &&
+                              vvn.ArrivalDate != null &&
+                              vvn.DepartureDate != null)
+                .ToListAsync();
+
+            // Filter by dock ID and time overlap in memory
+            var conflicts = dockVvns
+                .Where(vvn =>
+                {
+                    // Exclude the current VVN being checked
+                    if (excludeId != null && vvn.Id.Equals(excludeId))
+                        return false;
+
+                    // Check if this VVN is assigned to the specified dock
+                    if (vvn.TempAssignedDockId?.AsGuid() != dockId)
+                        return false;
+
+                    var existingArrival = vvn.ArrivalDate!.Value!.Value;
+                    var existingDeparture = vvn.DepartureDate!.Value!.Value;
+
+                    // Check for time overlap
+                    return arrivalDate < existingDeparture && existingArrival < departureDate;
+                })
+                .ToList();
+
+            return conflicts;
+        }
     }
 }

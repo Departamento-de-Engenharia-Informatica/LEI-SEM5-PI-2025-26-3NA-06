@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProjArqsi.Infrastructure;
 using ProjArqsi.Domain.UserAggregate.ValueObjects;
@@ -12,9 +13,11 @@ using ProjArqsi.Domain.UserAggregate.ValueObjects;
 namespace ProjArqsi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251228145231_AddUniqueIndexToVesselIMO")]
+    partial class AddUniqueIndexToVesselIMO
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -702,13 +705,10 @@ namespace ProjArqsi.Migrations
 
                             b1.Property<string>("Value")
                                 .IsRequired()
-                                .HasColumnType("nvarchar(450)")
+                                .HasColumnType("nvarchar(max)")
                                 .HasColumnName("TypeName");
 
                             b1.HasKey("VesselTypeId");
-
-                            b1.HasIndex("Value")
-                                .IsUnique();
 
                             b1.ToTable("VesselTypes");
 

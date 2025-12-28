@@ -52,7 +52,7 @@ namespace ProjArqsi.Controllers
                 if (!Guid.TryParse(dto.TempAssignedDockId, out var dockGuid))
                     return BadRequest(new { message = "Invalid dock ID format." });
 
-                var vvn = await _service.ApproveVvnAsync(id, dockGuid, officerId);
+                var vvn = await _service.ApproveVvnAsync(id, dockGuid, officerId, dto.ConfirmDockConflict);
                 return Ok(vvn);
             }
             catch (UnauthorizedAccessException ex)
@@ -61,6 +61,11 @@ namespace ProjArqsi.Controllers
             }
             catch (BusinessRuleValidationException ex)
             {
+                // Check if this is a dock conflict error
+                if (ex.Message.StartsWith("DOCK_CONFLICT:"))
+                {
+                    return Conflict(new { message = ex.Message.Replace("DOCK_CONFLICT: ", ""), requiresConfirmation = true });
+                }
                 return BadRequest(new { message = ex.Message });
             }
             catch (DbUpdateException ex)
@@ -72,6 +77,27 @@ namespace ProjArqsi.Controllers
             {
                 var innerMessage = ex.InnerException?.Message ?? ex.Message;
                 return StatusCode(500, new { message = "An error occurred while approving the VVN.", details = innerMessage });
+            }
+        }
+
+        // Check for dock conflicts before approving
+        [HttpGet("{id}/check-dock-conflicts/{dockId}")]
+        [Authorize(Roles = "PortAuthorityOfficer")]
+        public async Task<ActionResult<DockConflictInfoDto>> CheckDockConflicts(Guid id, Guid dockId)
+        {
+            try
+            {
+                var conflicts = await _service.CheckDockConflictsAsync(id, dockId);
+                return Ok(conflicts);
+            }
+            catch (BusinessRuleValidationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "An error occurred while checking dock conflicts.", details = innerMessage });
             }
         }
 

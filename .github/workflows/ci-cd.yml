@@ -41,7 +41,7 @@ jobs:
         continue-on-error: true
 
       - name: Publish - ${{ matrix.project }}
-        run: dotnet publish ${{ matrix.csproj }} -c Release -o ./publish/${{ matrix.project }}
+        run: dotnet publish ${{ matrix.csproj }} -c Release -o ./publish/${{ matrix.project }} /p:ErrorOnDuplicatePublishOutputFiles=false
         working-directory: ./${{ matrix.project }}
 
       - name: Upload build artifacts - ${{ matrix.project }}

@@ -41,7 +41,7 @@ jobs:
         continue-on-error: true
 
       - name: Publish - ${{ matrix.project }}
-        run: dotnet publish ${{ matrix.csproj }} --no-build -c Release -o ./publish
+        run: dotnet publish ${{ matrix.csproj }} -c Release -o ./publish --no-dependencies
         working-directory: ./${{ matrix.project }}
 
       - name: Upload build artifacts - ${{ matrix.project }}

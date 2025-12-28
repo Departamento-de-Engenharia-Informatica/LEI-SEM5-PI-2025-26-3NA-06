@@ -22,13 +22,13 @@ using ProjArqsi.Auth.Common;
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .Filter.ByIncludingOnly(logEvent => 
-        // Only log VVN approval/rejection decisions
-        logEvent.MessageTemplate.Text.Contains("VVN APPROVED") ||
-        logEvent.MessageTemplate.Text.Contains("VVN REJECTED") ||
-        // And unauthorized access attempts
-        logEvent.MessageTemplate.Text.Contains("UNAUTHORIZED ACCESS") ||
-        logEvent.MessageTemplate.Text.Contains("ACCESS DENIED")
-    )
+    {
+        var message = logEvent.MessageTemplate.Text.ToUpperInvariant();
+        return message.Contains("VVN APPROVED") ||
+               message.Contains("VVN REJECTED") ||
+               message.Contains("UNAUTHORIZED ACCESS") ||
+               message.Contains("ACCESS DENIED");
+    })
     .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 

@@ -41,14 +41,14 @@ jobs:
         continue-on-error: true
 
       - name: Publish - ${{ matrix.project }}
-        run: dotnet publish ${{ matrix.csproj }} -c Release -o ./publish --no-dependencies
+        run: dotnet publish ${{ matrix.csproj }} -c Release -o ./publish/${{ matrix.project }}
         working-directory: ./${{ matrix.project }}
 
       - name: Upload build artifacts - ${{ matrix.project }}
         uses: actions/upload-artifact@v4
         with:
           name: build-${{ matrix.project }}
-          path: ./${{ matrix.project }}/publish
+          path: ./${{ matrix.project }}/publish/${{ matrix.project }}
           retention-days: 7
 
   build-oem-api:

@@ -6,7 +6,7 @@ const logger = require("../utils/logger");
  */
 class BackendApiClient {
   constructor() {
-    this.baseUrl = process.env.BACKEND_API_URL || "http://localhost:5044";
+    this.baseUrl = process.env.BACKEND_API_URL || "http://localhost:5218";
     this.timeout = 10000; // 10 seconds
   }
 
@@ -108,6 +108,49 @@ class BackendApiClient {
         return null;
       }
       logger.error(`Error fetching VVN by ID ${vvnId}:`, error.message);
+      return null;
+    }
+  }
+
+  /**
+   * Fetch cargo manifests for a VVN
+   * @param {string} vvnId - VVN GUID
+   * @param {string} token - JWT authorization token
+   * @returns {Promise<{vvnId: string, vesselImo: string, loadingManifest: object, unloadingManifest: object} | null>}
+   */
+  async getCargoManifestsAsync(vvnId, token) {
+    try {
+      const response = await axios.get(
+        `${this.baseUrl}/api/VesselVisitNotification/${vvnId}/cargo-manifests`,
+        {
+          timeout: this.timeout,
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data) {
+        // Backend now returns enriched data with ISO codes and storage area names
+        return {
+          vvnId: response.data.vvnId,
+          vesselImo: response.data.vesselImo,
+          loadingManifest: response.data.loadingManifest,
+          unloadingManifest: response.data.unloadingManifest,
+        };
+      }
+
+      return null;
+    } catch (error) {
+      if (error.response?.status === 404) {
+        logger.warn(`Cargo manifests not found for VVN: ${vvnId}`);
+        return null;
+      }
+      logger.error(
+        `Error fetching cargo manifests for VVN ${vvnId}:`,
+        error.message
+      );
       return null;
     }
   }

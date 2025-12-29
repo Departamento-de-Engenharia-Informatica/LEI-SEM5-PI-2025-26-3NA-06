@@ -172,7 +172,12 @@
             </div>
 
             <div class="assignments-grid">
-              <div *ngFor="let assignment of dockGroup.assignments" class="assignment-card">
+              <div
+                *ngFor="let assignment of dockGroup.assignments"
+                class="assignment-card clickable"
+                (click)="viewCargoManifests(assignment.vvnId)"
+                title="Click to view cargo manifests"
+              >
                 <div class="assignment-header">
                   <h5>{{ assignment.vesselName || 'Unknown Vessel' }}</h5>
                   <span class="imo-badge">IMO: {{ assignment.vesselImo || 'N/A' }}</span>
@@ -187,12 +192,137 @@
                     <span class="label">📤 ETD:</span>
                     <span class="value">{{ assignment.etd | date : 'dd/MM/yyyy HH:mm' }}</span>
                   </div>
-                  <div class="detail-row">
-                    <span class="label">📦 Estimated TEU:</span>
-                    <span class="value teu-badge">{{ assignment.estimatedTeu }}</span>
-                  </div>
+                </div>
+
+                <div class="cargo-manifest-link">
+                  <i class="fas fa-box"></i> View Cargo Manifests
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cargo Manifests Modal -->
+  <div *ngIf="selectedVvnId" class="modal-overlay" (click)="closeCargoManifests()">
+    <div class="modal-content manifests-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>📦 Cargo Manifests</h3>
+        <button (click)="closeCargoManifests()" class="btn-close" title="Close">&times;</button>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="loadingManifests" class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i> Loading cargo manifests...
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="manifestsError" class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle"></i> {{ manifestsError }}
+      </div>
+
+      <!-- Manifests Display -->
+      <div *ngIf="cargoManifests && !loadingManifests" class="modal-body">
+        <div class="manifests-header">
+          <h4>Vessel IMO: {{ cargoManifests.vesselImo }}</h4>
+        </div>
+
+        <!-- Loading Manifest -->
+        <div class="manifest-section">
+          <h5 class="manifest-title loading-title">
+            <i class="fas fa-arrow-up"></i> Loading Manifest
+          </h5>
+          <div
+            *ngIf="
+              !cargoManifests.loadingManifest ||
+              !cargoManifests.loadingManifest.entries ||
+              cargoManifests.loadingManifest.entries.length === 0
+            "
+            class="no-entries"
+          >
+            <i class="fas fa-info-circle"></i> No containers to load
+          </div>
+          <div
+            *ngIf="
+              cargoManifests.loadingManifest &&
+              cargoManifests.loadingManifest.entries &&
+              cargoManifests.loadingManifest.entries.length > 0
+            "
+            class="manifest-table-container"
+          >
+            <table class="manifest-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Container ISO Code</th>
+                  <th>Source Storage Area</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let entry of cargoManifests.loadingManifest.entries; let i = index">
+                  <td>{{ i + 1 }}</td>
+                  <td class="container-id">{{ entry.containerIsoCode }}</td>
+                  <td>
+                    <span class="storage-badge source">
+                      {{ entry.sourceStorageAreaName }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="manifest-summary">
+              Total containers to load: {{ cargoManifests.loadingManifest.entries.length }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Unloading Manifest -->
+        <div class="manifest-section">
+          <h5 class="manifest-title unloading-title">
+            <i class="fas fa-arrow-down"></i> Unloading Manifest
+          </h5>
+          <div
+            *ngIf="
+              !cargoManifests.unloadingManifest ||
+              !cargoManifests.unloadingManifest.entries ||
+              cargoManifests.unloadingManifest.entries.length === 0
+            "
+            class="no-entries"
+          >
+            <i class="fas fa-info-circle"></i> No containers to unload
+          </div>
+          <div
+            *ngIf="
+              cargoManifests.unloadingManifest &&
+              cargoManifests.unloadingManifest.entries &&
+              cargoManifests.unloadingManifest.entries.length > 0
+            "
+            class="manifest-table-container"
+          >
+            <table class="manifest-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Container ISO Code</th>
+                  <th>Target Storage Area</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let entry of cargoManifests.unloadingManifest.entries; let i = index">
+                  <td>{{ i + 1 }}</td>
+                  <td class="container-id">{{ entry.containerIsoCode }}</td>
+                  <td>
+                    <span class="storage-badge target">
+                      {{ entry.targetStorageAreaName }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="manifest-summary">
+              Total containers to unload: {{ cargoManifests.unloadingManifest.entries.length }}
             </div>
           </div>
         </div>

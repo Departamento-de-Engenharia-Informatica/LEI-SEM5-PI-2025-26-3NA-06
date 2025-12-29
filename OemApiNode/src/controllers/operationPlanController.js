@@ -1,5 +1,6 @@
 const logger = require("../utils/logger");
 const operationPlanService = require("../services/OperationPlanService");
+const backendApiClient = require("../services/BackendApiClient");
 
 exports.create = async (req, res, next) => {
   try {
@@ -162,6 +163,40 @@ exports.validateFeasibility = async (req, res, next) => {
     }
   } catch (error) {
     logger.error("Error in validate feasibility controller:", error);
+    next(error);
+  }
+};
+
+exports.getCargoManifests = async (req, res, next) => {
+  try {
+    const { vvnId } = req.params;
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        error: "Authorization token required",
+      });
+    }
+
+    const manifests = await backendApiClient.getCargoManifestsAsync(
+      vvnId,
+      token
+    );
+
+    if (!manifests) {
+      return res.status(404).json({
+        success: false,
+        error: "Cargo manifests not found for this VVN",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: manifests,
+    });
+  } catch (error) {
+    logger.error("Error in get cargo manifests controller:", error);
     next(error);
   }
 };

@@ -107,4 +107,10 @@ export class OemService {
     }`;
     return this.http.get<any>(url, { headers: this.getHeaders() });
   }
+
+  getCargoManifests(vvnId: string): Observable<any> {
+    return this.http.get<any>(`${this.oemApiUrl}/operation-plans/vvn/${vvnId}/cargo-manifests`, {
+      headers: this.getHeaders(),
+    });
+  }
 }

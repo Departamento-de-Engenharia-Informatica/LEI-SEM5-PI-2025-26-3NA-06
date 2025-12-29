@@ -1,4 +1,10 @@
-import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ChangeDetectorRef,
+  ChangeDetectionStrategy,
+  NgZone,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OemService } from '../../services/oem.service';
@@ -11,6 +17,7 @@ import { throwError } from 'rxjs';
   imports: [CommonModule, FormsModule],
   templateUrl: './operation-plans-list.html',
   styleUrls: ['./operation-plans-list.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class OperationPlansListComponent implements OnInit {
   operationPlans: any[] = [];
@@ -18,6 +25,12 @@ export class OperationPlansListComponent implements OnInit {
   error: string | null = null;
   searched = false;
   selectedPlan: any = null;
+
+  // Cargo manifest properties
+  selectedVvnId: string | null = null;
+  cargoManifests: any = null;
+  loadingManifests = false;
+  manifestsError: string | null = null;
 
   filters = {
     startDate: '',
@@ -183,6 +196,62 @@ export class OperationPlansListComponent implements OnInit {
       dockMap.get(dockId).assignments.push(assignment);
     });
 
+    // Sort assignments within each dock by ETA
+    Array.from(dockMap.values()).forEach((dock) => {
+      dock.assignments.sort((a: any, b: any) => {
+        const etaA = new Date(a.eta).getTime();
+        const etaB = new Date(b.eta).getTime();
+        return etaA - etaB;
+      });
+    });
+
     return Array.from(dockMap.values());
+  }
+
+  viewCargoManifests(vvnId: string) {
+    this.selectedVvnId = vvnId;
+    this.loadingManifests = true;
+    this.manifestsError = null;
+    this.cargoManifests = null;
+
+    this.oemService
+      .getCargoManifests(vvnId)
+      .pipe(
+        timeout(10000),
+        catchError((err) => {
+          console.error('Error loading cargo manifests:', err);
+          return throwError(() => err);
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          this.ngZone.run(() => {
+            if (response.success) {
+              this.cargoManifests = response.data;
+            } else {
+              this.manifestsError = response.error || 'Failed to load cargo manifests';
+            }
+            this.loadingManifests = false;
+            this.cdr.markForCheck();
+          });
+        },
+        error: (err) => {
+          this.ngZone.run(() => {
+            console.error('Error in cargo manifests request:', err);
+            this.manifestsError =
+              err.error?.error || err.message || 'Failed to load cargo manifests';
+            this.loadingManifests = false;
+            this.cdr.markForCheck();
+          });
+        },
+      });
+  }
+
+  closeCargoManifests() {
+    this.selectedVvnId = null;
+    this.cargoManifests = null;
+    this.loadingManifests = false;
+    this.manifestsError = null;
+    this.cdr.markForCheck();
   }
 }

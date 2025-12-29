@@ -79,6 +79,7 @@ namespace Infrastructure
         {
             return await _context.VesselVisitNotifications
                 .Include(vvn => vvn.CargoManifests)
+                .ThenInclude(cm => cm.Entries)
                 .FirstOrDefaultAsync(vvn => vvn.Id == id);
         }
 
@@ -118,6 +119,7 @@ namespace Infrastructure
             // First, get all approved VVNs (EF Core can translate this)
             var approvedVvns = await _context.VesselVisitNotifications
                 .Include(vvn => vvn.CargoManifests)
+                .ThenInclude(cm => cm.Entries)
                 .Where(vvn => vvn.StatusValue == (int)StatusEnum.Accepted &&
                               vvn.ArrivalDate != null)
                 .ToListAsync();

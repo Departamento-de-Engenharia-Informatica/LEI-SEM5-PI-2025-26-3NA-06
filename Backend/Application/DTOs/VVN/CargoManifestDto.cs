@@ -4,8 +4,11 @@ namespace ProjArqsi.Application.DTOs.VVN
     public class ManifestEntryDto
     {
         public required string ContainerId { get; set; }
+        public string? ContainerIsoCode { get; set; }
         public string? SourceStorageAreaId { get; set; }
+        public string? SourceStorageAreaName { get; set; }
         public string? TargetStorageAreaId { get; set; }
+        public string? TargetStorageAreaName { get; set; }
     }
 
     // DTO for a cargo manifest (loading or unloading)

@@ -475,6 +475,42 @@ namespace ProjArqsi.Controllers
             }
         }
 
+        // Get cargo manifests for a VVN (for OEM module)
+        [HttpGet("{id}/cargo-manifests")]
+        [Authorize(Roles = "LogisticOperator, PortAuthorityOfficer")]
+        public async Task<ActionResult<object>> GetCargoManifests(Guid id)
+        {
+            try
+            {
+                Console.WriteLine($"[DEBUG] Fetching cargo manifests for VVN ID: {id}");
+                var vvn = await _service.GetVvnWithManifestsAsync(id);
+                
+                if (vvn == null)
+                {
+                    Console.WriteLine($"[DEBUG] VVN not found for ID: {id}");
+                    return NotFound(new { message = "Vessel Visit Notification not found." });
+                }
+
+                Console.WriteLine($"[DEBUG] VVN found: {vvn.Id}, Vessel: {vvn.ReferredVesselId}");
+                Console.WriteLine($"[DEBUG] Loading manifest: {(vvn.LoadingManifest != null ? $"{vvn.LoadingManifest.Entries?.Count ?? 0} entries" : "null")}");
+                Console.WriteLine($"[DEBUG] Unloading manifest: {(vvn.UnloadingManifest != null ? $"{vvn.UnloadingManifest.Entries?.Count ?? 0} entries" : "null")}");
+
+                return Ok(new
+                {
+                    vvnId = vvn.Id,
+                    vesselImo = vvn.ReferredVesselId,
+                    loadingManifest = vvn.LoadingManifest,
+                    unloadingManifest = vvn.UnloadingManifest
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DEBUG] Error fetching cargo manifests: {ex.Message}");
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { message = "An error occurred while retrieving cargo manifests.", details = innerMessage });
+            }
+        }
+
         // Get all approved VVNs for a specific date (for scheduling)
         [HttpGet("approved")]
         [Authorize(Roles = "LogisticOperator, PortAuthorityOfficer")]

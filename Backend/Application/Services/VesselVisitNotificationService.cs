@@ -631,5 +631,60 @@ namespace ProjArqsi.Application.Services
             Console.WriteLine($"[VVNService] Mapped to {result.Count} DTOs");
             return result;
         }
+
+        // Get VVN with cargo manifests (for OEM module)
+        public async Task<VVNDto?> GetVvnWithManifestsAsync(Guid id)
+        {
+            var vvn = await _repo.GetByIdAsync(new VesselVisitNotificationId(id));
+            if (vvn == null)
+                return null;
+
+            var vvnDto = _mapper.Map<VVNDto>(vvn);
+
+            // Enrich manifest entries with container ISO codes and storage area names
+            await EnrichManifestEntriesAsync(vvnDto.LoadingManifest);
+            await EnrichManifestEntriesAsync(vvnDto.UnloadingManifest);
+
+            return vvnDto;
+        }
+
+        private async Task EnrichManifestEntriesAsync(CargoManifestDto? manifest)
+        {
+            if (manifest?.Entries == null || !manifest.Entries.Any())
+                return;
+
+            foreach (var entry in manifest.Entries)
+            {
+                // Get container ISO code
+                if (Guid.TryParse(entry.ContainerId, out var containerGuid))
+                {
+                    var container = await _containerRepo.GetByIdAsync(new ContainerId(containerGuid));
+                    if (container != null)
+                    {
+                        entry.ContainerIsoCode = container.IsoCode.Value;
+                    }
+                }
+
+                // Get source storage area name
+                if (!string.IsNullOrEmpty(entry.SourceStorageAreaId) && Guid.TryParse(entry.SourceStorageAreaId, out var sourceGuid))
+                {
+                    var sourceArea = await _storageAreaRepo.GetByIdAsync(new StorageAreaId(sourceGuid));
+                    if (sourceArea != null)
+                    {
+                        entry.SourceStorageAreaName = sourceArea.Name.Value;
+                    }
+                }
+
+                // Get target storage area name
+                if (!string.IsNullOrEmpty(entry.TargetStorageAreaId) && Guid.TryParse(entry.TargetStorageAreaId, out var targetGuid))
+                {
+                    var targetArea = await _storageAreaRepo.GetByIdAsync(new StorageAreaId(targetGuid));
+                    if (targetArea != null)
+                    {
+                        entry.TargetStorageAreaName = targetArea.Name.Value;
+                    }
+                }
+            }
+        }
     }
 }

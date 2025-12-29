@@ -19,12 +19,4 @@ namespace ProjArqsi.Application.DTOs.VVN
         public bool IsHazardous { get; set; }
         public int EstimatedTeu { get; set; }
     }
-
-    public class CrewMemberDto
-    {
-        public string Name { get; set; } = string.Empty;
-        public string CitizenId { get; set; } = string.Empty;
-        public string Nationality { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty;
-    }
 }

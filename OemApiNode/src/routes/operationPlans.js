@@ -284,4 +284,35 @@ router.post(
   operationPlanController.validateFeasibility
 );
 
+/**
+ * @swagger
+ * /api/oem/operation-plans/vvn/{vvnId}/cargo-manifests:
+ *   get:
+ *     summary: Get cargo manifests for a VVN
+ *     description: Fetch loading and unloading cargo manifests for a specific VVN from the Core API
+ *     tags: [Operation Plans]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: vvnId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Cargo manifests retrieved successfully
+ *       404:
+ *         description: VVN not found
+ *       401:
+ *         description: Unauthorized
+ */
+router.get(
+  "/vvn/:vvnId/cargo-manifests",
+  authenticateJWT,
+  authorizeRole("LogisticOperator"),
+  operationPlanController.getCargoManifests
+);
+
 module.exports = router;

@@ -68,6 +68,11 @@
           >Operation Plans</a
         >
       </li>
+      <li *ngIf="userRole === 'LogisticOperator'">
+        <a routerLink="/logistic-operator/vve-management" routerLinkActive="active"
+          >VVE Management</a
+        >
+      </li>
 
       <!-- Shipping Agent Representative Menu -->
       <li *ngIf="userRole === 'ShippingAgentRepresentative'">

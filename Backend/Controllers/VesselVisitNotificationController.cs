@@ -439,7 +439,7 @@ namespace ProjArqsi.Controllers
 
         // Get all submitted VVNs
         [HttpGet("submitted")]
-        [Authorize(Roles = "PortAuthorityOfficer, ShippingAgentRepresentative")]
+        [Authorize(Roles = "PortAuthorityOfficer, ShippingAgentRepresentative, LogisticOperator")]
         public async Task<ActionResult<IEnumerable<VVNDto>>> GetAllSubmitted()
         {
             try
@@ -456,7 +456,7 @@ namespace ProjArqsi.Controllers
 
         // Get a submitted VVN by Id
         [HttpGet("submitted/{id}")]
-        [Authorize(Roles = "PortAuthorityOfficer, ShippingAgentRepresentative")]
+        [Authorize(Roles = "PortAuthorityOfficer, ShippingAgentRepresentative, LogisticOperator")]
         public async Task<ActionResult<VVNDto>> GetSubmittedById(Guid id)
         {
             try

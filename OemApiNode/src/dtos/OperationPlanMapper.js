@@ -28,6 +28,7 @@ class OperationPlanMapper {
     // Use the isFeasible and warnings from the DTO (already calculated by Schedule module)
     return new OperationPlan({
       planDate: dto.planDate,
+      status: dto.status || "Pending",
       isFeasible: dto.isFeasible,
       warnings: dto.warnings,
       assignments,

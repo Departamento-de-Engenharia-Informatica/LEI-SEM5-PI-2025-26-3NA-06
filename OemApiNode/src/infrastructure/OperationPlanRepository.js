@@ -58,6 +58,7 @@ class OperationPlanRepository {
         CREATE TABLE OperationPlans (
           Id UNIQUEIDENTIFIER PRIMARY KEY,
           PlanDate DATE NOT NULL,
+          Status NVARCHAR(50) NOT NULL DEFAULT 'Pending',
           IsFeasible BIT NOT NULL DEFAULT 1,
           Warnings NVARCHAR(MAX),
           Assignments NVARCHAR(MAX) NOT NULL,
@@ -67,6 +68,7 @@ class OperationPlanRepository {
           CONSTRAINT UQ_OperationPlan_PlanDate UNIQUE (PlanDate)
         );
         CREATE INDEX IX_OperationPlan_PlanDate ON OperationPlans(PlanDate);
+        CREATE INDEX IX_OperationPlan_Status ON OperationPlans(Status);
       END
     `;
 
@@ -117,6 +119,13 @@ class OperationPlanRepository {
         BEGIN
           ALTER TABLE OperationPlans ADD Author NVARCHAR(255);
         END
+
+        -- Add Status column if it doesn't exist
+        IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('OperationPlans') AND name = 'Status')
+        BEGIN
+          ALTER TABLE OperationPlans ADD Status NVARCHAR(50) NOT NULL DEFAULT 'Pending';
+          CREATE INDEX IX_OperationPlan_Status ON OperationPlans(Status);
+        END
       END
     `;
 
@@ -136,9 +145,9 @@ class OperationPlanRepository {
   async createAsync(operationPlan) {
     const query = `
       INSERT INTO OperationPlans 
-        (Id, PlanDate, IsFeasible, Warnings, Assignments, Algorithm, CreationDate, Author)
+        (Id, PlanDate, Status, IsFeasible, Warnings, Assignments, Algorithm, CreationDate, Author)
       VALUES 
-        (@id, @planDate, @isFeasible, @warnings, @assignments, @algorithm, @creationDate, @author);
+        (@id, @planDate, @status, @isFeasible, @warnings, @assignments, @algorithm, @creationDate, @author);
       
       SELECT * FROM OperationPlans WHERE Id = @id;
     `;
@@ -163,6 +172,11 @@ class OperationPlanRepository {
         name: "planDate",
         type: TYPES.Date,
         value: parsedDate,
+      },
+      {
+        name: "status",
+        type: TYPES.NVarChar,
+        value: dbData.Status || "Pending",
       },
       { name: "isFeasible", type: TYPES.Bit, value: dbData.IsFeasible ? 1 : 0 },
       { name: "warnings", type: TYPES.NVarChar, value: dbData.Warnings },
@@ -310,6 +324,7 @@ class OperationPlanRepository {
     const query = `
       UPDATE OperationPlans
       SET 
+        Status = @status,
         IsFeasible = @isFeasible,
         Warnings = @warnings,
         Assignments = @assignments
@@ -321,6 +336,11 @@ class OperationPlanRepository {
     const dbData = operationPlan.toDatabase();
     const params = [
       { name: "planDate", type: TYPES.Date, value: new Date(dbData.PlanDate) },
+      {
+        name: "status",
+        type: TYPES.NVarChar,
+        value: dbData.Status || "Pending",
+      },
       { name: "isFeasible", type: TYPES.Bit, value: dbData.IsFeasible ? 1 : 0 },
       {
         name: "warnings",

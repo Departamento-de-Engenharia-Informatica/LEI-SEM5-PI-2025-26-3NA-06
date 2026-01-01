@@ -5,11 +5,13 @@
 class UpsertOperationPlanDto {
   constructor({
     planDate,
+    status = "Pending",
     isFeasible = true,
     warnings = [],
     assignments = [],
   }) {
     this.planDate = planDate;
+    this.status = status;
     this.isFeasible = isFeasible;
     this.warnings = warnings;
     this.assignments = assignments;

@@ -129,6 +129,38 @@ exports.update = async (req, res, next) => {
   }
 };
 
+exports.updateStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const userId = req.user.sub || req.user.id;
+
+    if (!status) {
+      return res.status(400).json({
+        success: false,
+        error: "Status is required in request body",
+      });
+    }
+
+    const result = await operationPlanService.updateOperationPlanStatusAsync(
+      id,
+      status,
+      userId
+    );
+
+    if (result.success) {
+      res.status(200).json(result);
+    } else {
+      // Check if it's a not found or validation error
+      const statusCode = result.error.includes("not found") ? 404 : 400;
+      res.status(statusCode).json(result);
+    }
+  } catch (error) {
+    logger.error("Error in update operation plan status controller:", error);
+    next(error);
+  }
+};
+
 exports.delete = async (req, res, next) => {
   try {
     const { date } = req.params;

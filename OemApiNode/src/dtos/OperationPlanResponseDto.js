@@ -5,6 +5,7 @@ class OperationPlanResponseDto {
   constructor({
     id,
     planDate,
+    status,
     isFeasible,
     warnings,
     assignments,
@@ -14,6 +15,7 @@ class OperationPlanResponseDto {
   }) {
     this.id = id;
     this.planDate = planDate;
+    this.status = status;
     this.isFeasible = isFeasible;
     this.warnings = warnings;
     this.assignments = assignments;
@@ -29,6 +31,7 @@ class OperationPlanResponseDto {
     return new OperationPlanResponseDto({
       id: operationPlan.id,
       planDate: operationPlan.planDate,
+      status: operationPlan.status,
       isFeasible: operationPlan.isFeasible,
       warnings: operationPlan.warnings,
       assignments: operationPlan.assignments.map((a) => ({

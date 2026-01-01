@@ -9,6 +9,7 @@ class OperationPlan {
   constructor({
     id = null,
     planDate,
+    status = "Pending",
     isFeasible = true,
     warnings = [],
     assignments = [],
@@ -19,6 +20,7 @@ class OperationPlan {
     this.id = id || uuidv4();
     // Normalize planDate to YYYY-MM-DD string format
     this.planDate = this.normalizePlanDate(planDate);
+    this.status = this.validateStatus(status);
     this.isFeasible = isFeasible;
     this.warnings = Array.isArray(warnings) ? warnings : [];
     this.assignments = assignments.map((a) =>
@@ -55,6 +57,58 @@ class OperationPlan {
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
+  }
+
+  /**
+   * Validate and normalize status
+   * Valid states: Pending, InProgress, Completed, Cancelled
+   */
+  validateStatus(status) {
+    const validStatuses = ["Pending", "InProgress", "Completed", "Cancelled"];
+    const normalizedStatus = status || "Pending";
+
+    if (!validStatuses.includes(normalizedStatus)) {
+      throw new Error(
+        `Invalid status '${normalizedStatus}'. Must be one of: ${validStatuses.join(
+          ", "
+        )}`
+      );
+    }
+
+    return normalizedStatus;
+  }
+
+  /**
+   * Validate state transition
+   * Pending -> InProgress, Cancelled
+   * InProgress -> Completed, Cancelled
+   * Completed -> (terminal state)
+   * Cancelled -> (terminal state)
+   */
+  canTransitionTo(newStatus) {
+    const validTransitions = {
+      Pending: ["InProgress", "Cancelled"],
+      InProgress: ["Completed", "Cancelled"],
+      Completed: [],
+      Cancelled: [],
+    };
+
+    const allowedTransitions = validTransitions[this.status] || [];
+    return allowedTransitions.includes(newStatus);
+  }
+
+  /**
+   * Transition to a new status with validation
+   */
+  transitionTo(newStatus) {
+    if (!this.canTransitionTo(newStatus)) {
+      throw new Error(
+        `Cannot transition from '${
+          this.status
+        }' to '${newStatus}'. Valid transitions: ${this.canTransitionTo.toString()}`
+      );
+    }
+    this.status = this.validateStatus(newStatus);
   }
 
   validate() {
@@ -165,6 +219,7 @@ class OperationPlan {
     return {
       Id: this.id,
       PlanDate: this.planDate,
+      Status: this.status,
       IsFeasible: this.isFeasible,
       Warnings: JSON.stringify(this.warnings),
       Assignments: JSON.stringify(this.assignments.map((a) => a.toJSON())),
@@ -199,6 +254,7 @@ class OperationPlan {
     return new OperationPlan({
       id: row.Id,
       planDate: row.PlanDate,
+      status: row.Status || "Pending",
       isFeasible: row.IsFeasible,
       warnings: JSON.parse(row.Warnings || "[]"),
       assignments: assignments,

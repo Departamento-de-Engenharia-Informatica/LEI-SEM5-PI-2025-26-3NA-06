@@ -10,6 +10,7 @@ const logger = require("./utils/logger");
 const { errorHandler } = require("./middleware/errorHandler");
 const database = require("./config/database");
 const operationPlanService = require("./services/OperationPlanService");
+const vveService = require("./services/VesselVisitExecutionService");
 
 const app = express();
 const PORT = process.env.PORT || 5004;
@@ -50,6 +51,7 @@ async function startServer() {
 
     // Initialize services (create tables if needed)
     await operationPlanService.initializeAsync();
+    await vveService.initializeAsync();
 
     app.listen(PORT, () => {
       logger.info(`✓ OEM API (Node.js) is ready`);

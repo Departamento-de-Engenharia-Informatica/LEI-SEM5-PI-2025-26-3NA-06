@@ -31,6 +31,7 @@ import { ContainerManagementComponent } from './shipping-agent/container-managem
 import { LogisticOperatorDashboard } from './logistic-operator/logistic-operator-dashboard/logistic-operator-dashboard';
 import { DailySchedule } from './logistic-operator/daily-schedule/daily-schedule';
 import { OperationPlansListComponent } from './logistic-operator/operation-plans-list/operation-plans-list';
+import { VveManagementComponent } from './logistic-operator/vve-management/vve-management';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -85,6 +86,7 @@ export const routes: Routes = [
           { path: 'dashboard', component: LogisticOperatorDashboard },
           { path: 'daily-schedule', component: DailySchedule },
           { path: 'operation-plans', component: OperationPlansListComponent },
+          { path: 'vve-management', component: VveManagementComponent },
         ],
       },
       {

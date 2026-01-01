@@ -1,0 +1,423 @@
+<div class="vve-management-container">
+  <h2>Vessel Visit Executions - {{ today | date : 'dd/MM/yyyy' }}</h2>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-spinner">
+    <i class="fas fa-spinner fa-spin"></i> Loading vessel visit executions...
+  </div>
+
+  <!-- Messages -->
+  <div *ngIf="successMessage" class="alert alert-success">
+    <i class="fas fa-check-circle"></i> {{ successMessage }}
+    <button type="button" class="close-btn" (click)="successMessage = ''">&times;</button>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    <i class="fas fa-exclamation-triangle"></i> {{ errorMessage }}
+    <button type="button" class="close-btn" (click)="errorMessage = ''">&times;</button>
+  </div>
+
+  <!-- No Operation Plan Message -->
+  <div *ngIf="!loading && !hasOperationPlan" class="alert alert-warning">
+    <i class="fas fa-exclamation-triangle"></i>
+    <strong>No Operation Plan for Today</strong>
+    <p>There is no operation plan available for {{ today | date : 'dd/MM/yyyy' }}.</p>
+    <p>
+      Please
+      <a routerLink="/logistic-operator/daily-schedule" class="alert-link"
+        >create an operation plan</a
+      >
+      first before managing vessel visit executions.
+    </p>
+  </div>
+
+  <!-- Has Operation Plan - Show VVE Controls -->
+  <div *ngIf="!loading && hasOperationPlan">
+    <!-- Prepare VVEs Section -->
+    <div *ngIf="vves.length === 0" class="prepare-card">
+      <div class="prepare-content">
+        <i class="fas fa-ship fa-3x"></i>
+        <h3>Ready to Start Today's Operations</h3>
+        <p>
+          Click the button below to prepare all Vessel Visit Executions for today's operation plan.
+        </p>
+        <button class="btn btn-primary" (click)="prepareTodaysVVEs()" [disabled]="loading">
+          <i class="fas fa-plus-circle"></i> Prepare Today's VVEs
+        </button>
+      </div>
+    </div>
+
+    <!-- Prepare Result Summary -->
+    <div *ngIf="prepareResult && prepareResult.success" class="prepare-result card mb-4">
+      <div class="card-body">
+        <h5><i class="fas fa-check-circle text-success"></i> VVEs Preparation Summary</h5>
+        <div class="row mt-3">
+          <div class="col-md-4">
+            <div class="stat-box created">
+              <div class="stat-number">{{ prepareResult.created }}</div>
+              <div class="stat-label">Created</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="stat-box skipped">
+              <div class="stat-number">{{ prepareResult.skipped }}</div>
+              <div class="stat-label">Skipped</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="stat-box errors">
+              <div class="stat-number">{{ prepareResult.errors }}</div>
+              <div class="stat-label">Errors</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VVEs exist but not ready to display -->
+    <div *ngIf="vves.length > 0 && !dataReady && !loading" class="alert alert-warning">
+      <i class="fas fa-exclamation-triangle"></i>
+      <strong>Loading Vessel Information</strong>
+      <p>VVEs are being prepared. Please wait while vessel and dock information is loaded...</p>
+      <p class="mb-0"><small>Check browser console (F12) for detailed loading status.</small></p>
+    </div>
+
+    <!-- VVE Cards Grid -->
+    <div *ngIf="vves.length > 0 && dataReady" class="vves-section">
+      <div class="actions-bar">
+        <h4>Today's Vessel Visit Executions ({{ vves.length }})</h4>
+      </div>
+
+      <div class="vves-grid">
+        <div *ngFor="let vve of vves" class="vve-card">
+          <div class="card" (click)="openDetailModal(vve)">
+            <div class="card-header">
+              <div class="vessel-info">
+                <h5>{{ vve.vesselName || 'Loading...' }}</h5>
+                <span class="vessel-imo">{{ vve.vesselImo || 'N/A' }}</span>
+              </div>
+              <span class="badge" [ngClass]="getStatusBadgeClass(vve.status)">
+                {{ vve.status }}
+              </span>
+            </div>
+            <div class="card-body">
+              <!-- Planned Info -->
+              <div class="info-section">
+                <h6><i class="fas fa-calendar-alt"></i> Planned</h6>
+                <div class="info-row">
+                  <span class="label">Dock:</span>
+                  <span class="value">{{ vve.plannedDockName || 'Loading...' }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Arrival:</span>
+                  <span class="value">{{ formatDateTime(vve.plannedArrivalTime) }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Departure:</span>
+                  <span class="value">{{ formatDateTime(vve.plannedDepartureTime) }}</span>
+                </div>
+              </div>
+
+              <!-- Actual Info (if any) -->
+              <div
+                class="info-section actual"
+                *ngIf="vve.actualArrivalTime || vve.actualDockId || vve.actualDepartureTime"
+              >
+                <h6><i class="fas fa-check-circle"></i> Actual</h6>
+                <div class="info-row" *ngIf="vve.actualDockId">
+                  <span class="label">Dock:</span>
+                  <span class="value" [class.changed]="isDockChanged(vve)">
+                    {{ vve.actualDockName || 'Loading...' }}
+                  </span>
+                </div>
+                <div class="info-row" *ngIf="vve.actualArrivalTime">
+                  <span class="label">Arrival:</span>
+                  <span class="value" [class.delayed]="isDelayed(vve)">
+                    {{ formatDateTime(vve.actualArrivalTime) }}
+                  </span>
+                </div>
+                <div class="info-row" *ngIf="vve.actualDepartureTime">
+                  <span class="label">Departure:</span>
+                  <span class="value" [class.delayed]="isDepartureChanged(vve)">
+                    {{ formatDateTime(vve.actualDepartureTime) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer">
+              <button
+                *ngIf="vve.status !== 'Completed'"
+                class="btn btn-sm btn-primary"
+                (click)="openUpdateModal(vve); $event.stopPropagation()"
+              >
+                <i class="fas fa-edit"></i> Update
+              </button>
+              <button
+                class="btn btn-sm btn-outline-secondary"
+                (click)="openDetailModal(vve); $event.stopPropagation()"
+              >
+                <i class="fas fa-info-circle"></i> Details
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div
+  class="modal fade"
+  [class.show]="showDetailModal"
+  [style.display]="showDetailModal ? 'block' : 'none'"
+  tabindex="-1"
+>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" *ngIf="selectedVve">
+      <div class="modal-header">
+        <div class="modal-header-content">
+          <h5 class="modal-title">
+            <i class="fas fa-ship"></i> {{ selectedVve.vesselName || 'Vessel' }}
+            <span class="vessel-imo-subtitle">IMO: {{ selectedVve.vesselImo || 'N/A' }}</span>
+          </h5>
+          <span class="badge badge-lg" [ngClass]="getStatusBadgeClass(selectedVve.status)">
+            {{ selectedVve.status }}
+          </span>
+        </div>
+        <button type="button" class="close" (click)="closeDetailModal()">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="split-view">
+          <!-- Left Side - Planned -->
+          <div class="split-panel planned-panel">
+            <div class="panel-header">
+              <h5><i class="fas fa-calendar-check"></i> Planned</h5>
+            </div>
+            <div class="panel-content">
+              <div class="info-group">
+                <label>Dock</label>
+                <div class="info-value">
+                  <i class="fas fa-anchor"></i>
+                  {{ selectedVve.plannedDockName || 'N/A' }}
+                </div>
+              </div>
+
+              <div class="info-group">
+                <label>Arrival Time</label>
+                <div class="info-value">
+                  <i class="fas fa-sign-in-alt"></i>
+                  {{ formatDateTime(selectedVve.plannedArrivalTime) }}
+                </div>
+              </div>
+
+              <div class="info-group">
+                <label>Departure Time</label>
+                <div class="info-value">
+                  <i class="fas fa-sign-out-alt"></i>
+                  {{ formatDateTime(selectedVve.plannedDepartureTime) }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="split-divider"></div>
+
+          <!-- Right Side - Actual -->
+          <div class="split-panel actual-panel">
+            <div class="panel-header">
+              <h5><i class="fas fa-check-circle"></i> Actual</h5>
+            </div>
+            <div class="panel-content">
+              <div class="info-group">
+                <label>Dock</label>
+                <div class="info-value" [class.not-set]="!selectedVve.actualDockId">
+                  <i class="fas fa-anchor"></i>
+                  {{ selectedVve.actualDockName || 'Not set' }}
+                  <span
+                    *ngIf="isDockChanged(selectedVve)"
+                    class="badge badge-warning badge-sm ml-2"
+                  >
+                    <i class="fas fa-exclamation-triangle"></i> Changed
+                  </span>
+                  <span
+                    *ngIf="selectedVve.actualDockId && !isDockChanged(selectedVve)"
+                    class="badge badge-success badge-sm ml-2"
+                  >
+                    <i class="fas fa-check"></i> As Planned
+                  </span>
+                </div>
+              </div>
+
+              <div class="info-group">
+                <label>Arrival Time</label>
+                <div class="info-value" [class.not-set]="!selectedVve.actualArrivalTime">
+                  <i class="fas fa-sign-in-alt"></i>
+                  {{ formatDateTime(selectedVve.actualArrivalTime) }}
+                  <span *ngIf="isDelayed(selectedVve)" class="badge badge-warning badge-sm ml-2">
+                    <i class="fas fa-clock"></i> Delayed
+                  </span>
+                  <span
+                    *ngIf="selectedVve.actualArrivalTime && !isDelayed(selectedVve)"
+                    class="badge badge-success badge-sm ml-2"
+                  >
+                    <i class="fas fa-check"></i> On Time
+                  </span>
+                </div>
+              </div>
+
+              <div class="info-group">
+                <label>Departure Time</label>
+                <div
+                  class="info-value"
+                  [class.not-set]="!selectedVve.actualDepartureTime"
+                  [class.departure-changed]="isDepartureChanged(selectedVve)"
+                >
+                  <i class="fas fa-sign-out-alt"></i>
+                  {{ formatDateTime(selectedVve.actualDepartureTime) }}
+                  <span
+                    *ngIf="selectedVve.actualDepartureTime && !isDepartureChanged(selectedVve)"
+                    class="badge badge-success badge-sm ml-2"
+                  >
+                    <i class="fas fa-check"></i> On Time
+                  </span>
+                  <span
+                    *ngIf="isDepartureChanged(selectedVve)"
+                    class="badge badge-warning badge-sm ml-2"
+                  >
+                    <i class="fas fa-exclamation-triangle"></i> Changed
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Record Information -->
+        <div class="record-info">
+          <div class="record-info-item">
+            <i class="fas fa-clock"></i>
+            <span><strong>Created:</strong> {{ formatDateTime(selectedVve.createdAt) }}</span>
+          </div>
+          <div class="record-info-item" *ngIf="selectedVve.updatedAt">
+            <i class="fas fa-history"></i>
+            <span><strong>Last Updated:</strong> {{ formatDateTime(selectedVve.updatedAt) }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button
+          *ngIf="selectedVve.status !== 'Completed'"
+          type="button"
+          class="btn btn-primary"
+          (click)="closeDetailModal(); openUpdateModal(null)"
+        >
+          <i class="fas fa-edit"></i> Update VVE
+        </button>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeDetailModal(); selectedVve = null"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showDetailModal" *ngIf="showDetailModal"></div>
+
+<!-- Update Modal -->
+<div
+  class="modal fade"
+  [class.show]="showUpdateModal"
+  [style.display]="showUpdateModal ? 'block' : 'none'"
+  tabindex="-1"
+>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content" *ngIf="selectedVve">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-edit"></i> Update VVE - {{ selectedVve.vesselName || 'Vessel' }}
+        </h5>
+        <button type="button" class="close" (click)="closeUpdateModal()">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Messages inside Update Modal -->
+        <div *ngIf="successMessage" class="alert alert-success">
+          <i class="fas fa-check-circle"></i> {{ successMessage }}
+          <button type="button" class="close-btn" (click)="successMessage = ''">&times;</button>
+        </div>
+
+        <div *ngIf="errorMessage" class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle"></i> {{ errorMessage }}
+          <button type="button" class="close-btn" (click)="errorMessage = ''">&times;</button>
+        </div>
+
+        <form>
+          <!-- Actual Arrival Time -->
+          <div class="form-group">
+            <label for="actualArrivalTime">
+              <i class="fas fa-clock"></i> Actual Arrival Time
+            </label>
+            <input
+              type="datetime-local"
+              class="form-control"
+              id="actualArrivalTime"
+              [(ngModel)]="updateForm.actualArrivalTime"
+              name="actualArrivalTime"
+            />
+            <small class="form-text text-muted">
+              Planned: {{ formatDateTime(selectedVve.plannedArrivalTime) }}
+            </small>
+          </div>
+
+          <!-- Actual Dock -->
+          <div class="form-group">
+            <label for="actualDockId"> <i class="fas fa-anchor"></i> Actual Dock </label>
+            <select
+              class="form-control"
+              id="actualDockId"
+              [(ngModel)]="updateForm.actualDockId"
+              name="actualDockId"
+            >
+              <option *ngFor="let dock of docks" [value]="dock.id">{{ dock.dockName }}</option>
+            </select>
+            <small class="form-text text-muted">
+              Planned: {{ selectedVve.plannedDockName || 'N/A' }}
+            </small>
+          </div>
+
+          <!-- Actual Departure Time -->
+          <div class="form-group">
+            <label for="actualDepartureTime">
+              <i class="fas fa-ship"></i> Actual Departure Time
+            </label>
+            <input
+              type="datetime-local"
+              class="form-control"
+              id="actualDepartureTime"
+              [(ngModel)]="updateForm.actualDepartureTime"
+              name="actualDepartureTime"
+            />
+            <small class="form-text text-muted">
+              Planned: {{ formatDateTime(selectedVve.plannedDepartureTime) }}
+            </small>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" (click)="updateVVE()" [disabled]="loading">
+          <i class="fas fa-save"></i> Save Changes
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="closeUpdateModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-backdrop fade" [class.show]="showUpdateModal" *ngIf="showUpdateModal"></div>

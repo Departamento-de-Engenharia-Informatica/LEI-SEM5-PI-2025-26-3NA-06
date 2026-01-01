@@ -41,6 +41,52 @@ export interface SaveOperationPlanResponse {
   error?: string;
 }
 
+export interface VesselVisitExecution {
+  id: string;
+  vvnId: string;
+  operationPlanId: string;
+  vveDate: string;
+  plannedDockId: string;
+  plannedArrivalTime: string;
+  plannedDepartureTime: string;
+  actualDockId: string | null;
+  actualArrivalTime: string | null;
+  actualDepartureTime: string | null;
+  status: 'NotStarted' | 'InProgress' | 'Delayed' | 'Completed';
+  createdAt: string;
+  updatedAt: string | null;
+  // Enriched data (added by backend)
+  vesselName?: string;
+  vesselImo?: string;
+  plannedDockName?: string;
+  actualDockName?: string;
+}
+
+export interface PrepareTodaysVVEsResponse {
+  success: boolean;
+  message?: string;
+  operationPlanId?: string;
+  date?: string;
+  created?: number;
+  skipped?: number;
+  errors?: number;
+  details?: {
+    createdVves: Array<{ id: string; vvnId: string; status: string }>;
+    skippedVvns: Array<{ vvnId: string; reason: string }>;
+    failedVves: Array<{ success: boolean; vvnId: string; error: string }>;
+  };
+  error?: string;
+}
+
+export interface VVEResponse {
+  success: boolean;
+  data?: VesselVisitExecution | VesselVisitExecution[];
+  total?: number;
+  message?: string;
+  warnings?: string[];
+  error?: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -112,5 +158,49 @@ export class OemService {
     return this.http.get<any>(`${this.oemApiUrl}/operation-plans/vvn/${vvnId}/cargo-manifests`, {
       headers: this.getHeaders(),
     });
+  }
+
+  // VVE Methods
+  prepareTodaysVVEs(): Observable<PrepareTodaysVVEsResponse> {
+    return this.http.post<PrepareTodaysVVEsResponse>(
+      `${this.oemApiUrl}/vessel-visit-executions/prepare-today`,
+      {},
+      { headers: this.getHeaders() }
+    );
+  }
+
+  getVVEsByDate(date: string): Observable<VVEResponse> {
+    return this.http.get<VVEResponse>(`${this.oemApiUrl}/vessel-visit-executions/date/${date}`, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  getVVEById(id: string): Observable<VVEResponse> {
+    return this.http.get<VVEResponse>(`${this.oemApiUrl}/vessel-visit-executions/${id}`, {
+      headers: this.getHeaders(),
+    });
+  }
+
+  updateVVEBerth(
+    id: string,
+    data: {
+      actualArrivalTime?: string;
+      actualDockId?: string;
+      actualDepartureTime?: string;
+    }
+  ): Observable<VVEResponse> {
+    return this.http.patch<VVEResponse>(
+      `${this.oemApiUrl}/vessel-visit-executions/${id}/berth`,
+      data,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  updateVVEStatus(id: string, status: string): Observable<VVEResponse> {
+    return this.http.patch<VVEResponse>(
+      `${this.oemApiUrl}/vessel-visit-executions/${id}/status`,
+      { status },
+      { headers: this.getHeaders() }
+    );
   }
 }

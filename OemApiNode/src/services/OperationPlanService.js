@@ -1,4 +1,5 @@
 const operationPlanRepository = require("../infrastructure/OperationPlanRepository");
+const vesselVisitExecutionRepository = require("../infrastructure/VesselVisitExecutionRepository");
 const OperationPlanMapper = require("../dtos/OperationPlanMapper");
 const UpsertOperationPlanDto = require("../dtos/UpsertOperationPlanDto");
 const backendApiClient = require("./BackendApiClient");
@@ -186,6 +187,22 @@ class OperationPlanService {
       );
 
       if (existingPlan) {
+        // Delete all associated VVEs first
+        try {
+          await vesselVisitExecutionRepository.deleteByOperationPlanIdAsync(
+            existingPlan.id
+          );
+          logger.info(
+            `Deleted VVEs associated with operation plan ${existingPlan.id} before replacement`
+          );
+        } catch (vveError) {
+          logger.error(
+            "Error deleting associated VVEs during replacement:",
+            vveError
+          );
+          // Continue with operation plan replacement even if VVE deletion fails
+        }
+
         // Delete existing plan
         await operationPlanRepository.deleteAsync(existingPlan.planDate);
         logger.info(
@@ -218,7 +235,7 @@ class OperationPlanService {
       return {
         success: true,
         data: responseDto,
-        message: "Operation plan replaced successfully",
+        message: "Operation plan and associated VVEs replaced successfully",
       };
     } catch (error) {
       logger.error("Error replacing operation plan:", error);
@@ -304,13 +321,25 @@ class OperationPlanService {
         };
       }
 
+      // Delete all associated VVEs first (cascading delete)
+      try {
+        await vesselVisitExecutionRepository.deleteByOperationPlanIdAsync(
+          plan.id
+        );
+        logger.info(`Deleted VVEs associated with operation plan ${plan.id}`);
+      } catch (vveError) {
+        logger.error("Error deleting associated VVEs:", vveError);
+        // Continue with operation plan deletion even if VVE deletion fails
+      }
+
+      // Delete the operation plan
       await operationPlanRepository.deleteAsync(planDate);
 
       logger.info(`Operation plan for date ${planDate} deleted`);
 
       return {
         success: true,
-        message: "Operation plan deleted successfully",
+        message: "Operation plan and associated VVEs deleted successfully",
       };
     } catch (error) {
       logger.error(
@@ -346,6 +375,70 @@ class OperationPlanService {
       };
     } catch (error) {
       logger.error("Error validating feasibility:", error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
+  /**
+   * Update operation plan status with validation
+   * Valid transitions:
+   * - Pending -> InProgress, Cancelled
+   * - InProgress -> Completed, Cancelled
+   * - Completed -> (terminal state)
+   * - Cancelled -> (terminal state)
+   */
+  async updateOperationPlanStatusAsync(id, newStatus, userId) {
+    try {
+      const plan = await operationPlanRepository.getByIdAsync(id);
+
+      if (!plan) {
+        return {
+          success: false,
+          error: "Operation plan not found",
+        };
+      }
+
+      // Validate state transition
+      if (!plan.canTransitionTo(newStatus)) {
+        const validTransitions = {
+          Pending: ["InProgress", "Cancelled"],
+          InProgress: ["Completed", "Cancelled"],
+          Completed: [],
+          Cancelled: [],
+        };
+        const allowed = validTransitions[plan.status] || [];
+        return {
+          success: false,
+          error: `Cannot transition from '${
+            plan.status
+          }' to '${newStatus}'. Valid transitions: ${
+            allowed.join(", ") || "none"
+          }`,
+        };
+      }
+
+      // Perform transition
+      plan.transitionTo(newStatus);
+
+      // Update in database
+      const updatedPlan = await operationPlanRepository.updateAsync(plan);
+
+      logger.info(
+        `Operation plan ${id} status updated from ${plan.status} to ${newStatus}`
+      );
+
+      const responseDto = OperationPlanMapper.toResponseDto(updatedPlan);
+
+      return {
+        success: true,
+        data: responseDto,
+        message: `Operation plan status updated to ${newStatus}`,
+      };
+    } catch (error) {
+      logger.error(`Error updating operation plan status ${id}:`, error);
       return {
         success: false,
         error: error.message,

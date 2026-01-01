@@ -205,6 +205,59 @@ router.put(
 
 /**
  * @swagger
+ * /api/oem/operation-plans/{id}/status:
+ *   patch:
+ *     summary: Update Operation Plan Status
+ *     description: |
+ *       Transition an Operation Plan to a new status with validation.
+ *       Valid transitions:
+ *       - Pending -> InProgress, Cancelled
+ *       - InProgress -> Completed, Cancelled
+ *       - Completed -> (terminal, no transitions allowed)
+ *       - Cancelled -> (terminal, no transitions allowed)
+ *     tags: [Operation Plans]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Operation Plan ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [Pending, InProgress, Completed, Cancelled]
+ *                 description: The new status to transition to
+ *     responses:
+ *       200:
+ *         description: Status updated successfully
+ *       400:
+ *         description: Invalid status transition
+ *       404:
+ *         description: Operation Plan not found
+ *       401:
+ *         description: Unauthorized
+ */
+router.patch(
+  "/:id/status",
+  authenticateJWT,
+  authorizeRole("LogisticOperator"),
+  operationPlanController.updateStatus
+);
+
+/**
+ * @swagger
  * /api/oem/operation-plans/{id}:
  *   delete:
  *     summary: Delete Operation Plan

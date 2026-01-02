@@ -226,6 +226,16 @@ h2 {
   cursor: help;
 }
 
+.badge-primary {
+  background: #cfe2ff;
+  color: #084298;
+}
+
+.badge-secondary {
+  background: #e2e3e5;
+  color: #41464b;
+}
+
 .text-muted {
   color: #6c757d;
 }
@@ -314,6 +324,12 @@ h2 {
 .schedule-header h2 {
   margin: 0;
   color: #333;
+}
+
+.header-badges {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .status-badge {

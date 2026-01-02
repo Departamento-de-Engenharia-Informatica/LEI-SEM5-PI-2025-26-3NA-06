@@ -322,6 +322,10 @@ class VesselVisitExecutionService {
       vve.updatedAt = new Date();
       const updatedVve = await vveRepository.updateAsync(vve);
 
+      // Update operation plan status based on VVEs
+      const operationPlanService = require("./OperationPlanService");
+      await operationPlanService.updateStatusFromVVEsAsync(vve.operationPlanId);
+
       logger.info(`VVE berth updated: ${id}`);
 
       return {
@@ -375,6 +379,10 @@ class VesselVisitExecutionService {
       vve.transitionTo(newStatus);
 
       const updatedVve = await vveRepository.updateAsync(vve);
+
+      // Update operation plan status based on VVEs
+      const operationPlanService = require("./OperationPlanService");
+      await operationPlanService.updateStatusFromVVEsAsync(vve.operationPlanId);
 
       logger.info(`VVE ${id} status updated to ${newStatus}`);
 

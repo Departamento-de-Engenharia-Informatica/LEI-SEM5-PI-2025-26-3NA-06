@@ -12,6 +12,15 @@
     </button>
 
     <button
+      *ngIf="schedule && schedule.warnings.length > 0"
+      class="btn btn-warning"
+      (click)="correctOperationPlan()"
+      [disabled]="correcting"
+    >
+      {{ correcting ? 'Correcting...' : '🔧 Auto-Correct Operation Plan' }}
+    </button>
+
+    <button
       *ngIf="schedule"
       class="btn btn-success"
       (click)="saveOperationPlan()"

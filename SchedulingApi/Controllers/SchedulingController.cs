@@ -37,5 +37,20 @@ namespace ProjArqsi.SchedulingApi.Controllers
                 return StatusCode(500, new { message = "An error occurred while generating the daily schedule.", details = ex.Message });
             }
         }
+
+        [HttpPost("auto-correct")]
+        public async Task<ActionResult<DailyScheduleResultDto>> AutoCorrectOperationPlan([FromBody] DailyScheduleResultDto operationPlan)
+        {
+            try
+            {
+                var accessToken = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+                var result = await _schedulingEngine.AutoCorrectOperationPlan(operationPlan, accessToken);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while correcting the operation plan.", details = ex.Message });
+            }
+        }
     }
 }

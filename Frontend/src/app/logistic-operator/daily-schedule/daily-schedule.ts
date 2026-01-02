@@ -21,6 +21,7 @@ export class DailySchedule implements OnInit {
   schedule: DailyScheduleResult | null = null;
   loading: boolean = false;
   saving: boolean = false;
+  correcting: boolean = false;
   error: string | null = null;
   saveSuccess: string | null = null;
 
@@ -166,6 +167,37 @@ export class DailySchedule implements OnInit {
 
   canSaveOperationPlan(): boolean {
     return !!(this.schedule && this.schedule.dockSchedules.length > 0 && !this.saving);
+  }
+
+  correctOperationPlan() {
+    if (!this.schedule) {
+      this.error = 'No schedule to correct';
+      return;
+    }
+
+    this.correcting = true;
+    this.error = null;
+    this.saveSuccess = null;
+
+    this.schedulingService.correctOperationPlan(this.schedule).subscribe({
+      next: (correctedSchedule) => {
+        this.ngZone.run(() => {
+          this.schedule = correctedSchedule;
+          this.correcting = false;
+          this.saveSuccess =
+            'Operation Plan corrected successfully! Review and save the updated plan.';
+          this.cdr.detectChanges();
+        });
+      },
+      error: (err) => {
+        this.ngZone.run(() => {
+          console.error('Error correcting operation plan:', err);
+          this.error = err.error?.message || 'Failed to correct operation plan. Please try again.';
+          this.correcting = false;
+          this.cdr.detectChanges();
+        });
+      },
+    });
   }
 
   formatDateTime(dateStr: string): string {

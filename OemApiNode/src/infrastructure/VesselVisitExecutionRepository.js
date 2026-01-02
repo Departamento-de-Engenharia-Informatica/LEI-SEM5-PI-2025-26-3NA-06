@@ -256,6 +256,32 @@ class VesselVisitExecutionRepository {
   }
 
   /**
+   * Get VVEs by operation plan ID
+   */
+  async getByOperationPlanIdAsync(operationPlanId) {
+    const query =
+      "SELECT * FROM VesselVisitExecutions WHERE OperationPlanId = @operationPlanId ORDER BY PlannedArrivalTime";
+    const params = [
+      {
+        name: "operationPlanId",
+        type: TYPES.UniqueIdentifier,
+        value: operationPlanId,
+      },
+    ];
+
+    try {
+      const results = await database.executeQuery(query, params);
+      return results.map((row) => VesselVisitExecution.fromDatabase(row));
+    } catch (error) {
+      logger.error(
+        `Error fetching VVEs for operation plan ${operationPlanId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Search VVEs with filters
    */
   async searchAsync({ startDate, endDate, status, skip = 0, take = 50 }) {

@@ -445,6 +445,56 @@ class OperationPlanService {
       };
     }
   }
+
+  /**
+   * Update OperationPlan status based on its VVEs
+   * Called when VVEs are updated
+   */
+  async updateStatusFromVVEsAsync(operationPlanId) {
+    try {
+      const plan = await operationPlanRepository.getByIdAsync(operationPlanId);
+
+      if (!plan) {
+        logger.warn(
+          `Operation plan ${operationPlanId} not found for status update`
+        );
+        return {
+          success: false,
+          error: "Operation plan not found",
+        };
+      }
+
+      // Get all VVEs for this operation plan
+      const vves =
+        await vesselVisitExecutionRepository.getByOperationPlanIdAsync(
+          operationPlanId
+        );
+
+      // Calculate new status from VVEs
+      const OperationPlan = require("../domain/OperationPlan/OperationPlan");
+      const newStatus = OperationPlan.calculateStatusFromVVEs(vves);
+
+      // Only update if status changed
+      if (plan.status !== newStatus) {
+        plan.status = newStatus;
+        await operationPlanRepository.updateAsync(plan);
+        logger.info(
+          `Operation plan ${operationPlanId} status updated to ${newStatus} based on VVEs`
+        );
+      }
+
+      return {
+        success: true,
+        status: newStatus,
+      };
+    } catch (error) {
+      logger.error(`Error updating operation plan status from VVEs:`, error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
 }
 
 module.exports = new OperationPlanService();

@@ -50,6 +50,10 @@
               Plan Date
               <i class="fas" [ngClass]="getSortIcon('planDate')"></i>
             </th>
+            <th (click)="sortBy('status')" class="sortable">
+              Status
+              <i class="fas" [ngClass]="getSortIcon('status')"></i>
+            </th>
             <th (click)="sortBy('isFeasible')" class="sortable">
               Feasible
               <i class="fas" [ngClass]="getSortIcon('isFeasible')"></i>
@@ -71,6 +75,11 @@
         <tbody>
           <tr *ngFor="let plan of operationPlans">
             <td>{{ plan.planDate | date : 'dd/MM/yyyy' }}</td>
+            <td>
+              <span [ngClass]="getStatusBadgeClass(plan.status)">
+                {{ getStatusLabel(plan.status) }}
+              </span>
+            </td>
             <td>
               <span [class]="plan.isFeasible ? 'badge badge-success' : 'badge badge-danger'">
                 {{ plan.isFeasible ? '✓ Yes' : '✗ No' }}
@@ -118,12 +127,17 @@
       <div class="modal-body">
         <div class="schedule-header">
           <h2>Operation Plan - {{ selectedPlan.planDate | date : 'dd/MM/yyyy' }}</h2>
-          <div
-            class="status-badge"
-            [class.feasible]="selectedPlan.isFeasible"
-            [class.not-feasible]="!selectedPlan.isFeasible"
-          >
-            {{ selectedPlan.isFeasible ? '✓ Feasible' : '✗ Not Feasible' }}
+          <div class="header-badges">
+            <span [ngClass]="getStatusBadgeClass(selectedPlan.status)">
+              {{ getStatusLabel(selectedPlan.status) }}
+            </span>
+            <div
+              class="status-badge"
+              [class.feasible]="selectedPlan.isFeasible"
+              [class.not-feasible]="!selectedPlan.isFeasible"
+            >
+              {{ selectedPlan.isFeasible ? '✓ Feasible' : '✗ Not Feasible' }}
+            </div>
           </div>
         </div>
 

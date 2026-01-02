@@ -176,6 +176,32 @@ export class OperationPlansListComponent implements OnInit {
     return warning.replace(/\[Dock ([^\]]+)\]:/g, '<strong class="dock-badge">Dock $1</strong>:');
   }
 
+  getStatusBadgeClass(status: string): string {
+    switch (status) {
+      case 'NotStarted':
+        return 'badge badge-secondary';
+      case 'InProgress':
+        return 'badge badge-primary';
+      case 'Finished':
+        return 'badge badge-success';
+      default:
+        return 'badge badge-secondary';
+    }
+  }
+
+  getStatusLabel(status: string): string {
+    switch (status) {
+      case 'NotStarted':
+        return '⏳ Not Started';
+      case 'InProgress':
+        return '🔄 In Progress';
+      case 'Finished':
+        return '✓ Finished';
+      default:
+        return '❓ Unknown';
+    }
+  }
+
   getDockGroups(): any[] {
     if (!this.selectedPlan || !this.selectedPlan.assignments) {
       return [];

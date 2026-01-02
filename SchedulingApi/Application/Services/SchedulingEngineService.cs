@@ -12,6 +12,7 @@ namespace ProjArqsi.SchedulingApi.Services
             List<VesselVisitNotificationDto> vvns,
             List<DockDto> availableDocks,
             string accessToken);
+        Task<DailyScheduleResultDto> AutoCorrectOperationPlan(DailyScheduleResultDto operationPlan, string accessToken);
     }
 
     public class SchedulingEngineService : ISchedulingEngine
@@ -245,6 +246,172 @@ namespace ProjArqsi.SchedulingApi.Services
             }
 
             return conflicts;
+        }
+
+        /// <summary>
+        /// Auto-corrects an Operation Plan with warnings using a simple heuristic.
+        /// Strategy:
+        /// 1. Try to reassign VVNs to different available docks
+        /// 2. If no dock available, push the VVN forward in time to find a free slot
+        /// </summary>
+        public async Task<DailyScheduleResultDto> AutoCorrectOperationPlan(DailyScheduleResultDto operationPlan, string accessToken)
+        {
+            Console.WriteLine("\n🔧 AUTO-CORRECTING OPERATION PLAN...");
+            
+            // Parse the target date
+            if (!DateTime.TryParse(operationPlan.Date, out var targetDate))
+                throw new ArgumentException("Invalid date in operation plan");
+
+            // Fetch all docks for reassignment options
+            var allDocks = await _coreApiClientService.GetAllDocksAsync(accessToken);
+            
+            // Extract all VVNs from the operation plan assignments
+            var vvnData = new List<(Guid VvnId, Guid OriginalDockId, DateTime Eta, DateTime Etd, string VesselImo, string VesselName, int EstimatedTeu)>();
+            
+            foreach (var dockSchedule in operationPlan.DockSchedules)
+            {
+                foreach (var assignment in dockSchedule.Assignments)
+                {
+                    vvnData.Add((
+                        assignment.VvnId,
+                        assignment.DockId,
+                        assignment.Eta,
+                        assignment.Etd,
+                        assignment.VesselImo ?? "Unknown",
+                        assignment.VesselName ?? "Unknown Vessel",
+                        assignment.EstimatedTeu
+                    ));
+                }
+            }
+
+            // Sort by ETA to process in chronological order
+            vvnData = vvnData.OrderBy(v => v.Eta).ToList();
+
+            // Create new schedule tracking
+            var newDockSchedule = new Dictionary<Guid, List<DockAssignmentDto>>();
+            foreach (var dock in allDocks)
+            {
+                newDockSchedule[dock.Id] = new List<DockAssignmentDto>();
+            }
+
+            var correctedResult = new DailyScheduleResultDto
+            {
+                Date = operationPlan.Date,
+                IsFeasible = true,
+                Warnings = new List<string>(),
+                DockSchedules = new List<DailyDockScheduleDto>()
+            };
+
+            // Process each VVN with correction heuristic
+            foreach (var vvn in vvnData)
+            {
+                var eta = vvn.Eta;
+                var etd = vvn.Etd;
+                var duration = etd - eta;
+                var assignedDockId = vvn.OriginalDockId;
+                
+
+                // Check if there's a conflict with the original dock
+                var conflicts = DetectTimeConflicts(eta, etd, newDockSchedule[assignedDockId]);
+
+                if (conflicts.Any())
+                {
+                    Console.WriteLine($"  Conflict detected for VVN {vvn.VvnId} ({vvn.VesselName}) on dock {assignedDockId}");
+                    
+                    // HEURISTIC 1: Try to find an alternative dock without conflicts
+                    Guid? alternativeDockId = null;
+                    foreach (var dockk in allDocks.Where(d => d.Id != assignedDockId))
+                    {
+                        var altConflicts = DetectTimeConflicts(eta, etd, newDockSchedule[dockk.Id]);
+                        if (!altConflicts.Any())
+                        {
+                            alternativeDockId = dockk.Id;
+                            assignedDockId = dockk.Id;
+                            Console.WriteLine($"    ✓ Reassigned to dock {dockk.DockName}");
+                            break;
+                        }
+                    }
+
+                    // HEURISTIC 2: If no alternative dock, push forward in time
+                    if (!alternativeDockId.HasValue)
+                    {
+                        Console.WriteLine($"    No alternative dock available, pushing forward in time...");
+                        
+                        // Find the latest ETD on the original dock
+                        var latestEtd = newDockSchedule[assignedDockId]
+                            .Where(a => a.Eta < etd) // Only consider overlapping assignments
+                            .Select(a => a.Etd)
+                            .DefaultIfEmpty(eta)
+                            .Max();
+
+                        // Push the VVN to start right after the latest conflict
+                        if (latestEtd > eta)
+                        {
+                            var timeShift = latestEtd - eta;
+                            eta = latestEtd;
+                            etd = eta + duration;
+                            Console.WriteLine($"    ✓ Pushed forward by {timeShift.TotalHours:F1} hours to {eta:HH:mm} - {etd:HH:mm}");
+                        }
+                    }
+                }
+
+                // Add the corrected assignment
+                var dock = allDocks.First(d => d.Id == assignedDockId);
+                var assignment = new DockAssignmentDto
+                {
+                    VvnId = vvn.VvnId,
+                    VesselId = Guid.Empty, // Not needed for correction
+                    VesselImo = vvn.VesselImo,
+                    VesselName = vvn.VesselName,
+                    DockId = assignedDockId,
+                    DockName = dock.DockName,
+                    Eta = eta,
+                    Etd = etd,
+                    EstimatedTeu = vvn.EstimatedTeu
+                };
+
+                newDockSchedule[assignedDockId].Add(assignment);
+            }
+
+            // Build the corrected dock schedules
+            correctedResult.DockSchedules = newDockSchedule
+                .Where(kvp => kvp.Value.Any())
+                .Select(kvp =>
+                {
+                    var dock = allDocks.First(d => d.Id == kvp.Key);
+                    return new DailyDockScheduleDto
+                    {
+                        DockId = kvp.Key,
+                        DockName = dock.DockName,
+                        Assignments = kvp.Value.OrderBy(a => a.Eta).ToList()
+                    };
+                })
+                .OrderBy(ds => ds.DockName)
+                .ToList();
+
+            // Verify the corrected plan has no conflicts
+            foreach (var dockSched in correctedResult.DockSchedules)
+            {
+                for (int i = 0; i < dockSched.Assignments.Count - 1; i++)
+                {
+                    var current = dockSched.Assignments[i];
+                    var next = dockSched.Assignments[i + 1];
+                    
+                    if (current.Eta < next.Etd && next.Eta < current.Etd)
+                    {
+                        correctedResult.IsFeasible = false;
+                        correctedResult.Warnings.Add(
+                            $"[Dock {dockSched.DockName}]: Remaining conflict between {current.VesselName} and {next.VesselName}"
+                        );
+                    }
+                }
+            }
+
+            Console.WriteLine("✓ Auto-correction complete");
+            Console.WriteLine($"  Feasible: {correctedResult.IsFeasible}");
+            Console.WriteLine($"  Warnings: {correctedResult.Warnings.Count}");
+
+            return correctedResult;
         }
     }
 }

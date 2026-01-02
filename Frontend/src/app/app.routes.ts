@@ -33,6 +33,7 @@ import { DailySchedule } from './logistic-operator/daily-schedule/daily-schedule
 import { OperationPlansListComponent } from './logistic-operator/operation-plans-list/operation-plans-list';
 import { VveManagementComponent } from './logistic-operator/vve-management/vve-management';
 import { IncidentTypesComponent } from './port-authority/incident-types/incident-types.component';
+import { IncidentsComponent } from './logistic-operator/incidents/incidents.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -89,6 +90,7 @@ export const routes: Routes = [
           { path: 'daily-schedule', component: DailySchedule },
           { path: 'operation-plans', component: OperationPlansListComponent },
           { path: 'vve-management', component: VveManagementComponent },
+          { path: 'incidents', component: IncidentsComponent },
         ],
       },
       {

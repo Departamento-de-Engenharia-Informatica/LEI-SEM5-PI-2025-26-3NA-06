@@ -1,7 +1,7 @@
 const { Connection, Request, TYPES } = require("tedious");
 const logger = require("../utils/logger");
 
-const config = {
+const connectionConfig = {
   server: process.env.DB_SERVER,
   authentication: {
     type: process.env.DB_AUTHENTICATION || "azure-active-directory-default",
@@ -19,34 +19,96 @@ const config = {
 
 class Database {
   constructor() {
-    this.connection = null;
+    this.connectionPool = [];
+    this.maxPoolSize = 10;
+    this.minPoolSize = 2;
   }
 
   async connect() {
-    return new Promise((resolve, reject) => {
-      this.connection = new Connection(config);
+    // Pre-create minimum connections
+    logger.info("Initializing database connection pool...");
+    const promises = [];
+    for (let i = 0; i < this.minPoolSize; i++) {
+      promises.push(this.createConnection());
+    }
 
-      this.connection.on("connect", (err) => {
+    try {
+      await Promise.all(promises);
+      logger.info(
+        `✓ Connected to Azure SQL Database (Pool: ${this.minPoolSize} connections)`
+      );
+    } catch (error) {
+      logger.error("Database connection failed:", error);
+      throw error;
+    }
+  }
+
+  createConnection() {
+    return new Promise((resolve, reject) => {
+      const connection = new Connection(connectionConfig);
+
+      connection.on("connect", (err) => {
         if (err) {
-          logger.error("Database connection failed:", err);
           reject(err);
         } else {
-          logger.info("✓ Connected to Azure SQL Database");
-          resolve();
+          connection.inUse = false;
+          this.connectionPool.push(connection);
+          resolve(connection);
         }
       });
 
-      this.connection.connect();
+      connection.on("error", (err) => {
+        logger.error("Connection error:", err);
+      });
+
+      connection.connect();
     });
   }
 
+  async getConnection() {
+    // Find available connection
+    let connection = this.connectionPool.find(
+      (conn) => !conn.inUse && conn.state.name === "LoggedIn"
+    );
+
+    if (!connection) {
+      // Create new connection if pool not full
+      if (this.connectionPool.length < this.maxPoolSize) {
+        connection = await this.createConnection();
+      } else {
+        // Wait for available connection
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        return this.getConnection();
+      }
+    }
+
+    connection.inUse = true;
+    return connection;
+  }
+
+  releaseConnection(connection) {
+    if (connection) {
+      connection.inUse = false;
+    }
+  }
+
   async executeQuery(query, params = []) {
+    const connection = await this.getConnection();
+
     return new Promise((resolve, reject) => {
       const results = [];
       const request = new Request(query, (err, rowCount) => {
+        this.releaseConnection(connection);
+
         if (err) {
-          const errorMessage = err.message || (err.errors && err.errors.map(e => e.message).join('; ')) || err.toString();
-          logger.error("Query execution error:", { message: errorMessage, fullError: err });
+          const errorMessage =
+            err.message ||
+            (err.errors && err.errors.map((e) => e.message).join("; ")) ||
+            err.toString();
+          logger.error("Query execution error:", {
+            message: errorMessage,
+            fullError: err,
+          });
           reject(new Error(errorMessage));
         } else {
           resolve(results);
@@ -66,15 +128,18 @@ class Database {
         results.push(row);
       });
 
-      this.connection.execSql(request);
+      connection.execSql(request);
     });
   }
 
   async close() {
-    if (this.connection) {
-      this.connection.close();
-      logger.info("Database connection closed");
+    for (const connection of this.connectionPool) {
+      if (connection) {
+        connection.close();
+      }
     }
+    this.connectionPool = [];
+    logger.info("Database connection pool closed");
   }
 }
 

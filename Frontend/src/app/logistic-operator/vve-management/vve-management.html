@@ -86,11 +86,83 @@
     <div *ngIf="vves.length > 0 && dataReady" class="vves-section">
       <div class="actions-bar">
         <h4>Today's Vessel Visit Executions ({{ vves.length }})</h4>
+
+        <!-- Record Incident Button -->
+        <div class="incident-actions">
+          <button
+            *ngIf="!incidentSelectionMode"
+            class="btn btn-warning incident-record-btn"
+            (click)="startIncidentSelection()"
+          >
+            <i class="fas fa-exclamation-triangle"></i> ⚠️ Record Incident
+          </button>
+          <button
+            *ngIf="!incidentSelectionMode"
+            class="btn btn-secondary"
+            (click)="navigateToIncidents()"
+          >
+            <i class="fas fa-list"></i> Manage Incidents
+          </button>
+
+          <!-- Selection Mode Actions -->
+          <div *ngIf="incidentSelectionMode" class="selection-mode-actions">
+            <span class="selection-info">
+              <i class="fas fa-hand-pointer"></i> Select affected VVEs ({{ selectedVveIds.length }}
+              selected)
+            </span>
+            <button class="btn btn-sm btn-secondary" (click)="selectAllVVEs()">
+              <i class="fas fa-check-double"></i> Select All
+            </button>
+            <button class="btn btn-sm btn-secondary" (click)="deselectAllVVEs()">
+              <i class="fas fa-times"></i> Clear Selection
+            </button>
+            <button
+              class="btn btn-sm btn-primary"
+              (click)="proceedToIncidentForm()"
+              [disabled]="selectedVveIds.length === 0"
+            >
+              <i class="fas fa-arrow-right"></i> Continue
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" (click)="cancelIncidentSelection()">
+              Cancel
+            </button>
+          </div>
+        </div>
       </div>
 
       <div class="vves-grid">
-        <div *ngFor="let vve of vves" class="vve-card">
-          <div class="card" (click)="openDetailModal(vve)">
+        <div
+          *ngFor="let vve of vves"
+          class="vve-card"
+          [class.selection-mode]="incidentSelectionMode"
+        >
+          <!-- Checkbox overlay for selection mode -->
+          <div
+            *ngIf="incidentSelectionMode"
+            class="selection-overlay"
+            [class.disabled]="!canSelectVve(vve)"
+            (click)="canSelectVve(vve) && toggleVveSelection(vve.id); $event.stopPropagation()"
+          >
+            <div class="selection-checkbox">
+              <input
+                type="checkbox"
+                [checked]="isVveSelected(vve.id)"
+                [disabled]="!canSelectVve(vve)"
+                (click)="$event.stopPropagation()"
+                (change)="canSelectVve(vve) && toggleVveSelection(vve.id)"
+              />
+              <label *ngIf="canSelectVve(vve)">Select this VVE</label>
+              <label *ngIf="!canSelectVve(vve)" class="disabled-label">
+                <i class="fas fa-ban"></i> Cannot select completed VVE
+              </label>
+            </div>
+          </div>
+
+          <div
+            class="card"
+            (click)="!incidentSelectionMode && openDetailModal(vve)"
+            [class.selectable]="incidentSelectionMode"
+          >
             <div class="card-header">
               <div class="vessel-info">
                 <h5>{{ vve.vesselName || 'Loading...' }}</h5>
@@ -143,8 +215,14 @@
                   </span>
                 </div>
               </div>
+
+              <!-- Incidents affecting this VVE -->
+              <div class="incidents-indicator" *ngIf="getVveIncidentCount(vve.id) > 0">
+                <i class="fas fa-exclamation-triangle"></i> Affected by
+                {{ getVveIncidentCount(vve.id) }} incident(s)
+              </div>
             </div>
-            <div class="card-footer">
+            <div class="card-footer" *ngIf="!incidentSelectionMode">
               <button
                 *ngIf="vve.status !== 'Completed'"
                 class="btn btn-sm btn-primary"
@@ -307,6 +385,27 @@
             <span><strong>Last Updated:</strong> {{ formatDateTime(selectedVve.updatedAt) }}</span>
           </div>
         </div>
+
+        <!-- Incidents Section -->
+        <div class="incidents-section" *ngIf="getVveIncidents(selectedVve.id).length > 0">
+          <h6>
+            <i class="fas fa-exclamation-triangle text-warning"></i> Affecting Incidents Today
+          </h6>
+          <div *ngFor="let incident of getVveIncidents(selectedVve.id)" class="incident-item">
+            <div class="incident-header">
+              <span class="badge" [ngClass]="getSeverityBadgeClass(incident.severity)">{{
+                incident.severity
+              }}</span>
+              <strong>{{ incident.incidentTypeName }}</strong>
+            </div>
+            <div class="incident-description">{{ incident.description }}</div>
+            <div class="incident-time">
+              <i class="fas fa-clock"></i>
+              {{ incident.startTime | date : 'HH:mm' }} -
+              {{ incident.endTime ? (incident.endTime | date : 'HH:mm') : 'Ongoing' }}
+            </div>
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <button
@@ -421,3 +520,132 @@
   </div>
 </div>
 <div class="modal-backdrop fade" [class.show]="showUpdateModal" *ngIf="showUpdateModal"></div>
+
+<!-- Record Incident Modal -->
+<div
+  class="modal fade"
+  [class.show]="showRecordIncidentModal"
+  [style.display]="showRecordIncidentModal ? 'block' : 'none'"
+  tabindex="-1"
+>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-header-content">
+          <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> Record Incident</h5>
+        </div>
+        <button type="button" class="close" (click)="closeRecordIncidentModal()">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Affected VVEs Information -->
+        <div class="alert alert-info">
+          <h6>
+            <i class="fas fa-ship"></i> Affected Vessel Visit Executions ({{
+              getSelectedVves().length
+            }})
+          </h6>
+          <div class="selected-vves-list">
+            <div *ngFor="let vve of getSelectedVves()" class="selected-vve-item">
+              <i class="fas fa-check-circle"></i>
+              <strong>{{ vve.vesselName }}</strong> (IMO: {{ vve.vesselImo }}) -
+              {{ vve.plannedDockName }}
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="incidentErrorMessage" class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle"></i> {{ incidentErrorMessage }}
+        </div>
+
+        <form>
+          <div class="form-group">
+            <label>Incident Type <span class="text-danger">*</span></label>
+            <select
+              [(ngModel)]="incidentForm.incidentTypeId"
+              name="incidentTypeId"
+              class="form-control"
+              required
+            >
+              <option value="">Select incident type...</option>
+              <option *ngFor="let type of incidentTypes" [value]="type.id">
+                {{ type.code }} - {{ type.name }} ({{ type.severity }})
+              </option>
+            </select>
+          </div>
+
+          <div *ngIf="getSelectedIncidentType()" class="alert alert-secondary">
+            <strong>Severity:</strong>
+            <span
+              class="badge"
+              [ngClass]="getSeverityBadgeClass(getSelectedIncidentType()!.severity)"
+            >
+              {{ getSelectedIncidentType()!.severity }}
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label>Start Time <span class="text-danger">*</span></label>
+            <input
+              type="time"
+              [(ngModel)]="incidentForm.startTime"
+              name="startTime"
+              class="form-control"
+              required
+            />
+            <small class="form-text text-muted">Time on {{ today | date : 'dd/MM/yyyy' }}</small>
+          </div>
+
+          <div class="form-group">
+            <label>End Time</label>
+            <input
+              type="time"
+              [(ngModel)]="incidentForm.endTime"
+              name="endTime"
+              class="form-control"
+            />
+            <small class="form-text text-muted">Leave empty if incident is ongoing</small>
+          </div>
+
+          <div class="form-group">
+            <label>Description <span class="text-danger">*</span></label>
+            <textarea
+              [(ngModel)]="incidentForm.description"
+              name="description"
+              class="form-control"
+              rows="4"
+              required
+              placeholder="Describe the incident..."
+            ></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-warning"
+          (click)="submitIncident()"
+          [disabled]="loading || !incidentForm.incidentTypeId || !incidentForm.description"
+        >
+          <i *ngIf="loading" class="fas fa-spinner fa-spin"></i>
+          <i *ngIf="!loading" class="fas fa-save"></i>
+          {{ loading ? 'Recording...' : 'Record Incident' }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeRecordIncidentModal()"
+          [disabled]="loading"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div
+  class="modal-backdrop fade"
+  [class.show]="showRecordIncidentModal"
+  *ngIf="showRecordIncidentModal"
+></div>

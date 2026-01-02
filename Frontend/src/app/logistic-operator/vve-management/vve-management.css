@@ -247,6 +247,33 @@ h3 {
   font-size: 1.3rem;
 }
 
+/* Incident Actions */
+.incident-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.selection-mode-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: slideIn 0.3s ease;
+}
+
+.selection-info {
+  background: #fff3cd;
+  padding: 8px 15px;
+  border-radius: 6px;
+  color: #856404;
+  font-weight: 500;
+  border: 1px solid #ffeaa7;
+}
+
+.selection-info i {
+  margin-right: 8px;
+}
+
 /* VVE Cards Grid */
 .vves-grid {
   display: grid;
@@ -256,6 +283,101 @@ h3 {
 
 .vve-card {
   position: relative;
+}
+
+.vve-card.selection-mode {
+  cursor: pointer;
+}
+
+.selection-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 193, 7, 0.1);
+  border: 3px dashed #ffc107;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.selection-overlay:hover {
+  background: rgba(255, 193, 7, 0.2);
+  border-color: #ff9800;
+}
+
+.selection-overlay.disabled {
+  background: rgba(149, 165, 166, 0.1);
+  border: 3px dashed #95a5a6;
+  cursor: not-allowed;
+}
+
+.selection-overlay.disabled:hover {
+  background: rgba(149, 165, 166, 0.15);
+  border-color: #7f8c8d;
+}
+
+.selection-checkbox {
+  background: white;
+  padding: 15px 25px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.selection-checkbox input[type='checkbox']:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.selection-checkbox label.disabled-label {
+  color: #95a5a6;
+  font-style: italic;
+}
+
+.selection-checkbox input[type='checkbox'] {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  pointer-events: all;
+}
+
+.selection-checkbox label {
+  margin: 0;
+  font-weight: 600;
+  color: #2c3e50;
+  cursor: pointer;
+}
+
+.card.selectable {
+  pointer-events: none;
+}
+
+.selected-vves-list {
+  margin-top: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.selected-vve-item {
+  padding: 8px 12px;
+  background: white;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  border-left: 3px solid #28a745;
+}
+
+.selected-vve-item i {
+  color: #28a745;
+  margin-right: 8px;
 }
 
 .vve-card .card {
@@ -814,4 +936,106 @@ h3 {
 
 .record-info-item strong {
   color: #495057;
+}
+
+/* Incidents Indicator on VVE Cards */
+.incidents-indicator {
+  margin-top: 10px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(255, 152, 0, 0.3);
+}
+
+.incidents-indicator i {
+  font-size: 0.8rem;
+}
+
+/* Incidents Section in Detail Modal */
+.incidents-section {
+  margin-top: 20px;
+  padding: 15px 20px;
+  background: #fff8e1;
+  border-left: 4px solid #ffc107;
+  border-radius: 4px;
+}
+
+.incidents-section h6 {
+  margin: 0 0 15px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f57c00;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.incident-item {
+  background: white;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  border-left: 3px solid #ff9800;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.incident-item:last-child {
+  margin-bottom: 0;
+}
+
+.incident-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.incident-header strong {
+  color: #2c3e50;
+  font-size: 0.95rem;
+}
+
+.incident-description {
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.incident-time {
+  font-size: 0.85rem;
+  color: #95a5a6;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.incident-time i {
+  color: #f39c12;
+}
+
+/* Yellow and black striped button for Record Incident */
+.incident-record-btn {
+  background: repeating-linear-gradient(45deg, #ffc107, #ffc107 10px, #000000 10px, #000000 20px);
+  border: 2px solid #000;
+  color: #fff;
+  font-weight: 700;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.incident-record-btn:hover {
+  background: repeating-linear-gradient(45deg, #ffb300, #ffb300 10px, #1a1a1a 10px, #1a1a1a 20px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transform: translateY(-1px);
+}
+
+.incident-record-btn i {
+  margin-right: 6px;
 }

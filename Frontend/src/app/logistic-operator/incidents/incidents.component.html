@@ -1,0 +1,352 @@
+<div class="incidents-container">
+  <div class="header-section">
+    <h2>Incident Management</h2>
+  </div>
+
+  <!-- Success/Error Messages -->
+  <div *ngIf="successMessage" class="alert alert-success">
+    <i class="fas fa-check-circle"></i> {{ successMessage }}
+  </div>
+
+  <div *ngIf="error && !showCreateModal && !showDeleteModal" class="alert alert-danger">
+    <i class="fas fa-exclamation-triangle"></i> {{ error }}
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <div class="filter-group">
+      <label>Date:</label>
+      <input type="date" [(ngModel)]="filters.date" class="form-control" />
+    </div>
+    <div class="filter-group">
+      <label>Status:</label>
+      <select [(ngModel)]="filters.status" class="form-control">
+        <option [ngValue]="undefined">All</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Incident Type:</label>
+      <select [(ngModel)]="filters.incidentTypeId" class="form-control">
+        <option [ngValue]="undefined">All</option>
+        <option *ngFor="let type of incidentTypes" [value]="type.id">
+          {{ type.code }} - {{ type.name }}
+        </option>
+      </select>
+    </div>
+    <div class="filter-actions">
+      <button (click)="applyFilters()" class="btn btn-secondary">
+        <i class="fas fa-filter"></i> Apply
+      </button>
+      <button (click)="clearFilters()" class="btn btn-secondary">
+        <i class="fas fa-times"></i> Clear
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading && !showCreateModal && !showEditModal" class="loading-spinner">
+    <i class="fas fa-spinner fa-spin"></i> Loading...
+  </div>
+
+  <!-- Incidents Table -->
+  <div *ngIf="!loading" class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Incident Type</th>
+          <th>Severity</th>
+          <th>Date</th>
+          <th>Start Time</th>
+          <th>End Time</th>
+          <th>Status</th>
+          <th>Scope</th>
+          <th>Description</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let incident of incidents">
+          <td>
+            <strong>{{ incident.incidentTypeCode || 'N/A' }}</strong
+            ><br />
+            <small>{{ incident.incidentTypeName || 'N/A' }}</small>
+          </td>
+          <td>
+            <span class="badge" [ngClass]="getSeverityClass(incident.severity)">
+              {{ incident.severity || 'N/A' }}
+            </span>
+          </td>
+          <td>{{ formatDate(incident.date) }}</td>
+          <td>{{ formatTime(incident.startTime) }}</td>
+          <td>{{ incident.endTime ? formatTime(incident.endTime) : 'Ongoing' }}</td>
+          <td>
+            <span class="badge" [ngClass]="getStatusClass(incident.isActive)">
+              {{ getStatusText(incident) }}
+            </span>
+          </td>
+          <td>
+            <span *ngIf="incident.affectsAllVVEs" class="scope-all">All VVEs</span>
+            <span *ngIf="!incident.affectsAllVVEs" class="scope-specific">
+              {{ incident.affectedVVEIds.length }} VVE(s)
+            </span>
+          </td>
+          <td>
+            <span class="description-cell" [title]="incident.description">
+              {{
+                incident.description.length > 50
+                  ? (incident.description | slice : 0 : 50) + '...'
+                  : incident.description
+              }}
+            </span>
+          </td>
+          <td class="actions-cell">
+            <button (click)="openEditModal(incident)" class="btn btn-sm btn-info" title="Edit">
+              <i class="fas fa-edit"></i> Edit
+            </button>
+            <button
+              (click)="openDeleteModal(incident)"
+              class="btn btn-sm btn-danger"
+              title="Delete"
+            >
+              <i class="fas fa-trash"></i> Delete
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div *ngIf="incidents.length === 0" class="no-results">
+      <i class="fas fa-inbox"></i>
+      <p>No incidents found for the selected filters</p>
+    </div>
+  </div>
+</div>
+
+<!-- Create Modal -->
+<div *ngIf="showCreateModal" class="modal-overlay" (click)="closeCreateModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Record New Incident</h3>
+      <button (click)="closeCreateModal()" class="btn-close">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div *ngIf="error" class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle"></i> {{ error }}
+      </div>
+
+      <form>
+        <div class="form-group">
+          <label>Incident Type <span class="required">*</span></label>
+          <select
+            [(ngModel)]="formData.incidentTypeId"
+            name="incidentTypeId"
+            class="form-control"
+            required
+          >
+            <option value="">Select incident type...</option>
+            <option *ngFor="let type of incidentTypes" [value]="type.id">
+              {{ type.code }} - {{ type.name }} ({{ type.severity }})
+            </option>
+          </select>
+        </div>
+
+        <div *ngIf="getSelectedIncidentType()" class="info-box">
+          <strong>Severity:</strong>
+          <span [ngClass]="getSeverityClass(getSelectedIncidentType()!.severity)">
+            {{ getSelectedIncidentType()!.severity }}
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label>Start Time <span class="required">*</span></label>
+          <input
+            type="datetime-local"
+            [(ngModel)]="formData.startTime"
+            name="startTime"
+            class="form-control"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label>End Time</label>
+          <input
+            type="datetime-local"
+            [(ngModel)]="formData.endTime"
+            name="endTime"
+            class="form-control"
+          />
+          <small class="form-text">Leave empty if incident is ongoing</small>
+        </div>
+
+        <div class="form-group">
+          <label>Description <span class="required">*</span></label>
+          <textarea
+            [(ngModel)]="formData.description"
+            name="description"
+            class="form-control"
+            rows="4"
+            required
+            placeholder="Describe the incident..."
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="formData.affectsAllVVEs" name="affectsAllVVEs" />
+            Affects all today's VVEs
+          </label>
+        </div>
+
+        <div *ngIf="!formData.affectsAllVVEs" class="form-group">
+          <label>Affected VVE IDs</label>
+          <textarea
+            [(ngModel)]="affectedVVEInput"
+            name="affectedVVEIds"
+            class="form-control"
+            rows="2"
+            placeholder="Enter VVE IDs separated by commas&#10;Example: 123e4567-e89b-12d3-a456-426614174000, 234e5678-e89b-12d3-a456-426614174001"
+          ></textarea>
+          <small class="form-text">Comma-separated GUIDs</small>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button (click)="closeCreateModal()" class="btn btn-secondary" [disabled]="loading">
+        Cancel
+      </button>
+      <button
+        (click)="createIncident()"
+        class="btn btn-primary"
+        [disabled]="loading || !formData.incidentTypeId || !formData.description"
+      >
+        <i *ngIf="loading" class="fas fa-spinner fa-spin"></i>
+        {{ loading ? 'Creating...' : 'Create Incident' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div *ngIf="showEditModal" class="modal-overlay" (click)="closeEditModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Edit Incident</h3>
+      <button (click)="closeEditModal()" class="btn-close">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div *ngIf="error" class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle"></i> {{ error }}
+      </div>
+
+      <div *ngIf="selectedIncident" class="info-box">
+        <strong>Type:</strong> {{ selectedIncident.incidentTypeCode }} -
+        {{ selectedIncident.incidentTypeName }}<br />
+        <strong>Severity:</strong>
+        <span class="badge" [ngClass]="getSeverityClass(selectedIncident.severity)">
+          {{ selectedIncident.severity }} </span
+        ><br />
+        <strong>Date:</strong> {{ formatDate(selectedIncident.date) }}
+      </div>
+
+      <form>
+        <div class="form-group">
+          <label>Start Time <span class="required">*</span></label>
+          <input
+            type="time"
+            [(ngModel)]="editFormData.startTime"
+            name="startTime"
+            class="form-control"
+            required
+          />
+          <small class="form-text">Time on {{ formatDate(selectedIncident?.date || '') }}</small>
+        </div>
+
+        <div class="form-group">
+          <label>End Time</label>
+          <input
+            type="time"
+            [(ngModel)]="editFormData.endTime"
+            name="endTime"
+            class="form-control"
+          />
+          <small class="form-text">Leave empty if incident is ongoing</small>
+        </div>
+
+        <div class="form-group">
+          <label>Description <span class="required">*</span></label>
+          <textarea
+            [(ngModel)]="editFormData.description"
+            name="description"
+            class="form-control"
+            rows="4"
+            required
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Scope</label>
+          <div class="info-box">
+            <i class="fas fa-info-circle"></i>
+            <span *ngIf="editFormData.affectsAllVVEs">
+              <strong>All VVEs</strong> - This incident affects all vessel visits for the day
+            </span>
+            <span *ngIf="!editFormData.affectsAllVVEs">
+              <strong>{{ editFormData.affectedVVEIds?.length || 0 }} VVE(s)</strong> - Specific
+              vessel visits
+            </span>
+          </div>
+          <small class="form-text">Scope cannot be changed after creation</small>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button (click)="closeEditModal()" class="btn btn-secondary" [disabled]="loading">
+        Cancel
+      </button>
+      <button (click)="updateIncident()" class="btn btn-primary" [disabled]="loading">
+        <i *ngIf="loading" class="fas fa-spinner fa-spin"></i>
+        {{ loading ? 'Updating...' : 'Update Incident' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div *ngIf="showDeleteModal" class="modal-overlay" (click)="closeDeleteModal()">
+  <div class="modal-content small" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Confirm Delete</h3>
+      <button (click)="closeDeleteModal()" class="btn-close">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div *ngIf="error" class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle"></i> {{ error }}
+      </div>
+
+      <p *ngIf="selectedIncident">Are you sure you want to delete this incident?</p>
+      <div *ngIf="selectedIncident" class="info-box">
+        <strong>Type:</strong> {{ selectedIncident.incidentTypeName }}<br />
+        <strong>Date:</strong> {{ selectedIncident.date }}<br />
+        <strong>Description:</strong> {{ selectedIncident.description }}
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button (click)="closeDeleteModal()" class="btn btn-secondary" [disabled]="loading">
+        Cancel
+      </button>
+      <button (click)="deleteIncident()" class="btn btn-danger" [disabled]="loading">
+        <i *ngIf="loading" class="fas fa-spinner fa-spin"></i>
+        {{ loading ? 'Deleting...' : 'Delete' }}
+      </button>
+    </div>
+  </div>
+</div>

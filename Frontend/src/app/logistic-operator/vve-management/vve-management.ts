@@ -1,13 +1,15 @@
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import {
   OemService,
   VesselVisitExecution,
   PrepareTodaysVVEsResponse,
 } from '../../services/oem.service';
 import { VesselService } from '../../services/vessel.service';
+import { IncidentsService, CreateIncidentDto } from '../../services/incidents.service';
+import { IncidentTypesService, IncidentType } from '../../services/incident-types.service';
 
 @Component({
   selector: 'app-vve-management',
@@ -42,16 +44,36 @@ export class VveManagementComponent implements OnInit {
   docks: any[] = [];
   availableStatuses: string[] = [];
 
+  // For incident recording
+  showRecordIncidentModal: boolean = false;
+  incidentSelectionMode: boolean = false;
+  selectedVveIds: string[] = [];
+  incidentTypes: IncidentType[] = [];
+  todaysIncidents: any[] = []; // Store today's incidents
+  incidentErrorMessage: string = '';
+  incidentForm: CreateIncidentDto = {
+    incidentTypeId: '',
+    startTime: '',
+    endTime: null,
+    description: '',
+    affectsAllVVEs: false,
+    affectedVVEIds: [],
+  };
+
   constructor(
     private oemService: OemService,
     private vesselService: VesselService,
-    private cdr: ChangeDetectorRef
+    private incidentsService: IncidentsService,
+    private incidentTypesService: IncidentTypesService,
+    private cdr: ChangeDetectorRef,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
     this.today = new Date().toISOString().split('T')[0];
     // Load all data sequentially to ensure proper enrichment
     this.loadAllData();
+    this.loadTodaysIncidents();
   }
 
   loadAllData(): void {
@@ -478,5 +500,212 @@ export class VveManagementComponent implements OnInit {
     const planned = new Date(vve.plannedDepartureTime).getTime();
     const actual = new Date(vve.actualDepartureTime).getTime();
     return actual > planned;
+  }
+
+  // Incident Recording Methods
+  startIncidentSelection(): void {
+    this.incidentSelectionMode = true;
+    this.selectedVveIds = [];
+    this.cdr.markForCheck();
+  }
+
+  cancelIncidentSelection(): void {
+    this.incidentSelectionMode = false;
+    this.selectedVveIds = [];
+    this.cdr.markForCheck();
+  }
+
+  toggleVveSelection(vveId: string): void {
+    // Find the VVE to check its status
+    const vve = this.vves.find((v) => v.id === vveId);
+    if (!vve || vve.status === 'Completed') {
+      // Don't allow selection of completed VVEs
+      return;
+    }
+
+    const index = this.selectedVveIds.indexOf(vveId);
+    if (index > -1) {
+      this.selectedVveIds.splice(index, 1);
+    } else {
+      this.selectedVveIds.push(vveId);
+    }
+    this.cdr.markForCheck();
+  }
+
+  isVveSelected(vveId: string): boolean {
+    return this.selectedVveIds.includes(vveId);
+  }
+
+  canSelectVve(vve: VesselVisitExecution): boolean {
+    return vve.status !== 'Completed';
+  }
+
+  selectAllVVEs(): void {
+    // Only select VVEs that are not completed
+    this.selectedVveIds = this.vves
+      .filter((vve) => vve.status !== 'Completed')
+      .map((vve) => vve.id);
+    this.cdr.markForCheck();
+  }
+
+  deselectAllVVEs(): void {
+    this.selectedVveIds = [];
+    this.cdr.markForCheck();
+  }
+
+  getSelectedVves(): VesselVisitExecution[] {
+    return this.vves.filter((vve) => this.selectedVveIds.includes(vve.id));
+  }
+
+  proceedToIncidentForm(): void {
+    if (this.selectedVveIds.length === 0) return;
+
+    // Exit selection mode
+    this.incidentSelectionMode = false;
+    this.loading = true;
+
+    // Load incident types first, then show modal
+    this.incidentTypesService.getAllIncidentTypes(false).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.incidentTypes = response.data;
+
+          // Initialize form with current time and selected VVEs
+          const now = new Date();
+          const timeStr = now.toTimeString().slice(0, 5); // HH:MM format
+
+          this.incidentForm = {
+            incidentTypeId: '',
+            startTime: timeStr,
+            endTime: null,
+            description: '',
+            affectsAllVVEs: false,
+            affectedVVEIds: [...this.selectedVveIds],
+          };
+
+          // Show modal only after types are loaded
+          this.showRecordIncidentModal = true;
+          this.incidentErrorMessage = '';
+          this.loading = false;
+          this.cdr.markForCheck();
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load incident types:', err);
+        this.errorMessage = 'Failed to load incident types';
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  closeRecordIncidentModal(): void {
+    this.showRecordIncidentModal = false;
+    this.selectedVveIds = [];
+    this.incidentErrorMessage = '';
+    this.incidentForm = {
+      incidentTypeId: '',
+      startTime: '',
+      endTime: null,
+      description: '',
+      affectsAllVVEs: false,
+      affectedVVEIds: [],
+    };
+    this.cdr.markForCheck();
+  }
+
+  submitIncident(): void {
+    if (this.selectedVveIds.length === 0) return;
+
+    this.loading = true;
+    this.incidentErrorMessage = '';
+
+    // Prepare the incident data - convert times to datetime
+    const today = new Date().toISOString().split('T')[0];
+    const incidentData: CreateIncidentDto = {
+      ...this.incidentForm,
+      startTime: `${today}T${this.incidentForm.startTime}:00`,
+      endTime: this.incidentForm.endTime ? `${today}T${this.incidentForm.endTime}:00` : null,
+      affectedVVEIds: this.incidentForm.affectedVVEIds,
+    };
+
+    this.incidentsService.createIncident(incidentData).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.successMessage = 'Incident recorded successfully!';
+          this.closeRecordIncidentModal();
+          // Reload incidents to update the counts
+          this.loadTodaysIncidents();
+          setTimeout(() => {
+            this.successMessage = '';
+            this.cdr.markForCheck();
+          }, 3000);
+        } else {
+          this.incidentErrorMessage = response.error || 'Failed to record incident';
+        }
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.incidentErrorMessage = err.error?.error || 'Failed to record incident';
+        this.loading = false;
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  getSelectedIncidentType(): IncidentType | undefined {
+    return this.incidentTypes.find((type) => type.id === this.incidentForm.incidentTypeId);
+  }
+
+  getSeverityBadgeClass(severity: string): string {
+    const classes: { [key: string]: string } = {
+      Minor: 'badge-success',
+      Major: 'badge-warning',
+      Critical: 'badge-danger',
+    };
+    return classes[severity] || 'badge-secondary';
+  }
+
+  // Load today's incidents
+  loadTodaysIncidents(): void {
+    const filters = {
+      date: this.today,
+    };
+
+    this.incidentsService.getAllIncidents(filters).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.todaysIncidents = response.data;
+          this.cdr.markForCheck();
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load incidents:', err);
+      },
+    });
+  }
+
+  // Get incident count for a specific VVE
+  getVveIncidentCount(vveId: string): number {
+    return this.todaysIncidents.filter(
+      (incident) => incident.affectsAllVVEs || incident.affectedVVEIds.includes(vveId)
+    ).length;
+  }
+
+  // Get incidents affecting a specific VVE (sorted by start time, earliest first)
+  getVveIncidents(vveId: string): any[] {
+    return this.todaysIncidents
+      .filter((incident) => incident.affectsAllVVEs || incident.affectedVVEIds.includes(vveId))
+      .sort((a, b) => {
+        const timeA = new Date(a.startTime).getTime();
+        const timeB = new Date(b.startTime).getTime();
+        return timeA - timeB;
+      });
+  }
+
+  // Navigate to incidents management page
+  navigateToIncidents(): void {
+    this.router.navigate(['/logistic-operator/incidents']);
   }
 }

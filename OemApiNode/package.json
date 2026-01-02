@@ -28,6 +28,7 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
     "tedious": "^16.6.1",
+    "tedious-connection-pool": "^1.0.5",
     "uuid": "^9.0.1",
     "winston": "^3.11.0"
   },

@@ -49,10 +49,16 @@ namespace Infrastructure
                 .HasColumnName("IsHazardous")
                 .IsRequired();
             
+            // Configure RejectionReason as an owned entity
+            // Mark the Value as required with empty string default to avoid EF warning
+            // about optional dependents in table sharing
             builder.OwnsOne(vvn => vvn.RejectionReason, rr =>
             {
-                rr.Property(r => r.Value).HasColumnName("RejectionReason").IsRequired(false);
-            }).Navigation(vvn => vvn.RejectionReason).IsRequired(false);
+                rr.Property(r => r.Value)
+                    .HasColumnName("RejectionReason")
+                    .HasDefaultValue("")
+                    .IsRequired();
+            });
 
             // Map TempAssignedDockId as nullable Guid
             builder.Property(vvn => vvn.TempAssignedDockId)

@@ -32,6 +32,7 @@ import { LogisticOperatorDashboard } from './logistic-operator/logistic-operator
 import { DailySchedule } from './logistic-operator/daily-schedule/daily-schedule';
 import { OperationPlansListComponent } from './logistic-operator/operation-plans-list/operation-plans-list';
 import { VveManagementComponent } from './logistic-operator/vve-management/vve-management';
+import { IncidentTypesComponent } from './port-authority/incident-types/incident-types.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -74,6 +75,7 @@ export const routes: Routes = [
           { path: 'create-storage-area', component: CreateStorageAreaComponent },
           { path: 'edit-storage-area/:id', component: EditStorageAreaComponent },
           { path: 'vvn-pending', component: VvnPendingComponent },
+          { path: 'incident-types', component: IncidentTypesComponent },
           // Add more port authority child routes here
         ],
       },

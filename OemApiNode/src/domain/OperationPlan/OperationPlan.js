@@ -9,7 +9,7 @@ class OperationPlan {
   constructor({
     id = null,
     planDate,
-    status = "Pending",
+    status = "NotStarted",
     isFeasible = true,
     warnings = [],
     assignments = [],
@@ -61,11 +61,11 @@ class OperationPlan {
 
   /**
    * Validate and normalize status
-   * Valid states: Pending, InProgress, Completed, Cancelled
+   * Valid states: NotStarted, InProgress, Finished
    */
   validateStatus(status) {
-    const validStatuses = ["Pending", "InProgress", "Completed", "Cancelled"];
-    const normalizedStatus = status || "Pending";
+    const validStatuses = ["NotStarted", "InProgress", "Finished"];
+    const normalizedStatus = status || "NotStarted";
 
     if (!validStatuses.includes(normalizedStatus)) {
       throw new Error(
@@ -213,6 +213,39 @@ class OperationPlan {
   }
 
   /**
+   * Calculate status based on VVE statuses
+   * NotStarted - if no VVE has started
+   * InProgress - if at least 1 VVE has started (InProgress, Delayed, or Completed)
+   * Finished - if all VVEs are Completed
+   */
+  static calculateStatusFromVVEs(vves) {
+    if (!vves || vves.length === 0) {
+      return "NotStarted";
+    }
+
+    const startedStatuses = ["InProgress", "Delayed", "Completed"];
+    const startedCount = vves.filter((vve) =>
+      startedStatuses.includes(vve.status)
+    ).length;
+    const completedCount = vves.filter(
+      (vve) => vve.status === "Completed"
+    ).length;
+
+    // All VVEs completed
+    if (completedCount === vves.length) {
+      return "Finished";
+    }
+
+    // At least one VVE started
+    if (startedCount > 0) {
+      return "InProgress";
+    }
+
+    // No VVEs started yet
+    return "NotStarted";
+  }
+
+  /**
    * Convert to database format
    */
   toDatabase() {
@@ -254,7 +287,8 @@ class OperationPlan {
     return new OperationPlan({
       id: row.Id,
       planDate: row.PlanDate,
-      status: row.Status || "Pending",
+      status:
+        row.Status === "Pending" ? "NotStarted" : row.Status || "NotStarted",
       isFeasible: row.IsFeasible,
       warnings: JSON.parse(row.Warnings || "[]"),
       assignments: assignments,

@@ -5,7 +5,7 @@
 class UpsertOperationPlanDto {
   constructor({
     planDate,
-    status = "Pending",
+    status = "NotStarted",
     isFeasible = true,
     warnings = [],
     assignments = [],

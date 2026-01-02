@@ -46,6 +46,9 @@
         <a routerLink="/port-authority/storage-areas" routerLinkActive="active">Storage Areas</a>
       </li>
       <li *ngIf="userRole === 'PortAuthorityOfficer'">
+        <a routerLink="/port-authority/incident-types" routerLinkActive="active">Incident Types</a>
+      </li>
+      <li *ngIf="userRole === 'PortAuthorityOfficer'">
         <a routerLink="/port-authority/vvn-pending" routerLinkActive="active">Pending VVNs</a>
       </li>
 

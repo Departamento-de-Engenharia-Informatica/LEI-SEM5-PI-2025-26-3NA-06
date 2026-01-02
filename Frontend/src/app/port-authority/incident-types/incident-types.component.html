@@ -1,0 +1,441 @@
+<div class="incident-types-container">
+  <div class="header-section">
+    <h2>Incident Types Catalog</h2>
+    <button (click)="openCreateModal()" class="btn btn-primary">
+      <i class="fas fa-plus"></i> Create Incident Type
+    </button>
+  </div>
+
+  <!-- Success/Error Messages -->
+  <div *ngIf="successMessage" class="alert alert-success">
+    <i class="fas fa-check-circle"></i> {{ successMessage }}
+    <button (click)="clearMessages()" class="btn-close-alert">&times;</button>
+  </div>
+
+  <div
+    *ngIf="error && !showCreateModal && !showEditModal && !showDeleteModal"
+    class="alert alert-danger"
+  >
+    <i class="fas fa-exclamation-triangle"></i> {{ error }}
+    <button (click)="clearMessages()" class="btn-close-alert">&times;</button>
+  </div>
+
+  <!-- View Mode Toggle -->
+  <div class="view-toggle">
+    <button
+      (click)="switchViewMode('hierarchy')"
+      [class.active]="viewMode === 'hierarchy'"
+      class="btn btn-toggle"
+    >
+      <i class="fas fa-sitemap"></i> Hierarchy View
+    </button>
+    <button
+      (click)="switchViewMode('list')"
+      [class.active]="viewMode === 'list'"
+      class="btn btn-toggle"
+    >
+      <i class="fas fa-list"></i> List View
+    </button>
+    <button
+      (click)="switchViewMode('inactive')"
+      [class.active]="viewMode === 'inactive'"
+      class="btn btn-toggle"
+    >
+      <i class="fas fa-archive"></i> Inactive Types
+    </button>
+  </div>
+
+  <!-- Filters (List View) -->
+  <div *ngIf="viewMode === 'list'" class="filters-section">
+    <div class="filter-group">
+      <label>Search:</label>
+      <input
+        type="text"
+        [(ngModel)]="searchText"
+        placeholder="Search by code, name, or description..."
+        class="form-control"
+      />
+    </div>
+    <div class="filter-group">
+      <label>Severity:</label>
+      <select [(ngModel)]="filterSeverity" class="form-control">
+        <option value="">All</option>
+        <option value="Minor">Minor</option>
+        <option value="Major">Major</option>
+        <option value="Critical">Critical</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading && !showCreateModal && !showEditModal" class="loading-spinner">
+    <i class="fas fa-spinner fa-spin"></i> Loading...
+  </div>
+
+  <!-- List View -->
+  <div *ngIf="!loading && viewMode === 'list'" class="list-view">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Severity</th>
+            <th>Parent</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let type of getFilteredTypes()">
+            <td>
+              <strong>{{ type.code }}</strong>
+            </td>
+            <td>{{ type.name }}</td>
+            <td>{{ type.description || '-' }}</td>
+            <td>
+              <span [ngClass]="getSeverityBadgeClass(type.severity)">
+                {{ type.severity }}
+              </span>
+            </td>
+            <td>{{ type.parentName || '-' }}</td>
+            <td class="actions-cell">
+              <button (click)="openEditModal(type)" class="btn btn-sm btn-info" title="Edit">
+                <i class="fas fa-edit"></i> Edit
+              </button>
+              <button (click)="openDeleteModal(type)" class="btn btn-sm btn-danger" title="Delete">
+                <i class="fas fa-trash"></i> Delete
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div *ngIf="getFilteredTypes().length === 0" class="no-results">
+        <i class="fas fa-inbox"></i>
+        <p>No incident types found</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hierarchy View -->
+  <div *ngIf="!loading && viewMode === 'hierarchy'" class="hierarchy-view">
+    <div *ngIf="hierarchyData.length === 0" class="no-results">
+      <i class="fas fa-inbox"></i>
+      <p>No incident types found</p>
+    </div>
+
+    <div *ngFor="let rootType of hierarchyData" class="hierarchy-node level-0">
+      <div class="type-card">
+        <div class="type-header">
+          <div class="type-info">
+            <span class="type-code">{{ rootType.code }}</span>
+            <span class="type-name">{{ rootType.name }}</span>
+            <span [ngClass]="getSeverityBadgeClass(rootType.severity)">
+              {{ rootType.severity }}
+            </span>
+          </div>
+          <div class="type-actions">
+            <button (click)="openEditModal(rootType)" class="btn btn-sm btn-info" title="Edit">
+              <i class="fas fa-edit"></i> Edit
+            </button>
+            <button
+              (click)="openDeleteModal(rootType)"
+              class="btn btn-sm btn-danger"
+              title="Delete"
+            >
+              <i class="fas fa-trash"></i> Delete
+            </button>
+          </div>
+        </div>
+        <div *ngIf="rootType.description" class="type-description">
+          {{ rootType.description }}
+        </div>
+      </div>
+
+      <!-- Children (Recursive) -->
+      <div *ngIf="rootType.children && rootType.children.length > 0" class="children-container">
+        <ng-container *ngFor="let child of rootType.children">
+          <ng-container
+            *ngTemplateOutlet="hierarchyNode; context: { type: child, level: 1 }"
+          ></ng-container>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- Recursive Template for Children -->
+    <ng-template #hierarchyNode let-type="type" let-level="level">
+      <div class="hierarchy-node" [class]="'level-' + level">
+        <div class="type-card">
+          <div class="type-header">
+            <div class="type-info">
+              <span class="type-code">{{ type.code }}</span>
+              <span class="type-name">{{ type.name }}</span>
+              <span [ngClass]="getSeverityBadgeClass(type.severity)">
+                {{ type.severity }}
+              </span>
+            </div>
+            <div class="type-actions">
+              <button (click)="openEditModal(type)" class="btn btn-sm btn-info" title="Edit">
+                <i class="fas fa-edit"></i> Edit
+              </button>
+              <button (click)="openDeleteModal(type)" class="btn btn-sm btn-danger" title="Delete">
+                <i class="fas fa-trash"></i> Delete
+              </button>
+            </div>
+          </div>
+          <div *ngIf="type.description" class="type-description">
+            {{ type.description }}
+          </div>
+        </div>
+
+        <!-- Recursive Children -->
+        <div *ngIf="type.children && type.children.length > 0" class="children-container">
+          <ng-container *ngFor="let child of type.children">
+            <ng-container
+              *ngTemplateOutlet="hierarchyNode; context: { type: child, level: level + 1 }"
+            ></ng-container>
+          </ng-container>
+        </div>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Inactive Types View -->
+  <div *ngIf="!loading && viewMode === 'inactive'" class="list-view">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Severity</th>
+            <th>Parent</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let type of inactiveTypes">
+            <td>
+              <strong>{{ type.code }}</strong>
+            </td>
+            <td>{{ type.name }}</td>
+            <td>{{ type.description || '-' }}</td>
+            <td>
+              <span [ngClass]="getSeverityBadgeClass(type.severity)">
+                {{ type.severity }}
+              </span>
+            </td>
+            <td>{{ type.parentName || '-' }}</td>
+            <td class="actions-cell">
+              <button
+                (click)="activateIncidentType(type)"
+                class="btn btn-sm btn-success"
+                title="Activate"
+              >
+                <i class="fas fa-check-circle"></i> Activate
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div *ngIf="inactiveTypes.length === 0" class="no-results">
+        <i class="fas fa-inbox"></i>
+        <p>No inactive incident types</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Modal -->
+  <div *ngIf="showCreateModal" class="modal-overlay" (click)="closeCreateModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Create Incident Type</h3>
+        <button (click)="closeCreateModal()" class="btn-close">&times;</button>
+      </div>
+
+      <div *ngIf="error" class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle"></i> {{ error }}
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Code <span class="required">*</span></label>
+          <input
+            type="text"
+            [(ngModel)]="formData.code"
+            placeholder="e.g., T-INC001"
+            maxlength="10"
+            class="form-control"
+          />
+          <small>Max 10 characters, alphanumeric with hyphens</small>
+        </div>
+
+        <div class="form-group">
+          <label>Name <span class="required">*</span></label>
+          <input
+            type="text"
+            [(ngModel)]="formData.name"
+            placeholder="e.g., Equipment Failure"
+            maxlength="255"
+            class="form-control"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea
+            [(ngModel)]="formData.description"
+            placeholder="Optional description..."
+            rows="3"
+            class="form-control"
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Severity <span class="required">*</span></label>
+          <select [(ngModel)]="formData.severity" class="form-control">
+            <option value="Minor">Minor</option>
+            <option value="Major">Major</option>
+            <option value="Critical">Critical</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Parent Type (Optional)</label>
+          <select [(ngModel)]="formData.parentId" class="form-control">
+            <option [ngValue]="null">None (Root Level)</option>
+            <option *ngFor="let type of getAllTypesFlat()" [ngValue]="type.id">
+              {{ type.code }} - {{ type.name }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button (click)="closeCreateModal()" class="btn btn-secondary">Cancel</button>
+        <button (click)="createIncidentType()" class="btn btn-primary" [disabled]="loading">
+          <i *ngIf="loading" class="fas fa-spinner fa-spin"></i>
+          {{ loading ? 'Creating...' : 'Create' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div *ngIf="showEditModal && selectedType" class="modal-overlay" (click)="closeEditModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Edit Incident Type</h3>
+        <button (click)="closeEditModal()" class="btn-close">&times;</button>
+      </div>
+
+      <div *ngIf="error" class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle"></i> {{ error }}
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Code</label>
+          <input type="text" [value]="selectedType.code" class="form-control" readonly disabled />
+          <small>Code cannot be modified</small>
+        </div>
+
+        <div class="form-group">
+          <label>Name</label>
+          <input
+            type="text"
+            [(ngModel)]="editFormData.name"
+            placeholder="Name"
+            maxlength="255"
+            class="form-control"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea
+            [(ngModel)]="editFormData.description"
+            placeholder="Description..."
+            rows="3"
+            class="form-control"
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Severity</label>
+          <select [(ngModel)]="editFormData.severity" class="form-control">
+            <option value="Minor">Minor</option>
+            <option value="Major">Major</option>
+            <option value="Critical">Critical</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Parent Type</label>
+          <select [(ngModel)]="editFormData.parentId" class="form-control">
+            <option [ngValue]="null">None (Root Level)</option>
+            <option
+              *ngFor="let type of getAllTypesFlat()"
+              [ngValue]="type.id"
+              [disabled]="type.id === selectedType.id"
+            >
+              {{ type.code }} - {{ type.name }}
+              {{ type.id === selectedType.id ? '(current)' : '' }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="editFormData.isActive" />
+            Active
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button (click)="closeEditModal()" class="btn btn-secondary">Cancel</button>
+        <button (click)="updateIncidentType()" class="btn btn-primary" [disabled]="loading">
+          <i *ngIf="loading" class="fas fa-spinner fa-spin"></i>
+          {{ loading ? 'Updating...' : 'Update' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div *ngIf="showDeleteModal && selectedType" class="modal-overlay" (click)="closeDeleteModal()">
+    <div class="modal-content modal-small" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Delete Incident Type</h3>
+        <button (click)="closeDeleteModal()" class="btn-close">&times;</button>
+      </div>
+
+      <div *ngIf="error" class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle"></i> {{ error }}
+      </div>
+
+      <div class="modal-body">
+        <p>
+          Are you sure you want to delete incident type
+          <strong>{{ selectedType.code }}</strong> ({{ selectedType.name }})?
+        </p>
+        <p class="warning-text">
+          <i class="fas fa-exclamation-triangle"></i>
+          The incident type will be deactivated.
+        </p>
+      </div>
+
+      <div class="modal-footer">
+        <button (click)="closeDeleteModal()" class="btn btn-secondary">Cancel</button>
+        <button (click)="deleteIncidentType()" class="btn btn-danger" [disabled]="loading">
+          <i *ngIf="loading" class="fas fa-spinner fa-spin"></i>
+          {{ loading ? 'Deleting...' : 'Delete' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

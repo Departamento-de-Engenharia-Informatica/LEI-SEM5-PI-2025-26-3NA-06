@@ -9,7 +9,7 @@
     -value: string
   }
   
-  class Length <<value object>> {
+  class DockLength <<value object>> {
     -value: double
   }
   
@@ -111,7 +111,7 @@ package "Vessel Aggregate" {
     -number: string
   }
   
-  class Length <<value object>> {
+  class VesselLength <<value object>> {
     -value: double
   }
   
@@ -159,33 +159,11 @@ package "VesselVisitNotification Aggregate" {
     -reason: string
   }
   
-  class CrewMemberName <<value object>> {
-    -value: string
-  }
-  
-  class CitizenId <<value object>> {
-    -value: string
-  }
-  
-  class Nationality <<value object>> {
-    -value: string
-  }
-  
-  class CrewRole <<enumeration>> {
-    CAPTAIN
-    SAFETY_OFFICER
-    CREWMATE
-  }
-  
   ' Entities
   class VesselVisitNotification <<aggregate root>> {
     -visitId: Guid
     -assignedVesselImo: string
     -assignedDockId: Guid
-  }
-
-  class CrewMember <<entity>> {
-    -crewMemberId: Guid
   }
 }
 
@@ -250,7 +228,7 @@ package "Container Aggregate" {
 '=======================
 
 Dock "1" *-- "1" DockName
-Dock "1" *-- "1" Length
+Dock "1" *-- "1" DockLength
 Dock "1" *-- "1" Depth
 Dock "1" *-- "1" Draft
 Dock "1" *-- "1" Location
@@ -276,12 +254,11 @@ VesselType "1" *-- "1" MaxTiers
 Vessel "1" *-- "1" IMO
 Vessel "1" *-- "1" VesselName
 Vessel "1" *-- "1" Teu
-Vessel "1" *-- "1" Length
+Vessel "1" *-- "1" VesselLength
 Vessel "1" *-- "1" Capacity
 Vessel "1" --> "1" VesselType : classified by (by ID) >
 
 ' VESSEL VISIT NOTIFICATION AGGREGATE
-VesselVisitNotification "1" *-- "0..*" CrewMember : includes >
 VesselVisitNotification "1" --> "1" Vessel : refers to (by ID) >
 VesselVisitNotification "1" --> "0..2" CargoManifest : references (by ID) >
 VesselVisitNotification "1" --> "0..1" Dock : assigned to (by ID) >
@@ -308,9 +285,200 @@ VesselVisitNotification "1" *-- "1" ExpectedTimeOfDeparture
 VesselVisitNotification "1" *-- "1" isHazardousFlag
 VesselVisitNotification "1" *-- "1" visitStatus
 VesselVisitNotification "1" *-- "0..1" RejectionReason
-CrewMember "1" *-- "1" CrewMemberName
-CrewMember "1" *-- "1" CitizenId
-CrewMember "1" *-- "1" Nationality
-CrewMember "1" *-- "1" CrewRole
 
+' --- USER AGGREGATE ---
+package "User Aggregate" {
+  ' Value Objects
+  class Username <<value object>> {
+    -value: string
+  }
+  
+  class Email <<value object>> {
+    -value: string
+  }
+  
+  class UserRole <<enumeration>> {
+    LOGISTICS_OPERATOR
+    PORT_OPERATOR
+    SHIP_AGENT
+    CUSTOMS_OFFICER
+    ADMIN
+  }
+  
+  ' Entities
+  class User <<aggregate root>> {
+    -userId: Guid
+    -roles: List<UserRole>
+    -isActive: bool
+  }
+}
+
+' --- OPERATION PLAN AGGREGATE ---
+package "OperationPlan Aggregate" {
+  ' Value Objects
+  class PlanDate <<value object>> {
+    -date: Date
+  }
+  
+  class AlgorithmUsed <<value object>> {
+    -name: string
+  }
+  
+  class PlanStatus <<enumeration>> {
+    DRAFT
+    ACTIVE
+    COMPLETED
+  }
+  
+  class IsFeasible <<value object>> {
+    -value: bool
+  }
+  
+  ' Entities
+  class OperationPlan <<aggregate root>> {
+    -planId: Guid
+    -createdBy: Guid
+  }
+  
+  class VesselAssignment <<entity>> {
+    -assignmentId: Guid
+    -vvnId: Guid
+    -dockId: Guid
+    -eta: DateTime
+    -etd: DateTime
+  }
+}
+
+' --- VESSEL VISIT EXECUTION AGGREGATE ---
+package "VesselVisitExecution Aggregate" {
+  ' Value Objects
+  class PlannedArrivalTime <<value object>> {
+    -dateTime: DateTime
+  }
+  
+  class PlannedDepartureTime <<value object>> {
+    -dateTime: DateTime
+  }
+  
+  class ActualArrivalTime <<value object>> {
+    -dateTime: DateTime
+  }
+  
+  class ActualDepartureTime <<value object>> {
+    -dateTime: DateTime
+  }
+  
+  class ExecutionStatus <<enumeration>> {
+    NOT_STARTED
+    IN_PROGRESS
+    DELAYED
+    COMPLETED
+  }
+  
+  ' Entities
+  class VesselVisitExecution <<aggregate root>> {
+    -vveId: Guid
+    -vvnId: Guid
+    -operationPlanId: Guid
+    -plannedDockId: Guid
+    -actualDockId: Guid
+    -vveDate: Date
+  }
+}
+
+' --- INCIDENT TYPE AGGREGATE ---
+package "IncidentType Aggregate" {
+  ' Value Objects
+  class IncidentCode <<value object>> {
+    -value: string
+  }
+  
+  class IncidentTypeName <<value object>> {
+    -value: string
+  }
+  
+  class Severity <<enumeration>> {
+    MINOR
+    MAJOR
+    CRITICAL
+  }
+  
+  ' Entities
+  class IncidentType <<aggregate root>> {
+    -incidentTypeId: Guid
+  }
+}
+
+' --- INCIDENT AGGREGATE ---
+package "Incident Aggregate" {
+  ' Value Objects
+  class IncidentDate <<value object>> {
+    -date: Date
+  }
+  
+  class StartTime <<value object>> {
+    -dateTime: DateTime
+  }
+  
+  class EndTime <<value object>> {
+    -dateTime: DateTime
+  }
+  
+  class IncidentDescription <<value object>> {
+    -text: string
+  }
+  
+  class AffectsAllVVEs <<value object>> {
+    -value: bool
+  }
+  
+  ' Entities
+  class Incident <<aggregate root>> {
+    -incidentId: Guid
+    -incidentTypeId: Guid
+    -affectedVVEIds: List<Guid>
+    -isActive: bool
+  }
+}
+
+
+' USER AGGREGATE RELATIONSHIPS
+User "1" *-- "1" Username
+User "1" *-- "1" Email
+User "1" *-- "1..*" UserRole
+
+' OPERATION PLAN AGGREGATE RELATIONSHIPS
+OperationPlan "1" *-- "1" PlanDate
+OperationPlan "1" *-- "1" AlgorithmUsed
+OperationPlan "1" *-- "1" PlanStatus
+OperationPlan "1" *-- "1" IsFeasible
+OperationPlan "1" *-- "0..*" VesselAssignment : contains >
+OperationPlan "1" --> "1" User : created by (by ID) >
+VesselAssignment "1" --> "1" VesselVisitNotification : refers to (by ID) >
+VesselAssignment "1" --> "1" Dock : assigns to (by ID) >
+
+' VESSEL VISIT EXECUTION AGGREGATE RELATIONSHIPS
+VesselVisitExecution "1" *-- "1" PlannedArrivalTime
+VesselVisitExecution "1" *-- "1" PlannedDepartureTime
+VesselVisitExecution "1" *-- "0..1" ActualArrivalTime
+VesselVisitExecution "1" *-- "0..1" ActualDepartureTime
+VesselVisitExecution "1" *-- "1" ExecutionStatus
+VesselVisitExecution "1" --> "1" VesselVisitNotification : executes (by ID) >
+VesselVisitExecution "1" --> "1" OperationPlan : belongs to (by ID) >
+VesselVisitExecution "1" --> "1" Dock : planned at (by ID) >
+VesselVisitExecution "1" --> "0..1" Dock : actual at (by ID) >
+
+' INCIDENT TYPE AGGREGATE RELATIONSHIPS
+IncidentType "1" *-- "1" IncidentCode
+IncidentType "1" *-- "1" IncidentTypeName
+IncidentType "1" *-- "1" Severity
+
+' INCIDENT AGGREGATE RELATIONSHIPS
+Incident "1" *-- "1" IncidentDate
+Incident "1" *-- "1" StartTime
+Incident "1" *-- "0..1" EndTime
+Incident "1" *-- "1" IncidentDescription
+Incident "1" *-- "1" AffectsAllVVEs
+Incident "1" --> "1" IncidentType : classified by (by ID) >
+Incident "1" --> "0..*" VesselVisitExecution : affects (by ID) >
 @enduml

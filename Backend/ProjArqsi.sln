@@ -4,7 +4,7 @@ VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjArqsi", "ProjArqsi.csproj", "{7421A090-7CA2-F178-3811-C7B120BF3256}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjArqsi.Tests", "ProjArqsi.Tests\ProjArqsi.Tests.csproj", "{C1BC1FE9-0043-4B7F-B76B-9D424FCFEC63}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjArqsi.Tests", "..\Backend.Tests\ProjArqsi.Tests.csproj", "{C1BC1FE9-0043-4B7F-B76B-9D424FCFEC63}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjArqsi.SchedulingApi", "..\SchedulingApi\ProjArqsi.SchedulingApi.csproj", "{86AFAC39-BD9D-4142-AA44-F2DCFB298B1B}"
 EndProject

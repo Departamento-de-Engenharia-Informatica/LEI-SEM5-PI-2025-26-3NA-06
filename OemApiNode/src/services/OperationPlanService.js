@@ -1,5 +1,6 @@
 const operationPlanRepository = require("../infrastructure/OperationPlanRepository");
 const vesselVisitExecutionRepository = require("../infrastructure/VesselVisitExecutionRepository");
+const incidentRepository = require("../infrastructure/IncidentRepository");
 const OperationPlanMapper = require("../dtos/OperationPlanMapper");
 const UpsertOperationPlanDto = require("../dtos/UpsertOperationPlanDto");
 const backendApiClient = require("./BackendApiClient");
@@ -203,6 +204,20 @@ class OperationPlanService {
           // Continue with operation plan replacement even if VVE deletion fails
         }
 
+        // Delete all incidents for this date
+        try {
+          await incidentRepository.deleteByDateAsync(dto.planDate);
+          logger.info(
+            `Deleted incidents for date ${dto.planDate} before replacement`
+          );
+        } catch (incidentError) {
+          logger.error(
+            "Error deleting incidents during schedule replacement:",
+            incidentError
+          );
+          // Continue with operation plan replacement even if incident deletion fails
+        }
+
         // Delete existing plan
         await operationPlanRepository.deleteAsync(existingPlan.planDate);
         logger.info(
@@ -330,6 +345,18 @@ class OperationPlanService {
       } catch (vveError) {
         logger.error("Error deleting associated VVEs:", vveError);
         // Continue with operation plan deletion even if VVE deletion fails
+      }
+
+      // Delete all incidents for this date
+      try {
+        await incidentRepository.deleteByDateAsync(planDate);
+        logger.info(`Deleted incidents for date ${planDate}`);
+      } catch (incidentError) {
+        logger.error(
+          "Error deleting incidents during operation plan deletion:",
+          incidentError
+        );
+        // Continue with operation plan deletion even if incident deletion fails
       }
 
       // Delete the operation plan

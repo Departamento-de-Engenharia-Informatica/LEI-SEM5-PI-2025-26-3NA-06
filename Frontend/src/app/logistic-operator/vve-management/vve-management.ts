@@ -181,34 +181,41 @@ export class VveManagementComponent implements OnInit {
         vvnId: vve.vvnId,
         plannedDockId: vve.plannedDockId,
         status: vve.status,
+        hasVesselName: !!vve.vesselName,
+        hasPlannedDockName: !!vve.plannedDockName,
       });
 
-      // Get vessel info from operation plan by matching vvnId (case-insensitive)
-      const assignment = this.operationPlanData.assignments?.find(
-        (a: any) => a.vvnId.toLowerCase() === vve.vvnId.toLowerCase()
-      );
-
-      if (assignment) {
-        vve.vesselName = assignment.vesselName;
-        vve.vesselImo = assignment.vesselImo;
-        // Get dock name from the assignment (it's already enriched by OEM API)
-        vve.plannedDockName = assignment.dockName;
-
-        console.log(`✅ VVE ${vve.id} enriched:`, {
-          vesselName: vve.vesselName,
-          vesselImo: vve.vesselImo,
-          plannedDockName: vve.plannedDockName,
-        });
-        enrichedCount++;
-      } else {
-        console.error(`❌ VVE ${vve.id}: No assignment found for vvnId ${vve.vvnId}`);
-        console.log(
-          'Available assignments:',
-          this.operationPlanData.assignments?.map((a: any) => ({
-            vvnId: a.vvnId,
-            vesselName: a.vesselName,
-          }))
+      // Only enrich if data is not already present (backend now provides enriched data)
+      if (!vve.vesselName || !vve.plannedDockName) {
+        // Get vessel info from operation plan by matching vvnId (case-insensitive)
+        const assignment = this.operationPlanData.assignments?.find(
+          (a: any) => a.vvnId.toLowerCase() === vve.vvnId.toLowerCase()
         );
+
+        if (assignment) {
+          if (!vve.vesselName) vve.vesselName = assignment.vesselName;
+          if (!vve.vesselImo) vve.vesselImo = assignment.vesselImo;
+          if (!vve.plannedDockName) vve.plannedDockName = assignment.dockName;
+
+          console.log(`✅ VVE ${vve.id} enriched from assignment:`, {
+            vesselName: vve.vesselName,
+            vesselImo: vve.vesselImo,
+            plannedDockName: vve.plannedDockName,
+          });
+          enrichedCount++;
+        } else {
+          console.error(`❌ VVE ${vve.id}: No assignment found for vvnId ${vve.vvnId}`);
+          console.log(
+            'Available assignments:',
+            this.operationPlanData.assignments?.map((a: any) => ({
+              vvnId: a.vvnId,
+              vesselName: a.vesselName,
+            }))
+          );
+        }
+      } else {
+        console.log(`✅ VVE ${vve.id} already enriched by backend`);
+        enrichedCount++;
       }
 
       // Get actual dock name if actualDockId is set (only during updates)

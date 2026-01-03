@@ -9,6 +9,8 @@ import {
   IncidentFilters,
 } from '../../services/incidents.service';
 import { IncidentTypesService, IncidentType } from '../../services/incident-types.service';
+import { OemService, VesselVisitExecution } from '../../services/oem.service';
+import { VesselService } from '../../services/vessel.service';
 
 @Component({
   selector: 'app-incidents',
@@ -52,9 +54,16 @@ export class IncidentsComponent implements OnInit {
   // For affected VVEs input
   affectedVVEInput: string = '';
 
+  // VVE selection for editing
+  vves: VesselVisitExecution[] = [];
+  showVveSelection = false;
+  selectedVveIds: string[] = [];
+
   constructor(
     private incidentsService: IncidentsService,
     private incidentTypesService: IncidentTypesService,
+    private oemService: OemService,
+    private vesselService: VesselService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -212,6 +221,98 @@ export class IncidentsComponent implements OnInit {
     this.selectedIncident = null;
     this.editFormData = {};
     this.affectedVVEInput = '';
+    this.showVveSelection = false;
+    this.vves = [];
+    this.selectedVveIds = [];
+  }
+
+  loadVvesForDate(date: string) {
+    // Load operation plan first to get vessel info for enrichment
+    this.oemService.getOperationPlanByDate(date).subscribe({
+      next: (planResponse) => {
+        const operationPlan: any = planResponse.success ? planResponse.data : null;
+
+        // Then load VVEs
+        this.oemService.getVVEsByDate(date).subscribe({
+          next: (vveResponse) => {
+            if (vveResponse.success && vveResponse.data) {
+              this.vves = Array.isArray(vveResponse.data) ? vveResponse.data : [vveResponse.data];
+
+              // Enrich VVEs with vessel and dock info
+              if (operationPlan && operationPlan.assignments) {
+                this.vves.forEach((vve) => {
+                  const assignment = operationPlan.assignments.find(
+                    (a: any) => a.vvnId.toLowerCase() === vve.vvnId.toLowerCase()
+                  );
+                  if (assignment) {
+                    vve.vesselName = assignment.vesselName;
+                    vve.vesselImo = assignment.vesselImo;
+                    vve.plannedDockName = assignment.dockName;
+                  }
+                });
+              }
+
+              this.cdr.markForCheck();
+            }
+          },
+          error: (err) => {
+            console.error('Error loading VVEs:', err);
+          },
+        });
+      },
+      error: (err) => {
+        console.error('Error loading operation plan:', err);
+        // Still try to load VVEs even if operation plan fails
+        this.oemService.getVVEsByDate(date).subscribe({
+          next: (vveResponse) => {
+            if (vveResponse.success && vveResponse.data) {
+              this.vves = Array.isArray(vveResponse.data) ? vveResponse.data : [vveResponse.data];
+              this.cdr.markForCheck();
+            }
+          },
+          error: (err) => {
+            console.error('Error loading VVEs:', err);
+          },
+        });
+      },
+    });
+  }
+
+  openVveSelection() {
+    if (!this.selectedIncident) return;
+
+    // Load VVEs for the incident date
+    const incidentDate = this.selectedIncident.date.split('T')[0];
+    this.loadVvesForDate(incidentDate);
+
+    // Pre-select currently affected VVEs
+    this.selectedVveIds = [...(this.editFormData.affectedVVEIds || [])];
+    this.showVveSelection = true;
+  }
+
+  closeVveSelection() {
+    this.showVveSelection = false;
+  }
+
+  confirmVveSelection() {
+    // Update the affected VVE IDs with the new selection
+    this.editFormData.affectedVVEIds = [...this.selectedVveIds];
+    this.showVveSelection = false;
+    this.cdr.markForCheck();
+  }
+
+  isVveSelected(vveId: string): boolean {
+    return this.selectedVveIds.includes(vveId);
+  }
+
+  toggleVveSelection(vveId: string) {
+    const index = this.selectedVveIds.indexOf(vveId);
+    if (index > -1) {
+      this.selectedVveIds.splice(index, 1);
+    } else {
+      this.selectedVveIds.push(vveId);
+    }
+    this.cdr.markForCheck();
   }
 
   updateIncident() {
@@ -332,6 +433,11 @@ export class IncidentsComponent implements OnInit {
 
   formatTime(datetime: string): string {
     return new Date(datetime).toLocaleTimeString();
+  }
+
+  formatTimeOnly(datetime: string): string {
+    if (!datetime) return '';
+    return new Date(datetime).toTimeString().slice(0, 5); // HH:MM
   }
 
   formatDate(dateString: string): string {

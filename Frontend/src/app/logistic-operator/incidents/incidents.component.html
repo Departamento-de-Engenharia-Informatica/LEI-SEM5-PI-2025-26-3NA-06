@@ -290,18 +290,24 @@
         </div>
 
         <div class="form-group">
-          <label>Scope</label>
+          <label>Affected VVEs</label>
           <div class="info-box">
             <i class="fas fa-info-circle"></i>
             <span *ngIf="editFormData.affectsAllVVEs">
               <strong>All VVEs</strong> - This incident affects all vessel visits for the day
             </span>
             <span *ngIf="!editFormData.affectsAllVVEs">
-              <strong>{{ editFormData.affectedVVEIds?.length || 0 }} VVE(s)</strong> - Specific
-              vessel visits
+              <strong>{{ editFormData.affectedVVEIds?.length || 0 }} VVE(s)</strong> selected
             </span>
           </div>
-          <small class="form-text">Scope cannot be changed after creation</small>
+          <button
+            *ngIf="!editFormData.affectsAllVVEs"
+            type="button"
+            (click)="openVveSelection()"
+            class="btn btn-outline-primary btn-sm mt-2"
+          >
+            <i class="fas fa-edit"></i> Change Affected VVEs
+          </button>
         </div>
       </form>
     </div>
@@ -313,6 +319,69 @@
       <button (click)="updateIncident()" class="btn btn-primary" [disabled]="loading">
         <i *ngIf="loading" class="fas fa-spinner fa-spin"></i>
         {{ loading ? 'Updating...' : 'Update Incident' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- VVE Selection Modal -->
+<div *ngIf="showVveSelection" class="modal-overlay" (click)="closeVveSelection()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Select Affected VVEs</h2>
+      <button class="close-btn" (click)="closeVveSelection()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="info-box">
+        <i class="fas fa-info-circle"></i>
+        Select the vessel visit executions that are affected by this incident
+      </div>
+
+      <div *ngIf="vves.length === 0" class="no-data">
+        <i class="fas fa-exclamation-circle"></i>
+        <p>No VVEs found for this date</p>
+      </div>
+
+      <div *ngIf="vves.length > 0" class="vves-list">
+        <div *ngFor="let vve of vves" class="vve-item">
+          <label class="vve-checkbox-label">
+            <input
+              type="checkbox"
+              [checked]="isVveSelected(vve.id)"
+              (change)="toggleVveSelection(vve.id)"
+            />
+            <div class="vve-details">
+              <div class="vve-main">
+                <strong>{{ vve.vesselName }}</strong>
+                <span *ngIf="vve.vesselImo" class="vve-imo">(IMO: {{ vve.vesselImo }})</span>
+              </div>
+              <div class="vve-secondary">Dock: {{ vve.plannedDockName }}</div>
+              <div class="vve-time">
+                {{ formatTimeOnly(vve.plannedArrivalTime) }} →
+                {{ formatTimeOnly(vve.plannedDepartureTime) }}
+                <span class="badge status-badge" [ngClass]="'status-' + vve.status.toLowerCase()">
+                  {{ vve.status }}
+                </span>
+              </div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="selection-summary">
+        <strong>{{ selectedVveIds.length }}</strong> VVE(s) selected
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button (click)="closeVveSelection()" class="btn btn-secondary">Cancel</button>
+      <button
+        (click)="confirmVveSelection()"
+        class="btn btn-primary"
+        [disabled]="selectedVveIds.length === 0"
+      >
+        <i class="fas fa-check"></i> Confirm Selection
       </button>
     </div>
   </div>

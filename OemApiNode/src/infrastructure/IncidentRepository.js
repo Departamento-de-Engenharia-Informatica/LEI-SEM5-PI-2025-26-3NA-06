@@ -245,6 +245,28 @@ class IncidentRepository {
   }
 
   /**
+   * Delete all incidents for a specific date (hard delete)
+   * Used when regenerating schedules
+   */
+  async deleteByDateAsync(date) {
+    const query = `
+      DELETE FROM Incidents
+      WHERE Date = @date
+    `;
+
+    const params = [{ name: "date", type: TYPES.Date, value: date }];
+
+    try {
+      await database.executeQuery(query, params);
+      logger.info(`Incidents deleted for date ${date}`);
+      return true;
+    } catch (error) {
+      logger.error(`Error deleting incidents for date ${date}:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Get today's active incidents
    */
   async getTodaysActiveAsync() {

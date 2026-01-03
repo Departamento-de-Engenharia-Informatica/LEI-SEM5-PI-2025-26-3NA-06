@@ -1,3 +1,9 @@
+using FluentAssertions;
+using ProjArqsi.Domain.ContainerAggregate;
+using ProjArqsi.Domain.ContainerAggregate.ValueObjects;
+using ProjArqsi.Domain.Shared;
+using Xunit;
+
 namespace Backend.Tests.AggregateTests.Container
 {
     public class ContainerTests

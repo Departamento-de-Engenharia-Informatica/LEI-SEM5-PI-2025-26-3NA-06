@@ -1,0 +1,112 @@
+name: Run Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        dotnet-version: ["8.0.x"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+
+      - name: Restore dependencies
+        run: dotnet restore Backend/ProjArqsi.sln
+
+      - name: Build
+        run: dotnet build Backend/ProjArqsi.sln --no-restore --configuration Release
+
+      # Level 1: Value Object Tests
+      - name: Run Level 1 Tests (Value Objects)
+        run: |
+          dotnet test Backend.Tests/ProjArqsi.Tests.csproj `
+            --no-build `
+            --configuration Release `
+            --filter "FullyQualifiedName~ProjArqsi.Tests._1_ValueObjectTests" `
+            --logger "trx;LogFileName=level1-results.trx" `
+            --verbosity normal
+        continue-on-error: false
+
+      # Level 2: Aggregate Tests
+      - name: Run Level 2 Tests (Aggregates)
+        run: |
+          dotnet test Backend.Tests/ProjArqsi.Tests.csproj `
+            --no-build `
+            --configuration Release `
+            --filter "FullyQualifiedName~ProjArqsi.Tests._2_AggregateTests" `
+            --logger "trx;LogFileName=level2-results.trx" `
+            --verbosity normal
+        continue-on-error: false
+
+      # Level 3: Application Tests
+      - name: Run Level 3 Tests (Application/API)
+        run: |
+          dotnet test Backend.Tests/ProjArqsi.Tests.csproj `
+            --no-build `
+            --configuration Release `
+            --filter "FullyQualifiedName~ProjArqsi.Tests._3_ApplicationTests" `
+            --logger "trx;LogFileName=level3-results.trx" `
+            --verbosity normal
+        continue-on-error: false
+
+      # Level 4: System Tests (E2E)
+      - name: Run Level 4 Tests (System/E2E)
+        run: |
+          dotnet test Backend.Tests/ProjArqsi.Tests.csproj `
+            --no-build `
+            --configuration Release `
+            --filter "FullyQualifiedName~ProjArqsi.Tests._4_SystemTests" `
+            --logger "trx;LogFileName=level4-results.trx" `
+            --verbosity normal
+        continue-on-error: false
+
+      # Run all tests with code coverage
+      - name: Run All Tests with Coverage
+        run: |
+          dotnet test Backend.Tests/ProjArqsi.Tests.csproj `
+            --no-build `
+            --configuration Release `
+            --collect:"XPlat Code Coverage" `
+            --results-directory ./coverage `
+            --logger "trx;LogFileName=all-tests-results.trx"
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            **/*.trx
+            ./coverage/**/*
+
+      - name: Publish Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Test Results
+          path: "**/*.trx"
+          reporter: dotnet-trx
+          fail-on-error: true
+
+      # Optional: Code Coverage Report
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          directory: ./coverage
+          fail_ci_if_error: false
+          verbose: true

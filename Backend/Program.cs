@@ -158,3 +158,6 @@ app.MapControllers();
 Console.WriteLine("\n✓ App is ready\n");
 
 app.Run();
+
+// Make Program accessible to integration tests
+public partial class Program { }

@@ -62,7 +62,7 @@ namespace ProjArqsi.Application.Services
                 draft.SetUnloadingManifest(unloadManifest);
             }
 
-            await _repo.DraftVVN(draft);
+            await _repo.AddAsync(draft);
             await _unitOfWork.CommitAsync();
 
             return _mapper.Map<VVNDraftDtoWId>(draft);
@@ -599,10 +599,10 @@ namespace ProjArqsi.Application.Services
             return _mapper.Map<List<VVNDto>>(vvns);
         }
 
-        public async Task<VVNDto> GetDraftByIdAsync(Guid id)
+        public async Task<VVNDraftDtoWId> GetDraftByIdAsync(Guid id)
         {
             var vvn = await _repo.GetDraftByIdAsync(new VesselVisitNotificationId(id)) ?? throw new InvalidOperationException($"Vessel Visit Notification with ID '{id}' not found.");
-            return _mapper.Map<VVNDto>(vvn);
+            return _mapper.Map<VVNDraftDtoWId>(vvn);
         }
 
         public async Task DeleteDraftAsync(Guid id)

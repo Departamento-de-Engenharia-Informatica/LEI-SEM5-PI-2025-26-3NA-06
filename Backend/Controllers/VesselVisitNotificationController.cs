@@ -156,7 +156,7 @@ namespace ProjArqsi.Controllers
          // Get a drafted VVN by Id
         [HttpGet("drafts/{id}")]
         [Authorize(Roles = "ShippingAgentRepresentative")]
-        public async Task<ActionResult<VVNDto>> GetDraftById(Guid id)
+        public async Task<ActionResult<VVNDraftDtoWId>> GetDraftById(Guid id)
         {
             try
             {
@@ -176,7 +176,7 @@ namespace ProjArqsi.Controllers
 
         [HttpPost("draft")]
         [Authorize(Roles = "ShippingAgentRepresentative")]
-        public async Task<ActionResult<VVNDto>> DraftVVN([FromBody] VVNDraftDto dto)
+        public async Task<ActionResult<VVNDraftDtoWId>> DraftVVN([FromBody] VVNDraftDto dto)
         {
             try
             {
@@ -188,6 +188,10 @@ namespace ProjArqsi.Controllers
                 return BadRequest(new { message = ex.Message });
             }
             catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
@@ -235,18 +239,22 @@ namespace ProjArqsi.Controllers
 
         [HttpPost("submit")]
         [Authorize(Roles = "ShippingAgentRepresentative")]
-        public async Task<ActionResult<VVNDto>> SubmitVVN([FromBody] VVNSubmitDto dto)
+        public async Task<ActionResult<VVNSubmitDtoWId>> SubmitVVN([FromBody] VVNSubmitDto dto)
         {
             try
             {
                 var vvn = await _service.SubmitVVNAsync(dto);
-                return CreatedAtAction(nameof(GetSubmittedById), new { id = vvn.Id }, vvn);
+                return StatusCode(201, vvn); // Return 201 Created with the body
             }
             catch (BusinessRuleValidationException ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
             catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
             {
                 return BadRequest(new { message = ex.Message });
             }

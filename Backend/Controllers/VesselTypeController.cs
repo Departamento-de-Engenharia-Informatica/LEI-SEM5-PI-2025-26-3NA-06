@@ -25,6 +25,10 @@ namespace ProjArqsi.Controllers
                 var result = await _service.CreateAsync(dto);
                 return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
             }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
             catch (InvalidOperationException ex)
             {
                 return BadRequest(new { message = ex.Message });
@@ -44,6 +48,10 @@ namespace ProjArqsi.Controllers
             {
                 return NotFound(new { message = ex.Message });
             }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
             catch (InvalidOperationException ex)
             {
                 return BadRequest(new { message = ex.Message });
@@ -58,6 +66,10 @@ namespace ProjArqsi.Controllers
             {
                 var result = await _service.GetByIdAsync(id);
                 return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
             }
             catch (InvalidOperationException ex)
             {

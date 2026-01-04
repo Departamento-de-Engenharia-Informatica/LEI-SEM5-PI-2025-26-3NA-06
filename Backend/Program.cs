@@ -118,11 +118,16 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Apply pending migrations on startup
+// Apply pending migrations on startup (skip for in-memory databases)
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    dbContext.Database.Migrate();
+    
+    // Only run migrations if not using in-memory database
+    if (!dbContext.Database.IsInMemory())
+    {
+        dbContext.Database.Migrate();
+    }
     
     // Check if --seed argument was passed
     if (args.Contains("--seed"))

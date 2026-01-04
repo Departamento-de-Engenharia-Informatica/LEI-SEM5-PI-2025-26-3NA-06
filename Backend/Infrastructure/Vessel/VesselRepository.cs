@@ -34,7 +34,10 @@ namespace ProjArqsi.Infrastructure.Repositories
 
         public async Task<Vessel?> GetByImoAsync(IMOnumber imo)
         {
-            return await _context.Vessels.FirstOrDefaultAsync(v => v.IMO.Number == imo.Number);
+            // EF Core can't translate owned entity comparisons in queries
+            // So we load all vessels and filter in memory
+            var vessels = await _context.Vessels.ToListAsync();
+            return vessels.FirstOrDefault(v => v.IMO.Number == imo.Number);
         }
     }
 }

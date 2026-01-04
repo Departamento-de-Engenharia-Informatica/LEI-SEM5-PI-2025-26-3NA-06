@@ -62,17 +62,15 @@ namespace Infrastructure
                 .Include(vvn => vvn.CargoManifests)
                 .FirstOrDefaultAsync(vvn => vvn.Id == vesselVisitNotificationId && vvn.StatusValue == (int)StatusEnum.InProgress);
         }
-        public async Task<VesselVisitNotification> DraftVVN(VesselVisitNotification vesselVisitNotification)
+        public Task<VesselVisitNotification> DraftVVN(VesselVisitNotification vesselVisitNotification)
         {
             _context.VesselVisitNotifications.Add(vesselVisitNotification);
-            await _context.SaveChangesAsync();
-            return vesselVisitNotification;
+            return Task.FromResult(vesselVisitNotification);
         }
-        public async Task<VesselVisitNotification> SubmitVVN(VesselVisitNotification vesselVisitNotification)
+        public Task<VesselVisitNotification> SubmitVVN(VesselVisitNotification vesselVisitNotification)
         {
             _context.VesselVisitNotifications.Update(vesselVisitNotification);
-            await _context.SaveChangesAsync();
-            return vesselVisitNotification;
+            return Task.FromResult(vesselVisitNotification);
         }
 
         public async Task<VesselVisitNotification?> GetByIdAsync(VesselVisitNotificationId id)
@@ -83,17 +81,15 @@ namespace Infrastructure
                 .FirstOrDefaultAsync(vvn => vvn.Id == id);
         }
 
-        public async Task<VesselVisitNotification> AddAsync(VesselVisitNotification entity)
+        public Task<VesselVisitNotification> AddAsync(VesselVisitNotification entity)
         {
             _context.VesselVisitNotifications.Add(entity);
-            await _context.SaveChangesAsync();
-            return entity;
+            return Task.FromResult(entity);
         }
-        public async Task<VesselVisitNotification> UpdateAsync(VesselVisitNotification entity)
+        public Task<VesselVisitNotification> UpdateAsync(VesselVisitNotification entity)
         {
             _context.VesselVisitNotifications.Update(entity);
-            await _context.SaveChangesAsync();
-            return entity;
+            return Task.FromResult(entity);
         }
         public async Task DeleteAsync(VesselVisitNotificationId id)
         {
@@ -101,7 +97,6 @@ namespace Infrastructure
             if (entity != null)
             {
                 _context.VesselVisitNotifications.Remove(entity);
-                await _context.SaveChangesAsync();
             }
         }
         public async Task<List<VesselVisitNotification>> GetAllAsync()
@@ -152,19 +147,19 @@ namespace Infrastructure
             DateTime departureDate, 
             VesselVisitNotificationId? excludeId = null)
         {
-            // Get all VVNs that are not rejected and not in draft (fetch to client first)
-            // EF Core cannot translate complex value object navigation in WHERE clause
-            var allActiveVvns = await _context.VesselVisitNotifications
+            // Get all VVNs (fetch to client first)
+            // EF Core cannot translate complex value object comparisons in WHERE clause
+            var allVvns = await _context.VesselVisitNotifications
                 .Include(vvn => vvn.CargoManifests)
+                .ToListAsync();
+
+            // Filter everything in memory
+            var vesselVvns = allVvns
                 .Where(vvn => vvn.StatusValue != (int)StatusEnum.Rejected &&
                               vvn.StatusValue != (int)StatusEnum.InProgress &&
                               vvn.ArrivalDate != null &&
-                              vvn.DepartureDate != null)
-                .ToListAsync();
-
-            // Filter by vessel IMO in memory
-            var vesselVvns = allActiveVvns
-                .Where(vvn => vvn.ReferredVesselId.VesselId.Value == vesselImo.Value)
+                              vvn.DepartureDate != null &&
+                              vvn.ReferredVesselId.VesselId.Value == vesselImo.Value)
                 .ToList();
 
             // Filter in memory for time overlap and exclude current VVN if provided
@@ -195,14 +190,19 @@ namespace Infrastructure
             DateTime departureDate,
             VesselVisitNotificationId? excludeId = null)
         {
-            // Get all approved VVNs for this dock
-            var dockVvns = await _context.VesselVisitNotifications
+            // Get all VVNs (fetch to client first)
+            // EF Core cannot translate complex value object comparisons in WHERE clause
+            var allVvns = await _context.VesselVisitNotifications
                 .Include(vvn => vvn.CargoManifests)
+                .ToListAsync();
+
+            // Filter everything in memory
+            var dockVvns = allVvns
                 .Where(vvn => vvn.StatusValue == (int)StatusEnum.Accepted &&
                               vvn.TempAssignedDockId != null &&
                               vvn.ArrivalDate != null &&
                               vvn.DepartureDate != null)
-                .ToListAsync();
+                .ToList();
 
             // Filter by dock ID and time overlap in memory
             var conflicts = dockVvns

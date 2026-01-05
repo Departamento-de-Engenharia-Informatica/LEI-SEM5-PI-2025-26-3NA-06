@@ -24,15 +24,25 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        // Use Testing environment first to load appsettings.Testing.json
+        builder.UseEnvironment("Testing");
+
         builder.ConfigureAppConfiguration((context, config) =>
         {
-            // Override configuration with test values
+            // Clear existing configuration sources to ensure test config takes precedence
+            config.Sources.Clear();
+            
+            // Add appsettings.Testing.json which has the correct JWT key
+            config.AddJsonFile("appsettings.Testing.json", optional: false, reloadOnChange: false);
+            
+            // Override with in-memory configuration to ensure test values
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["JwtSettings:SigningKey"] = "TestSecretKeyForJwtTokenGeneration123456789012345678901234567890", // 64 chars
                 ["JwtSettings:Issuer"] = "TestIssuer",
                 ["JwtSettings:Audience"] = "TestAudience",
-                ["JwtSettings:ExpiresInMinutes"] = "60"
+                ["JwtSettings:ExpiresInMinutes"] = "60",
+                ["ConnectionStrings:DefaultConnection"] = $"DataSource={_databaseName};Mode=Memory;Cache=Shared"
             });
         });
 
@@ -56,9 +66,6 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
                 options.EnableDetailedErrors();
             });
         });
-
-        // Use Testing environment to avoid production configurations
-        builder.UseEnvironment("Testing");
     }
 
     /// <summary>

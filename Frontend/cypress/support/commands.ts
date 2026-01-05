@@ -102,7 +102,7 @@ Cypress.Commands.add('getByCy', (value: string) => {
 
 // Mock API call
 Cypress.Commands.add('mockApiCall', (method: string, url: string, fixture: string) => {
-  cy.intercept(method, `**/api${url}`, { fixture: fixture }).as(fixture);
+  cy.intercept(method.toUpperCase() as any, `**/api${url}`, { fixture: fixture }).as(fixture);
 });
 
 // Wait for page load

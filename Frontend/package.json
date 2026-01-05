@@ -44,6 +44,7 @@
     "@angular/build": "^21.0.1",
     "@angular/cli": "^21.0.1",
     "@angular/compiler-cli": "^21.0.0",
+    "@angular/platform-browser-dynamic": "^21.0.0",
     "@cypress/webpack-dev-server": "^5.4.1",
     "@types/jasmine": "^5.1.13",
     "cypress": "^15.8.1",

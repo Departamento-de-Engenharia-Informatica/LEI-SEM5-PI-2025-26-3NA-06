@@ -11,3 +11,17 @@ As a Project Manager, I want the team to develop a dedicated back-end module tha
 - The module must not persist operational data — it only computes and returns scheduling results upon request.
 - Input and output payloads must follow JSON format and use consistent identifiers with other modules (e.g., resource IDs).
 - The module API must be properly documented (e.g. via OpenAPI/Swagger) and accessible.
+
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._

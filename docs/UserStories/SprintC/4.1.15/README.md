@@ -15,3 +15,17 @@ As a Logistics Operator, I want to record and manage Complementary Tasks perform
   - Filtering and listing Complementary Tasks by vessel, date range, or status.
   - Highlighting on going tasks that are currently impacting operations.
 - Each task record must include: a unique generated ID, a reference to its Category, the responsible team or service, the start and end timestamps (time window), the completion status (e.g. ongoing, completed), the VVE on which the task is being performed.
+
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._

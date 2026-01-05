@@ -18,3 +18,17 @@ As a Logistics Operator, I want to generate a daily schedule for the loading and
   - Display the results in a summary table (e.g., vessel, start/end time, assigned crane, staff) and, if feasible, through a timeline approach.
   - Provide feedback on progress and completion, including warnings about infeasibility (e.g., lack of resources or staff).
 - At this stage, results do not need to be persisted anywhere— they can be recomputed on demand.
+
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._

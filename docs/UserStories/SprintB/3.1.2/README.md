@@ -17,3 +17,17 @@ As a System User, I want the SPA to provide a unified layout, so that navigation
 - UI styling must follow a consistent design system/component library.
 - It must have multilingual support (e.g.: English and Portuguese).
 - The layout must adapt to different screen sizes (desktop orientation first; tablet/mobile support may be planned).
+
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._

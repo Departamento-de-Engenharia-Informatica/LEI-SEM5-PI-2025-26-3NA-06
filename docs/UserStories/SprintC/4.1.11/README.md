@@ -13,3 +13,17 @@ As a Logistics Operator, I want to mark a VVE as completed by recording the vess
 - Completion is only allowed if all associated cargo operations are recorded as finished.
 - Once completed, the VVE becomes read-only, except for authorized corrections by admin users.
 - The action must be logged (timestamp, user, any changes made) for audit purposes.
+
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._

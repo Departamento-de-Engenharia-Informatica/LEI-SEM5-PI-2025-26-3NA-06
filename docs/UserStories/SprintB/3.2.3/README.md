@@ -11,6 +11,20 @@ As a System User, I want my authenticated session to be maintained securely, so 
 - The SPA must try to avoid unauthorized API calls by, for instance, attaching the user access token to requests.
 - Back-end module(s) must also validate tokens on each request.
 
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._
+
 ## Implementação
 
 ### Backend

@@ -12,6 +12,20 @@ As a Port Authority Officer, I want to register and update storage areas, so tha
 - Complementary information, such as the distance between docks and storage areas, must be manually recorded to support future logistics planning and optimization.
 - Updates to storage areas must not allow the current occupancy to exceed maximum capacity.
 
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._
+
 ## Perguntas do Fórum (Dev-Cliente)
 
 **Q1:**

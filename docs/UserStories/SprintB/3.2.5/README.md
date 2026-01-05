@@ -12,6 +12,20 @@ As an Administrator, I want to assign (or update) the internal role(s) of a give
   - By default, the users are set to a "deactivated" status.
 - Internal roles determine system access level.
 
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._
+
 ## Implementação
 
 ### Backend

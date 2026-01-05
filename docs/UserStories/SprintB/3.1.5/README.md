@@ -17,3 +17,17 @@ As a System User, I want the SPA to provide suitable pages/forms to perform the 
   - US 2.2.3, related with Docks
   - US 2.2.2, related with Vessels
   - US 2.2.5, related with Shipping Agent Organizations and Representatives
+
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._

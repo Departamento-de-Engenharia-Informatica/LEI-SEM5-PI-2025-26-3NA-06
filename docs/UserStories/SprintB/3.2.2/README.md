@@ -9,6 +9,20 @@ As a System User, I want the system to automatically load my internal authorizat
 - After IAM login, the SPA must call a backend endpoint to retrieve the user's assigned role and render the respective menu options.
 - If the user has no assigned role or it is inactive, access must be denied with an appropriate message.
 
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._
+
 ## Implementação
 
 ### Backend

@@ -13,6 +13,20 @@ As a System User receiving an activation link, I want to complete my first acces
 - Expired or invalid links must show an error message.
 - After activation, the user gains role-based access.
 
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._
+
 ## Implementação
 
 ### Token Expiration

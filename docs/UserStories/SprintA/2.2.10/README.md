@@ -9,6 +9,20 @@ As a Shipping Agent Representative, I want to view the status of all my submitte
 - The Shipping Agent Representative may also view the status of Vessel Visit Notifications submitted by other representatives working for the same shipping agent organization.
 - Vessel Visit Notifications must be searchable and filterable by vessel, status, representative and time.
 
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._
+
 ## Perguntas do Fórum (Dev-Cliente)
 
 **Q1:**

@@ -15,6 +15,20 @@ As a Port Operations Supervisor, I want to manage the catalog of Complementary T
   - Maintenance: Hull Repair, Equipment Calibration
   - Cleaning and Housekeeping: Deck Cleaning, Waste Removal
 
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._
+
 ## Perguntas do Fórum (Dev-Cliente)
 
 **Q1:**

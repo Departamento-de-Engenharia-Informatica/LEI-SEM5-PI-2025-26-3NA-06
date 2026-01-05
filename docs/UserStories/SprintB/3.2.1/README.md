@@ -12,6 +12,20 @@ As a (Non-Authenticated) System User, I want to authenticate using the external 
 - After successful authentication, a valid access token must be available to the front-end.
 - Logout must also be supported, clearing tokens/session data.
 
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._
+
 ## Implementação
 
 ### Backend

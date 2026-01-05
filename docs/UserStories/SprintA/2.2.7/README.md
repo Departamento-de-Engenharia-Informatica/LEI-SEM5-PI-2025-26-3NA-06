@@ -11,6 +11,20 @@ As a Port Authority Officer, I want to review pending Vessel Visit Notifications
 - If rejected, the shipping agent representative might review / update the notification for further new decision.
 - All decisions (approve/reject) must be logged with timestamp, officer ID, and decision outcome for auditing purposes.
 
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._
+
 ## Perguntas do Fórum (Dev-Cliente)
 
 **Q1:**

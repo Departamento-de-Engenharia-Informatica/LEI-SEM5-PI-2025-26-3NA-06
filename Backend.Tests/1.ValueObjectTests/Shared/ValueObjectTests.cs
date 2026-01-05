@@ -474,7 +474,7 @@ namespace ProjArqsi.Tests.ValueObjectTests.Shared
         }
 
         [Fact]
-        public void GetHashCode_WithSimilarValues_ShouldBeDifferent()
+        public void GetHashCode_WithSlightlyDifferentValues_ReturnsDistinctHashes()
         {
             // Arrange
             var vo1 = new TestValueObject("test1", 42);

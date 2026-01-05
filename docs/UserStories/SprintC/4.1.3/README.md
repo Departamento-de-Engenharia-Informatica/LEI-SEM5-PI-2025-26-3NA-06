@@ -9,3 +9,17 @@ As a Logistics Operator, I want to search and list Operation Plans for a given d
 - The REST API must support querying Operation Plans by date range and/or vessel identifier.
 - The SPA must provide a searchable and filterable table showing plan summaries (e.g., vessel, dock, start/end time, assigned resources).
 - Results must be sortable (e.g., by start time, vessel name, or expected delay).
+
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._

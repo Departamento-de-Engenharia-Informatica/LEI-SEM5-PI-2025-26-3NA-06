@@ -10,3 +10,17 @@ As a Logistics Operator, I want to query, for a given period, the total allocati
 - Returned data must include total allocated time and number of operations.
 - The SPA must display results in a summary table.
 - Data must only include saved Operation Plans.
+
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._

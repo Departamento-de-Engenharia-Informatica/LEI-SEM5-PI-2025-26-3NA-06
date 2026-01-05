@@ -10,3 +10,17 @@ As a System User, I want the 3D scene to have appropriate lighting, so that obje
 - Lighting should enhance depth perception and object contours without causing overexposure or darkness.
 - Shadows or highlights must be used without causing significant performance degradation.
 - The illumination setup must work consistently across zoom levels and camera angles.
+
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._

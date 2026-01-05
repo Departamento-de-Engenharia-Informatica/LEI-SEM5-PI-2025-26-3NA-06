@@ -12,6 +12,20 @@ As a Shipping Agent Representative, I want to create/submit a Vessel Visit Notif
 - Vessel Visit Notifications might become at an "in progress" status (e.g. cargo information is incomplete) to be further update/completed.
 - When completed / ready for asking approval, the agent is required to change its state to "submitted".
 
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._
+
 ## Perguntas do Fórum (Dev-Cliente)
 
 **Q1:**

@@ -10,6 +10,20 @@ As a Port Authority Officer, I want to register and update vessel records, so th
 - The system must validate that the IMO number follows the official format (seven digits with a check digit), otherwise reject it.
 - Vessel records must be searchable by IMO number, name, or operator.
 
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._
+
 ## Perguntas do Fórum (Dev-Cliente)
 
 **Q1:**

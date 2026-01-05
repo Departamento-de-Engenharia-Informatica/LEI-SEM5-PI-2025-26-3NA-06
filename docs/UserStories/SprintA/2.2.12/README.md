@@ -15,3 +15,17 @@ As a Logistics Operator, I want to register and manage physical resources (creat
   - (Staff) Qualification requirements, ensuring only properly certified staff can be scheduled with the resource.
 - Deactivation/reactivation must not delete resource data but preserve it for audit and historical planning purposes.
 - Resources must be searchable and filterable by code, description, kind of resource, status.
+
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._

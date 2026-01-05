@@ -11,6 +11,20 @@ As a Logistics Operator, I want to create a Vessel Visit Execution (VVE) record 
 - The SPA must easy the VVE creation using available VVN information.
 - Once created, the VVE must be marked as "In Progress."
 
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._
+
 ## Perguntas do Fórum (Dev-Cliente)
 
 **Q1:**

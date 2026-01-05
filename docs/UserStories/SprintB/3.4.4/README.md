@@ -10,3 +10,17 @@ As a Logistics Operator, I want an alternative scheduling algorithm for the load
 - This algorithm must aim to minimize vessel departure delays but prioritize computational efficiency over optimality. Suitable approaches may include greedy strategies, local search, or other informed heuristics.
 - Results must be comparable (e.g., total delay, computation time) against the previous algorithm using summary metrics.
 - At this stage, results do not need to be persisted anywhere— they can be recomputed on demand.
+
+## 3. Análise
+
+### 3.1. Domínio
+
+_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+
+### 3.2. Regras de Negócio
+
+_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+
+### 3.3. Casos de Uso
+
+_A desenvolver: Descrever os principais casos de uso e seus fluxos._

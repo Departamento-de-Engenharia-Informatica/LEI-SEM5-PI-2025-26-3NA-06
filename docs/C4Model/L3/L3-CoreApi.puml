@@ -1,0 +1,49 @@
+@startuml L3-CoreApi
+' C4 Level 3 — Component (PlantUML)
+' Core API internal architecture (layered view)
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title C4 - Nível 3 (Component) — Core API Architecture
+
+Container_Boundary(coreApi, "Core API") {
+    ' === Presentation Layer ===
+    Component(controllers, "Controllers", "ASP.NET Controllers", "VesselTypeController, VesselController, DockController, StorageAreaController, ContainerController, VVNController, UserController. Expõem endpoints REST.")
+    
+    ' === Application Layer ===
+    Component(services, "Application Services", "C# Classes", "VesselTypeService, VesselService, DockService, StorageAreaService, ContainerService, VVNService, UserService, EmailService. Orquestram lógica de negócio.")
+    
+    ' === Domain Layer ===
+    Component(aggregates, "Domain Aggregates", "DDD Aggregates", "VesselType, Vessel, Dock, StorageArea, Container, VVN, User. Encapsulam regras de negócio e invariantes.")
+    
+    Component(valueObjects, "Value Objects", "DDD Value Objects", "IMOnumber, Email, Role, TypeName, Capacity, etc. Objetos imutáveis sem identidade.")
+    
+    ' === Infrastructure Layer ===
+    Component(repositories, "Repositories", "EF Core Repositories", "VesselTypeRepository, VesselRepository, DockRepository, StorageAreaRepository, ContainerRepository, VVNRepository, UserRepository. Abstração de persistência.")
+    
+    Component(unitOfWork, "Unit of Work", "Transaction Manager", "Coordena transações e garante consistência de dados.")
+    
+    Component(mapper, "AutoMapper", "Object Mapper", "Mapeia entre Domain Models e DTOs.")
+    
+    Component(dbContext, "DbContext", "EF Core DbContext", "AppDbContext. Define DbSets e configurações de mapeamento OR/M.")
+    
+    Component(logger, "Logger", "Serilog", "Sistema de logging estruturado para auditoria (VVN approvals/rejections, unauthorized access).")
+}
+
+' === External Dependencies ===
+ContainerDb(db, "ProjArqsiDB", "Azure SQL Database", "Base de dados core")
+Container(authApi, "Auth API", ".NET Core", "Validação de JWT tokens")
+
+' === Layered Architecture Flow ===
+Rel(authApi, controllers, "Valida JWT", "Middleware")
+Rel(controllers, services, "Invoca", "Dependency Injection")
+Rel(services, aggregates, "Manipula", "Domain Logic")
+Rel(services, repositories, "Persiste via", "Repository Pattern")
+Rel(services, unitOfWork, "Coordena transações")
+Rel(services, mapper, "Converte DTOs")
+Rel(services, logger, "Regista eventos", "Logging")
+Rel(aggregates, valueObjects, "Composto por", "Composition")
+Rel(repositories, dbContext, "Usa", "EF Core")
+Rel(dbContext, db, "Executa queries", "Entity Framework Core / SQL")
+
+@enduml

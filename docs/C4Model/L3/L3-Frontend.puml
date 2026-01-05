@@ -1,0 +1,64 @@
+@startuml L3-Frontend
+' C4 Level 3 — Component (PlantUML)
+' Frontend SPA internal architecture (layered view)
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title C4 - Nível 3 (Component) — Single Page Application Architecture
+
+Container_Boundary(spa, "Single Page Application") {
+    ' === Presentation Layer - Core ===
+    Component(coreComponents, "Core Components", "Angular Components", "AppComponent (root), LayoutComponent (menu/navegação), LoginComponent (autenticação Google).")
+    
+    ' === Presentation Layer - Dashboards ===
+    Component(dashboards, "Role-based Dashboards", "Angular Components", "AdminDashboard, PortAuthorityDashboard, LogisticOperatorDashboard, ShippingAgentDashboard. Entry points baseados em roles.")
+    
+    ' === Presentation Layer - Feature Components ===
+    Component(portAuthorityFeatures, "Port Authority Features", "Angular Components", "VesselTypes, Vessels, Docks, StorageAreas, VVN Approval, IncidentTypes. Gestão de infraestrutura portuária.")
+    
+    Component(shippingAgentFeatures, "Shipping Agent Features", "Angular Components", "Create/Edit VVN, VVN Drafts, VVN Submitted, VVN Reviewed, Container Management. Gestão de visitas de navios.")
+    
+    Component(logisticOperatorFeatures, "Logistic Operator Features", "Angular Components", "Daily Schedule, Operation Plans, VVE Management, Incidents. Gestão de operações e execução.")
+    
+    Component(adminFeatures, "Admin Features", "Angular Components", "User Management. Gestão de utilizadores e roles.")
+    
+    ' === Service Layer ===
+    Component(httpServices, "HTTP Services", "Angular Services", "AuthService, VesselService, ContainerService, SchedulingService, OemService, IncidentTypesService, IncidentsService. Abstração de comunicação com APIs.")
+    
+    ' === Security Layer ===
+    Component(guards, "Route Guards", "Angular Guards", "AuthGuard (requer autenticação), RoleGuard (requer role específica). Protegem rotas da aplicação.")
+    
+    Component(interceptors, "HTTP Interceptors", "Angular Interceptors", "AuthInterceptor. Injeta JWT token em todos os requests HTTP.")
+    
+    ' === Routing ===
+    Component(router, "Angular Router", "Routing Module", "Gestão de navegação e rotas com proteção baseada em roles.")
+}
+
+' === External Dependencies ===
+Container(coreApi, "Core API", ".NET Core", "API de domínio core")
+Container(schedulingApi, "Scheduling API", ".NET Core", "API de agendamento")
+Container(oemApi, "OEM API", "Node.js", "API de operações")
+System_Ext(googleIam, "Google IAM", "Autenticação externa")
+
+' === Angular Architecture Flow ===
+Rel(router, guards, "Verifica acesso", "Route Protection")
+Rel(guards, httpServices, "Consulta estado autenticação")
+Rel(router, dashboards, "Redireciona baseado em role")
+Rel(coreComponents, dashboards, "Navega para")
+Rel(dashboards, portAuthorityFeatures, "Acede a features")
+Rel(dashboards, shippingAgentFeatures, "Acede a features")
+Rel(dashboards, logisticOperatorFeatures, "Acede a features")
+Rel(dashboards, adminFeatures, "Acede a features")
+Rel(portAuthorityFeatures, httpServices, "Consome dados via")
+Rel(shippingAgentFeatures, httpServices, "Consome dados via")
+Rel(logisticOperatorFeatures, httpServices, "Consome dados via")
+Rel(adminFeatures, httpServices, "Consome dados via")
+Rel(coreComponents, httpServices, "Usa para autenticação")
+Rel(interceptors, httpServices, "Intercepta requests")
+Rel(interceptors, httpServices, "Injeta JWT token")
+Rel(httpServices, googleIam, "Autentica via", "OIDC")
+Rel(httpServices, coreApi, "Consome", "REST/HTTPS")
+Rel(httpServices, schedulingApi, "Consome", "REST/HTTPS")
+Rel(httpServices, oemApi, "Consome", "REST/HTTPS")
+
+@enduml

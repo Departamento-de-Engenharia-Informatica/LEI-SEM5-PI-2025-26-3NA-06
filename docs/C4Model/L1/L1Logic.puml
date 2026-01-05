@@ -1,0 +1,34 @@
+@startuml L1
+' C4 Level 1 — System Context (PlantUML)
+' Requires: C4-PlantUML library
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title C4 - Nível 1 (System Context) — Port Management System
+
+' === Pessoas / Atores ===
+Person(admin, "Administrator", "Gere utilizadores, atribui roles e configura sistema.")
+Person(shippingAgent, "Shipping Agent", "Submete VVNs e consulta estado/planos.")
+Person(portOfficer, "Port Authority Officer", "Aprova/rejeita VVNs e supervisiona operações/incidentes.")
+Person(logOp, "Logistics Operator", "Executa operações: cria/atualiza VVEs e regista tempos reais.")
+
+' === Sistema principal ===
+System(pms, "Port Management System", "Sistema para gestão de visitas de navios.")
+
+' === Sistemas externos ===
+System_Ext(googleIam, "Google IAM / OIDC", "Autenticação e emissão/validação de identidade (tokens).")
+
+' (Opcional) Se quiseres mostrar um serviço externo adicional (ex.: Email/SMS), adiciona aqui
+
+' === Relações (alto nível, sem detalhes de payload) ===
+Rel(admin, pms, "Usa", "HTTP (SPA)")
+Rel(shippingAgent, pms, "Usa", "HTTP (SPA)")
+Rel(portOfficer, pms, "Usa", "HTTP (SPA)")
+Rel(logOp, pms, "Usa", "HTTP (SPA)")
+
+Rel(pms, googleIam, "Autentica utilizadores via", "OIDC / OAuth2")
+
+' Se o PMS validar tokens recebidos:
+Rel(googleIam, pms, "Fornece identidade/tokens para", "JWT / ID Token")
+
+@enduml

@@ -1,0 +1,53 @@
+@startuml L3-OemApi
+' C4 Level 3 — Component (PlantUML)
+' OEM API internal architecture (layered view)
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title C4 - Nível 3 (Component) — OEM API Architecture
+
+Container_Boundary(oemApi, "OEM API") {
+    ' === Middleware Layer ===
+    Component(middleware, "Middleware", "Express Middleware", "Auth Middleware (valida JWT e roles), Error Handler (gestão centralizada de erros), CORS, Logging.")
+    
+    ' === Presentation Layer ===
+    Component(controllers, "Controllers", "Express Controllers", "OperationPlanController, VVEController, IncidentController, IncidentTypeController, HealthController. Expõem endpoints REST.")
+    
+    ' === Application Layer ===
+    Component(services, "Application Services", "JavaScript Classes", "OperationPlanService, VVEService, IncidentService, IncidentTypeService. Orquestram lógica de negócio.")
+    
+    Component(backendApiClient, "Backend API Client", "HTTP Client", "Cliente HTTP para comunicar com Core API e obter dados de VVNs, Vessels.")
+    
+    ' === Domain Layer ===
+    Component(domainModels, "Domain Models", "JavaScript Classes", "OperationPlan, VesselVisitExecution, Incident, IncidentType. Encapsulam entidades e regras de negócio.")
+    
+    Component(valueObjects, "Value Objects", "JavaScript Classes", "Assignment (vessel-dock assignment). Objetos imutáveis sem identidade própria.")
+    
+    Component(validators, "Validators", "JavaScript Functions", "Validações de regras de negócio e invariantes de domínio.")
+    
+    ' === Infrastructure Layer ===
+    Component(repositories, "Repositories", "Data Access Layer", "OperationPlanRepository, VVERepository, IncidentRepository, IncidentTypeRepository. Abstração de persistência.")
+    
+    Component(database, "Database Client", "mssql driver", "Cliente SQL Server para execução de queries.")
+    
+    Component(logger, "Logger", "Winston", "Sistema de logging estruturado para auditoria e debugging.")
+}
+
+' === External Dependencies ===
+ContainerDb(dbOem, "projArqsiDBOEM", "Azure SQL Database", "Base de dados OEM")
+Container(authApi, "Auth API", ".NET Core", "Validação de JWT tokens")
+
+' === Layered Architecture Flow ===
+Rel(authApi, middleware, "Valida JWT", "Middleware Pipeline")
+Rel(middleware, controllers, "Protege e intercepta", "Express Pipeline")
+Rel(controllers, services, "Invoca", "Dependency Injection")
+Rel(services, domainModels, "Manipula", "Domain Logic")
+Rel(domainModels, valueObjects, "Composto por", "Composition")
+Rel(services, validators, "Valida com", "Business Rules")
+Rel(services, backendApiClient, "Obtém dados via", "HTTP")
+Rel(services, repositories, "Persiste via", "Repository Pattern")
+Rel(services, logger, "Regista eventos", "Logging")
+Rel(repositories, database, "Usa", "SQL Queries")
+Rel(database, dbOem, "Executa queries", "TDS Protocol")
+
+@enduml

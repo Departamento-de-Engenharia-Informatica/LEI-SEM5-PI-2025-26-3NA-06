@@ -1,0 +1,62 @@
+@startuml L2
+' C4 Level 2 — Container (PlantUML)
+' Requires: C4-PlantUML library
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title C4 - Nível 2 (Container) — Port Management System
+
+' === Pessoas / Atores ===
+Person(admin, "Administrator", "Gere utilizadores e sistema")
+Person(shippingAgent, "Shipping Agent", "Submete VVNs")
+Person(portOfficer, "Port Authority Officer", "Aprova VVNs")
+Person(logOp, "Logistics Operator", "Executa operações")
+
+' === Sistema principal - Containers ===
+System_Boundary(pms, "Port Management System") {
+    Container(spa, "Single Page Application", "Angular", "Interface web para todos os utilizadores. Acesso baseado em roles.")
+    
+    Container(authApi, "Auth API", ".NET Core", "Autentica utilizadores via Google OIDC e emite JWT tokens.")
+    
+    Container(coreApi, "Core API", ".NET Core", "Gestão de domínio core: Vessels, VesselTypes, Docks, StorageAreas, Containers, VVNs, Users.")
+    
+    Container(schedulingApi, "Scheduling API", ".NET Core", "Calcula agendamentos de operações on-demand (stateless).")
+    
+    Container(oemApi, "OEM API", "Node.js/Express", "Gestão de Operation Plans, VVEs, Incidents e Complementary Tasks.")
+    
+    ContainerDb(dbCore, "ProjArqsiDB", "Azure SQL Database", "Armazena dados core: Vessels, VesselTypes, Docks, StorageAreas, Containers, VVNs, Users.")
+    
+    ContainerDb(dbOem, "projArqsiDBOEM", "Azure SQL Database", "Armazena dados de operações: Operation Plans, VVEs, Incidents, Complementary Tasks.")
+}
+
+' === Sistemas externos ===
+System_Ext(googleIam, "Google IAM / OIDC", "Fornecedor de autenticação externa")
+
+' === Relações Utilizadores -> Containers ===
+Rel(admin, spa, "Usa para gerir sistema", "HTTP")
+Rel(shippingAgent, spa, "Usa para gerir VVNs", "HTTP")
+Rel(portOfficer, spa, "Usa para aprovar VVNs", "HTTP")
+Rel(logOp, spa, "Usa para gerir operações", "HTTP")
+
+' === Relações SPA -> APIs ===
+Rel(spa, coreApi, "Consumes", "HTTP/JSON, Port 5218")
+Rel(spa, schedulingApi, "Consumes", "HTTP/JSON, Port 5002")
+Rel(spa, oemApi, "Consumes", "HTTP/JSON, Port 5004")
+
+' === Relações Auth ===
+Rel(authApi, googleIam, "Consumes", "OIDC/OAuth2")
+Rel(authApi, dbCore, "Consumes", "Entity Framework Core")
+
+' === Relações Core API ===
+Rel(coreApi, dbCore, "Consumes", "Entity Framework Core")
+
+
+' === Relações OEM API ===
+Rel(oemApi, dbOem, "Consumes", "mssql driver")
+
+' === Validação de tokens ===
+Rel(coreApi, authApi, "Consumes", "JWT Bearer")
+Rel(schedulingApi, authApi, "Consumes", "JWT Bearer")
+Rel(oemApi, authApi, "Consumes", "JWT Bearer")
+
+@enduml

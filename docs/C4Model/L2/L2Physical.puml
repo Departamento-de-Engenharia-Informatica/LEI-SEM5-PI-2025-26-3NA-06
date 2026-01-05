@@ -1,0 +1,89 @@
+@startuml L2Physical
+' C4 Level 2 — Physical/Deployment View (PlantUML)
+' Requires: C4-PlantUML library
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Deployment.puml
+
+title C4 - Nível 2 Physical (Deployment) — Port Management System
+
+note as N1
+    **Nota:** Na implementação atual, todos os componentes executam em localhost (desenvolvimento).
+    Este diagrama representa a arquitetura de deployment ideal/produção.
+    
+    **Alternativas de Deployment:**
+    Esta é apenas uma possibilidade de arquitetura física. Dependendo das necessidades
+    de escalabilidade, disponibilidade, custos operacionais e requisitos de infraestrutura,
+    poderiam existir outros esquemas de deployment, tais como:
+    - Todos os serviços num único servidor
+    - Cada API no seu próprio servidor/container
+    - Uso de orquestração (Kubernetes, Docker Swarm)
+    - Arquitetura serverless (Azure Functions, AWS Lambda)
+end note
+
+' === Pessoas / Atores ===
+Person(admin, "Administrator", "Gere utilizadores e sistema")
+Person(shippingAgent, "Shipping Agent", "Submete VVNs")
+Person(portOfficer, "Port Authority Officer", "Aprova VVNs")
+Person(logOp, "Logistics Operator", "Executa operações")
+
+' === Nós de Execução ===
+
+Deployment_Node(clientDevice, "Client Device", "Windows/Mac/Linux") {
+    Deployment_Node(browser, "Web Browser", "Chrome/Firefox/Edge") {
+        Container(spa, "Single Page Application", "Angular", "Interface web para todos os utilizadores. Acesso baseado em roles.")
+    }
+}
+
+Deployment_Node(appServer, "Application Server", "Azure App Service / VM") {
+    Container(authApi, "Auth API", ".NET Core", "Autentica utilizadores via Google OIDC e emite JWT tokens. Port 5001")
+    
+    Container(coreApi, "Core API", ".NET Core", "Gestão de domínio core: Vessels, VesselTypes, Docks, StorageAreas, Containers, VVNs, Users. Port 5218")
+    
+    Container(schedulingApi, "Scheduling API", ".NET Core", "Calcula agendamentos de operações on-demand (stateless). Port 5002")
+}
+
+Deployment_Node(nodeServer, "Node.js Server", "Azure App Service / VM") {
+    Container(oemApi, "OEM API", "Node.js/Express", "Gestão de Operation Plans, VVEs, Incidents e Complementary Tasks. Port 5004")
+}
+
+Deployment_Node(dbServer, "Database Server", "Azure SQL Database") {
+    ContainerDb(dbCore, "ProjArqsiDB", "SQL Server", "Armazena dados core: Vessels, VesselTypes, Docks, StorageAreas, Containers, VVNs, Users.")
+    
+    ContainerDb(dbOem, "projArqsiDBOEM", "SQL Server", "Armazena dados de operações: Operation Plans, VVEs, Incidents, Complementary Tasks.")
+}
+
+Deployment_Node(externalIAM, "External IAM Provider", "Google Cloud") {
+    System_Ext(googleIam, "Google IAM / OIDC", "Fornecedor de autenticação externa")
+}
+
+' === Relações Utilizadores -> Client Device ===
+Rel(admin, spa, "Usa", "HTTPS")
+Rel(shippingAgent, spa, "Usa", "HTTPS")
+Rel(portOfficer, spa, "Usa", "HTTPS")
+Rel(logOp, spa, "Usa", "HTTPS")
+
+' === Relações SPA -> APIs ===
+Rel(spa, coreApi, "Consome", "HTTPS/JSON (Port 5218)")
+Rel(spa, schedulingApi, "Consome", "HTTPS/JSON (Port 5002)")
+Rel(spa, oemApi, "Consome", "HTTPS/JSON (Port 5004)")
+
+' === Relações Auth ===
+Rel(authApi, googleIam, "Valida tokens", "HTTPS/OIDC")
+Rel(authApi, dbCore, "Lê/escreve utilizadores", "TDS (Port 1433)")
+
+' === Relações Core API ===
+Rel(coreApi, dbCore, "Lê/escreve dados", "TDS (Port 1433)")
+
+' === Relações Scheduling API ===
+Rel(schedulingApi, coreApi, "Consome", "HTTPS/JSON (Port 5218)")
+
+' === Relações OEM API ===
+Rel(oemApi, dbOem, "Lê/escreve dados", "TDS (Port 1433)")
+Rel(oemApi, coreApi, "Consome", "HTTPS/JSON (Port 5218)")
+
+' === Validação de tokens ===
+Rel(coreApi, authApi, "Valida JWT", "HTTPS (Port 5001)")
+Rel(schedulingApi, authApi, "Valida JWT", "HTTPS (Port 5001)")
+Rel(oemApi, authApi, "Valida JWT", "HTTPS (Port 5001)")
+
+@enduml

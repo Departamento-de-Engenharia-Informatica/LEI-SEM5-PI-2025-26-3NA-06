@@ -1,0 +1,52 @@
+{
+  "date": "2026-02-01",
+  "isFeasible": true,
+  "warnings": ["Dock A has high utilization (85%)", "Container overflow risk at Storage Area 2"],
+  "dockSchedules": [
+    {
+      "dockId": "dock-1",
+      "dockName": "Dock A",
+      "assignments": [
+        {
+          "vvnId": "vvn-101",
+          "vesselId": "vessel-1",
+          "vesselImo": "IMO1234567",
+          "vesselName": "Vessel One",
+          "dockId": "dock-1",
+          "dockName": "Dock A",
+          "eta": "2026-02-01T08:00:00Z",
+          "etd": "2026-02-01T14:00:00Z",
+          "estimatedTeu": 150
+        },
+        {
+          "vvnId": "vvn-102",
+          "vesselId": "vessel-2",
+          "vesselImo": "IMO7654321",
+          "vesselName": "Vessel Two",
+          "dockId": "dock-1",
+          "dockName": "Dock A",
+          "eta": "2026-02-01T15:00:00Z",
+          "etd": "2026-02-01T22:00:00Z",
+          "estimatedTeu": 200
+        }
+      ]
+    },
+    {
+      "dockId": "dock-2",
+      "dockName": "Dock B",
+      "assignments": [
+        {
+          "vvnId": "vvn-103",
+          "vesselId": "vessel-3",
+          "vesselImo": "IMO1111111",
+          "vesselName": "Vessel Three",
+          "dockId": "dock-2",
+          "dockName": "Dock B",
+          "eta": "2026-02-01T10:00:00Z",
+          "etd": "2026-02-01T18:00:00Z",
+          "estimatedTeu": 180
+        }
+      ]
+    }
+  ]
+}

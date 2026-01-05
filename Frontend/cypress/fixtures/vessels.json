@@ -1,0 +1,35 @@
+[
+  {
+    "id": "1",
+    "vesselName": "Vessel One",
+    "imo": "IMO1234567",
+    "capacity": 5000,
+    "vesselTypeId": "type1",
+    "vesselType": {
+      "id": "type1",
+      "name": "Container Ship"
+    }
+  },
+  {
+    "id": "2",
+    "vesselName": "Vessel Two",
+    "imo": "IMO7654321",
+    "capacity": 3000,
+    "vesselTypeId": "type2",
+    "vesselType": {
+      "id": "type2",
+      "name": "Tanker"
+    }
+  },
+  {
+    "id": "3",
+    "vesselName": "Vessel Three",
+    "imo": "IMO1111111",
+    "capacity": 4500,
+    "vesselTypeId": "type1",
+    "vesselType": {
+      "id": "type1",
+      "name": "Container Ship"
+    }
+  }
+]

@@ -1,0 +1,36 @@
+[
+  {
+    "id": "101",
+    "referredVesselId": "IMO1234567",
+    "arrivalDate": "2026-02-01T10:00:00Z",
+    "departureDate": "2026-02-03T14:00:00Z",
+    "status": "Pending",
+    "isHazardous": false,
+    "loadingManifest": null,
+    "unloadingManifest": {
+      "entries": [
+        {
+          "containerId": "CONT001",
+          "targetStorageAreaId": "area-1"
+        }
+      ]
+    }
+  },
+  {
+    "id": "102",
+    "referredVesselId": "IMO7654321",
+    "arrivalDate": "2026-02-05T08:00:00Z",
+    "departureDate": "2026-02-07T16:00:00Z",
+    "status": "Pending",
+    "isHazardous": true,
+    "loadingManifest": {
+      "entries": [
+        {
+          "containerId": "CONT002",
+          "sourceStorageAreaId": "area-2"
+        }
+      ]
+    },
+    "unloadingManifest": null
+  }
+]

@@ -1,0 +1,22 @@
+{
+  "name": "projarqsi-oem-api-tests",
+  "version": "1.0.0",
+  "description": "Tests for OEM API - Operations & Execution Management",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "keywords": [
+    "oem",
+    "tests",
+    "jest"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jest": "^29.5.11",
+    "better-sqlite3": "^12.5.0",
+    "jest": "^29.7.0"
+  }
+}

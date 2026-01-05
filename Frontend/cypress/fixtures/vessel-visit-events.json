@@ -1,0 +1,32 @@
+[
+  {
+    "id": "701",
+    "vesselVisitId": "404",
+    "eventType": "Arrival",
+    "eventTime": "2026-01-18T10:00:00Z",
+    "description": "Vessel arrived at dock",
+    "vesselVisit": {
+      "vessel": {
+        "vesselName": "Vessel Two"
+      },
+      "dock": {
+        "dockName": "Dock B"
+      }
+    }
+  },
+  {
+    "id": "702",
+    "vesselVisitId": "404",
+    "eventType": "StartLoading",
+    "eventTime": "2026-01-18T12:00:00Z",
+    "description": "Started container unloading",
+    "vesselVisit": {
+      "vessel": {
+        "vesselName": "Vessel Two"
+      },
+      "dock": {
+        "dockName": "Dock B"
+      }
+    }
+  }
+]

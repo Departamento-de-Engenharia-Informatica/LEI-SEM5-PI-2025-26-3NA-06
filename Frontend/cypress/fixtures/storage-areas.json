@@ -1,0 +1,23 @@
+[
+  {
+    "id": "1",
+    "name": "Storage Area Alpha",
+    "capacity": 500,
+    "location": "West Yard",
+    "currentOccupancy": 250
+  },
+  {
+    "id": "2",
+    "name": "Storage Area Beta",
+    "capacity": 750,
+    "location": "East Yard",
+    "currentOccupancy": 600
+  },
+  {
+    "id": "3",
+    "name": "Storage Area Gamma",
+    "capacity": 300,
+    "location": "North Yard",
+    "currentOccupancy": 100
+  }
+]

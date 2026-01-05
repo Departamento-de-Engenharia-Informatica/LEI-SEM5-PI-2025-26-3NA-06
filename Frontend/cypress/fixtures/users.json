@@ -1,0 +1,26 @@
+[
+  {
+    "userId": "1",
+    "email": "test1@example.com",
+    "name": "Test User 1",
+    "role": "ShippingAgent",
+    "isActive": false,
+    "createdAt": "2026-01-01T10:00:00Z"
+  },
+  {
+    "userId": "2",
+    "email": "test2@example.com",
+    "name": "Test User 2",
+    "role": "LogisticOperator",
+    "isActive": false,
+    "createdAt": "2026-01-02T11:00:00Z"
+  },
+  {
+    "userId": "3",
+    "email": "test3@example.com",
+    "name": "Test User 3",
+    "role": "PortAuthority",
+    "isActive": false,
+    "createdAt": "2026-01-03T09:00:00Z"
+  }
+]

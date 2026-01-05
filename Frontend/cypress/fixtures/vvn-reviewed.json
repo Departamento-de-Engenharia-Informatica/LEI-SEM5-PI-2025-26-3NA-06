@@ -1,0 +1,21 @@
+[
+  {
+    "id": "401",
+    "vesselId": "1",
+    "dockId": "1",
+    "estimatedArrival": "2026-01-20T10:00:00Z",
+    "estimatedDeparture": "2026-01-22T14:00:00Z",
+    "purpose": "Cargo operations",
+    "status": "Approved",
+    "createdBy": "shipping@example.com",
+    "reviewedBy": "port@example.com",
+    "reviewedAt": "2026-01-12T11:00:00Z",
+    "vessel": {
+      "vesselName": "Vessel One",
+      "imo": "IMO1234567"
+    },
+    "dock": {
+      "dockName": "Dock A"
+    }
+  }
+]

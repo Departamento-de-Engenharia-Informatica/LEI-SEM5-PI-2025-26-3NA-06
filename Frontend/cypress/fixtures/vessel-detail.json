@@ -1,0 +1,11 @@
+{
+  "id": "vessel-1",
+  "vesselName": "Pacific Star",
+  "imoNumber": "IMO1234567",
+  "vesselTypeId": "type-1",
+  "vesselTypeName": "Container Ship",
+  "callSign": "ABCD",
+  "capacity": 5000,
+  "length": 300,
+  "width": 40
+}

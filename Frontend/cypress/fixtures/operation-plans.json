@@ -1,0 +1,65 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": "op-601",
+      "planDate": "2026-01-05",
+      "status": "Draft",
+      "isFeasible": true,
+      "warnings": [],
+      "assignmentsCount": 3,
+      "assignments": [
+        {
+          "vvnId": "vvn-101",
+          "vesselId": "vessel-1",
+          "vesselName": "Vessel One",
+          "vesselImo": "IMO1234567",
+          "dockId": "dock-1",
+          "dockName": "Dock A"
+        }
+      ],
+      "creationDate": "2026-01-04T10:00:00Z",
+      "author": "admin@port.com"
+    },
+    {
+      "id": "op-602",
+      "planDate": "2026-01-05",
+      "status": "Published",
+      "isFeasible": false,
+      "warnings": ["Dock capacity exceeded"],
+      "assignmentsCount": 2,
+      "assignments": [
+        {
+          "vvnId": "vvn-102",
+          "vesselId": "vessel-2",
+          "vesselName": "Vessel Two",
+          "vesselImo": "IMO7654321",
+          "dockId": "dock-2",
+          "dockName": "Dock B"
+        }
+      ],
+      "creationDate": "2026-01-04T11:00:00Z",
+      "author": "operator@port.com"
+    },
+    {
+      "id": "op-603",
+      "planDate": "2026-01-05",
+      "status": "Published",
+      "isFeasible": true,
+      "warnings": [],
+      "assignmentsCount": 1,
+      "assignments": [
+        {
+          "vvnId": "vvn-103",
+          "vesselId": "vessel-3",
+          "vesselName": "Vessel Three",
+          "vesselImo": "IMO1111111",
+          "dockId": "dock-1",
+          "dockName": "Dock A"
+        }
+      ],
+      "creationDate": "2026-01-04T12:00:00Z",
+      "author": "operator@port.com"
+    }
+  ]
+}

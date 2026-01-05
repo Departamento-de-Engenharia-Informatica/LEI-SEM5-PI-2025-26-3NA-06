@@ -1,0 +1,23 @@
+[
+  {
+    "id": "type1",
+    "name": "Container Ship",
+    "description": "Cargo containers",
+    "maxLength": 400,
+    "maxBeam": 60
+  },
+  {
+    "id": "type2",
+    "name": "Tanker",
+    "description": "Liquid cargo",
+    "maxLength": 300,
+    "maxBeam": 50
+  },
+  {
+    "id": "type3",
+    "name": "Bulk Carrier",
+    "description": "Dry bulk cargo",
+    "maxLength": 350,
+    "maxBeam": 55
+  }
+]

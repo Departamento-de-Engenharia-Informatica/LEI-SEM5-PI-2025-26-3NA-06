@@ -1,0 +1,65 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": "type-1",
+      "code": "EQUIP-001",
+      "name": "Equipment Failure",
+      "description": "Malfunction or breakdown of port equipment",
+      "severity": "Critical",
+      "parentId": null,
+      "isActive": true,
+      "createdAt": "2026-01-01T10:00:00Z",
+      "updatedAt": null,
+      "children": [
+        {
+          "id": "type-1-1",
+          "code": "EQUIP-001-1",
+          "name": "Crane Failure",
+          "description": "Crane malfunction",
+          "severity": "Critical",
+          "parentId": "type-1",
+          "isActive": true,
+          "createdAt": "2026-01-01T11:00:00Z",
+          "updatedAt": null
+        }
+      ]
+    },
+    {
+      "id": "type-2",
+      "code": "CARGO-001",
+      "name": "Cargo Incident",
+      "description": "Damage or loss of cargo",
+      "severity": "Major",
+      "parentId": null,
+      "isActive": true,
+      "createdAt": "2026-01-01T10:00:00Z",
+      "updatedAt": null,
+      "children": []
+    },
+    {
+      "id": "type-3",
+      "code": "SAFE-001",
+      "name": "Safety Incident",
+      "description": "Safety-related incidents or near misses",
+      "severity": "Critical",
+      "parentId": null,
+      "isActive": true,
+      "createdAt": "2026-01-01T10:00:00Z",
+      "updatedAt": null,
+      "children": []
+    },
+    {
+      "id": "type-4",
+      "code": "WEATH-001",
+      "name": "Weather Incident",
+      "description": "Weather-related delays or issues",
+      "severity": "Minor",
+      "parentId": null,
+      "isActive": true,
+      "createdAt": "2026-01-01T10:00:00Z",
+      "updatedAt": null,
+      "children": []
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "id": "1",
+    "dockName": "Dock A",
+    "locationDescription": "North Harbor",
+    "capacity": 100,
+    "allowedVesselTypeIds": ["type1", "type2"]
+  },
+  {
+    "id": "2",
+    "dockName": "Dock B",
+    "locationDescription": "South Harbor",
+    "capacity": 200,
+    "allowedVesselTypeIds": ["type1", "type3"]
+  },
+  {
+    "id": "3",
+    "dockName": "Dock C",
+    "locationDescription": "East Terminal",
+    "capacity": 150,
+    "allowedVesselTypeIds": ["type2"]
+  }
+]

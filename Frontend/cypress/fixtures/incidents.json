@@ -1,0 +1,47 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": "801",
+      "incidentTypeId": "type-1",
+      "incidentTypeCode": "EQUIP-001",
+      "incidentTypeName": "Equipment Failure",
+      "severity": "Critical",
+      "date": "2026-01-04",
+      "startTime": "14:30:00",
+      "endTime": null,
+      "description": "Crane #3 hydraulic system failure",
+      "isActive": true,
+      "affectsAllVVEs": false,
+      "affectedVVEIds": []
+    },
+    {
+      "id": "802",
+      "incidentTypeId": "type-2",
+      "incidentTypeCode": "WEATHER-001",
+      "incidentTypeName": "Weather Delay",
+      "severity": "Moderate",
+      "date": "2026-01-03",
+      "startTime": "08:00:00",
+      "endTime": "12:00:00",
+      "description": "Vessel delayed due to heavy fog",
+      "isActive": false,
+      "affectsAllVVEs": true,
+      "affectedVVEIds": []
+    },
+    {
+      "id": "803",
+      "incidentTypeId": "type-3",
+      "incidentTypeCode": "CARGO-001",
+      "incidentTypeName": "Container Damage",
+      "severity": "Minor",
+      "date": "2026-01-02",
+      "startTime": "15:00:00",
+      "endTime": null,
+      "description": "Container CONT123456 damaged during loading",
+      "isActive": true,
+      "affectsAllVVEs": false,
+      "affectedVVEIds": ["vve-123"]
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "id": "501",
+    "containerNumber": "CONT123456",
+    "type": "20ft Standard",
+    "weight": 15000,
+    "status": "Available",
+    "location": "Storage Area Alpha"
+  },
+  {
+    "id": "502",
+    "containerNumber": "CONT789012",
+    "type": "40ft High Cube",
+    "weight": 22000,
+    "status": "In Transit",
+    "location": "Dock A"
+  },
+  {
+    "id": "503",
+    "containerNumber": "CONT345678",
+    "type": "20ft Refrigerated",
+    "weight": 18000,
+    "status": "Available",
+    "location": "Storage Area Beta"
+  }
+]

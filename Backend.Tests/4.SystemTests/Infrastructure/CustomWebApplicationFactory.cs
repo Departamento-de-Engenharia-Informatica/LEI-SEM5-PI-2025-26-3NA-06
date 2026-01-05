@@ -20,29 +20,37 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
     {
         // Use a unique database name for each test factory instance
         _databaseName = $"IntegrationTestDb_{Guid.NewGuid()}";
+        
+        // Set environment variables before any configuration is loaded
+        // This ensures JWT settings are available when Program.cs runs
+        Environment.SetEnvironmentVariable("JwtSettings__SigningKey", "TestSecretKeyForJwtTokenGeneration123456789012345678901234567890");
+        Environment.SetEnvironmentVariable("JwtSettings__Issuer", "TestIssuer");
+        Environment.SetEnvironmentVariable("JwtSettings__Audience", "TestAudience");
+        Environment.SetEnvironmentVariable("JwtSettings__ExpirationMinutes", "60");
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        // Use Testing environment first to load appsettings.Testing.json
+        // Use Testing environment
         builder.UseEnvironment("Testing");
 
         builder.ConfigureAppConfiguration((context, config) =>
         {
-            // Clear existing configuration sources to ensure test config takes precedence
-            config.Sources.Clear();
-            
-            // Add appsettings.Testing.json which has the correct JWT key
-            config.AddJsonFile("appsettings.Testing.json", optional: false, reloadOnChange: false);
-            
-            // Override with in-memory configuration to ensure test values
+            // Add in-memory configuration with highest priority to override all settings
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["JwtSettings:SigningKey"] = "TestSecretKeyForJwtTokenGeneration123456789012345678901234567890", // 64 chars
+                // JWT Configuration - must be at least 32 characters
+                ["JwtSettings:SigningKey"] = "TestSecretKeyForJwtTokenGeneration123456789012345678901234567890",
                 ["JwtSettings:Issuer"] = "TestIssuer",
                 ["JwtSettings:Audience"] = "TestAudience",
-                ["JwtSettings:ExpiresInMinutes"] = "60",
-                ["ConnectionStrings:DefaultConnection"] = $"DataSource={_databaseName};Mode=Memory;Cache=Shared"
+                ["JwtSettings:ExpirationMinutes"] = "60",
+                
+                // Database Configuration
+                ["ConnectionStrings:DefaultConnection"] = $"DataSource={_databaseName};Mode=Memory;Cache=Shared",
+                
+                // Logging Configuration
+                ["Logging:LogLevel:Default"] = "Warning",
+                ["Logging:LogLevel:Microsoft.AspNetCore"] = "Warning"
             });
         });
 

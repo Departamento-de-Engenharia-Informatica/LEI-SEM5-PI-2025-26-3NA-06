@@ -1,0 +1,7 @@
+{
+  "id": "1",
+  "dockName": "Dock A",
+  "locationDescription": "North Harbor",
+  "capacity": 100,
+  "allowedVesselTypeIds": ["type1", "type2"]
+}

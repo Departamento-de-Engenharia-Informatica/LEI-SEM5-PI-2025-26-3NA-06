@@ -1,0 +1,7 @@
+{
+  "id": "1",
+  "name": "Storage Area Alpha",
+  "capacity": 500,
+  "location": "West Yard",
+  "currentOccupancy": 250
+}

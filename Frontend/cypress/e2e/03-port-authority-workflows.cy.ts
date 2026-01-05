@@ -112,6 +112,21 @@ describe('Port Authority - Dock Management', () => {
     cy.url().should('include', '/port-authority/create-dock');
     cy.contains('Create Dock').should('be.visible');
   });
+
+  it('should edit an existing dock', () => {
+    cy.visit('/port-authority/docks');
+    cy.wait('@getDocks');
+
+    cy.intercept('GET', '**/api/Dock/*', { fixture: 'dock-detail.json' }).as('getDockDetail');
+    cy.intercept('PUT', '**/api/Dock/*', {
+      statusCode: 200,
+      body: { message: 'Dock updated successfully' },
+    }).as('updateDock');
+
+    cy.get('.edit-btn').first().click();
+    cy.wait('@getDockDetail');
+    cy.url().should('include', '/port-authority/edit-dock');
+  });
 });
 
 describe('Port Authority - Storage Areas', () => {
@@ -148,6 +163,23 @@ describe('Port Authority - Storage Areas', () => {
     cy.contains('Create Storage Area').click();
     cy.url().should('include', '/port-authority/create-storage-area');
     cy.contains('Create Storage Area').should('be.visible');
+  });
+
+  it('should edit an existing storage area', () => {
+    cy.visit('/port-authority/storage-areas');
+    cy.wait('@getStorageAreas');
+
+    cy.intercept('GET', '**/api/StorageArea/*', { fixture: 'storage-area-detail.json' }).as(
+      'getStorageAreaDetail'
+    );
+    cy.intercept('PUT', '**/api/StorageArea/*', {
+      statusCode: 200,
+      body: { message: 'Storage area updated successfully' },
+    }).as('updateStorageArea');
+
+    cy.get('.edit-btn').first().click();
+    cy.wait('@getStorageAreaDetail');
+    cy.url().should('include', '/port-authority/edit-storage-area');
   });
 });
 

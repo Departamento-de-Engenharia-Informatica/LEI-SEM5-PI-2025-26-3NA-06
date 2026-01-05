@@ -14,3 +14,22 @@ As a Port Operations Supervisor, I want to manage the catalog of Complementary T
   - Safety and Security: Onboard Security Check, Customs Inspection
   - Maintenance: Hull Repair, Equipment Calibration
   - Cleaning and Housekeeping: Deck Cleaning, Waste Removal
+
+## Perguntas do Fórum (Dev-Cliente)
+
+**Q1:**
+Na user story 4.1.14 – Complementary Task Categories, os exemplos apresentados (por exemplo, Safety and Security: Onboard Security Check, Customs Inspection) parecem sugerir uma estrutura hierárquica semelhante à definida para os Incident Types na user story 4.1.12.
+A dúvida é: as complementary task categories também devem ter hierarquia, à semelhança dos Incident Types?
+
+**A1:**
+Tens razão. Não é necessário providenciarem essa hierarquia, contudo, seria algo desejável.
+
+---
+
+**Q2:**
+When updating a complementary task category, which fields can be edited?
+Can the name, description, and duration be changed?
+I assume the ID (unique code) cannot be changed.
+
+**A2:**
+All fields, excepting the unique code, may be updated.

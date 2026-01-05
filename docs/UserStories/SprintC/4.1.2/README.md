@@ -12,3 +12,16 @@ As a Logistics Operator, I want to automatically generate and store Operation Pl
   - Each plan must include, among others, the assigned resources, planned time windows for loading/unloading.
 - The SPA must allow operators to initiate and view generated plans before saving them in the OEM module.
 - For auditability purposes, the system must record some metadata such as creation date, author, algorithm used.
+
+## Perguntas do Fórum (Dev-Cliente)
+
+**Q1:**
+O Operation Plan é gerado automaticamente através do módulo de planeamento. No entanto, para o módulo de planeamento conseguir dar a sequência das operações, este tem de ter acesso a que operações executar para cada VVN.
+
+Esta lista de operações de uma VVN é registada manualmente? Se sim, quem a preenche e poderia dar exemplos de operações numa VVN?
+
+**A1:**
+A tua pergunta revela um desconhecimento que não me parece aceitável para esta fase (Sprint C), porque isto já foi tratado anteriormente (Sprint B).
+As operações advém dos manifestos de carga (cargo manifest).
+Recomendo ainda que leias com atenção este post:
+https://moodle.isep.ipp.pt/mod/forum/discuss.php?d=2246

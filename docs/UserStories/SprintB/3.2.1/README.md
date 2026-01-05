@@ -60,3 +60,15 @@ As a (Non-Authenticated) System User, I want to authenticate using the external 
 - httpOnly cookies prevent XSS attacks
 - Secure cookie flags enabled
 - HTTPS enforced for OAuth redirects
+
+## Perguntas do Fórum (Dev-Cliente)
+
+**Q1:**
+I would like to ask whether there are any specific recommendations regarding the IAM provider to be used, or if further details about this User Story will be provided.
+
+**A1:**
+It is the team's responsibility to select the external IAM provider to integrate with, as long as it serves the intended purpose.
+For instance, integration with Google, Facebook, Microsoft, or similar providers fits the project purposes.
+Standard protocols must be supported by the IAM, so pay attention to the acceptance criteria.
+
+Integration procedures depend on the selected IAM, so this should be taken into consideration when choosing the provider.

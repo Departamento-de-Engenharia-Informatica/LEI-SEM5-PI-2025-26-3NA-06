@@ -1,0 +1,17 @@
+@startuml US_4.1.1_Domain_Model
+
+!define TECHNICAL_COLOR #E3F2FD
+
+note as N1
+  Technical User Story
+  No specific domain aggregate
+  
+  OEM Module Setup:
+  - Node.js + TypeScript
+  - Express REST API
+  - JWT Authentication
+  - MongoDB integration
+  - Domain-Driven Design structure
+end note
+
+@enduml

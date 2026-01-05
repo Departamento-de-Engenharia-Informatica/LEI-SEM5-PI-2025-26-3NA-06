@@ -1,0 +1,20 @@
+@startuml US_3.1.5_Domain_Model
+
+!define TECHNICAL_COLOR #E3F2FD
+
+note as N1
+  Technical User Story
+  Uses domain aggregates from Backend:
+  
+  - VesselType
+  - Vessel
+  - Dock
+  - StorageArea
+  - VesselVisitNotification
+  - Container
+  
+  Frontend Components for CRUD operations
+  on these aggregates
+end note
+
+@enduml

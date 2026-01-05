@@ -1,0 +1,29 @@
+@startuml US_3.2.6_SSD
+autonumber
+
+actor "New\nUser" as User
+participant ":System" as System
+
+note over User, System: Usuário recebeu link de ativação por email
+
+== Access Activation Link ==
+activate User
+User -> System: Clica no link de ativação recebido por email
+activate System
+System --> User: Redireciona para página de autenticação Google
+deactivate System
+
+== Authenticate via IAM ==
+User -> System: Autentica-se no Google
+activate System
+System --> User: Apresenta confirmação de ativação da conta
+deactivate System
+
+== Access System ==
+User -> System: Clica em "Access System"
+activate System
+System --> User: Apresenta página inicial do sistema
+deactivate System
+deactivate User
+
+@enduml

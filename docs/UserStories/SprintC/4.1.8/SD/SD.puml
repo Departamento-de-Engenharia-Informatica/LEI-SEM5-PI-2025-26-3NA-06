@@ -1,0 +1,65 @@
+@startuml US_4.1.8_Sequence_Diagram
+
+actor "Dock Operator" as OPER
+participant "<<UI>>\n:VVEComponent" as UI
+participant "<<Controller>>\n:VVEController" as Controller
+participant "<<Application>>\n:VVEService" as Service
+participant "<<Domain>>\n:VesselVisitExecution" as Domain
+participant "<<Repository>>\n:VVERepository" as Repo
+database "<<Database>>\n:OEM SQL DB" as DB
+
+== Update Berth Time ==
+
+OPER -> UI : Navio atraca
+activate UI
+
+UI --> OPER : Apresenta VVE ativo
+
+OPER -> UI : Regista informação de atracação:\n- Actual berth time\n- Actual dock (se diferente do planeado)
+
+UI -> Controller : PUT /api/vve/{id}/berth\n{actualBerthTime, actualDockId}
+activate Controller
+
+Controller -> Service : updateBerthInfo(id, berthInfo)
+activate Service
+
+Service -> Repo : findById(id)
+activate Repo
+Repo -> DB : SELECT * FROM VesselVisitExecutions\nWHERE Id = ?
+activate DB
+DB --> Repo : VVE
+deactivate DB
+Repo --> Service : VesselVisitExecution
+deactivate Repo
+
+Service -> Domain : updateBerthInfo(\nactualBerthTime, actualDockId)
+activate Domain
+
+Domain -> Domain : Valida:\n- berthTime >= arrivalTime\n- Status = Arrived\n- Muda Status para Berthed
+
+alt Dock diferente do planeado
+    Domain -> Domain : Regista discrepância:\n- Planned dock vs actual dock\n- Reason (opcional)
+end
+
+Domain --> Service : VVE atualizado
+deactivate Domain
+
+Service -> Repo : update(vve)
+activate Repo
+Repo -> DB : UPDATE VesselVisitExecutions\nSET BerthInfo=..., Status=...\nWHERE Id = ?
+activate DB
+DB --> Repo : Modified
+deactivate DB
+Repo --> Service : Success
+deactivate Repo
+
+Service --> Controller : VVEDTO
+deactivate Service
+
+Controller --> UI : 200 OK {vve}
+deactivate Controller
+
+UI --> OPER : Atracação registada
+deactivate UI
+
+@enduml

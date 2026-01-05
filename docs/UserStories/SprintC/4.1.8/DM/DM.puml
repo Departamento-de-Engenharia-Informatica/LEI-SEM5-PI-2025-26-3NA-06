@@ -1,0 +1,56 @@
+@startuml US_4.1.8_Domain_Model
+
+!define AGGREGATE_ROOT_COLOR #FFDDAA
+!define VALUE_OBJECT_COLOR #E8F5E9
+
+class VesselVisitExecution <<Aggregate Root>> AGGREGATE_ROOT_COLOR {
+    - VveId id
+    - VvnId vvnId
+    - DateTime actualArrivalTime
+    - BerthInfo? berthInfo
+    - ExecutionStatus status
+    + UpdateBerthInfo(actualBerthTime, actualDockId)
+    + RecordDiscrepancy(reason)
+}
+
+class VveId <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + VveId(value)
+}
+
+class BerthInfo <<Value Object>> VALUE_OBJECT_COLOR {
+    - DateTime actualBerthTime
+    - DockId actualDockId
+    - DateTime recordedAt
+    - DiscrepancyReason? discrepancyReason
+}
+
+class DiscrepancyReason <<Value Object>> VALUE_OBJECT_COLOR {
+    - string reason
+    - DateTime recordedAt
+}
+
+class DockId <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + DockId(value)
+}
+
+class ExecutionStatus <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + ExecutionStatus(value)
+}
+
+VesselVisitExecution "1" *-- "1" VveId : id
+VesselVisitExecution "1" *-- "0..1" BerthInfo : berthInfo
+VesselVisitExecution "1" *-- "1" ExecutionStatus : status
+BerthInfo "1" --> "1" DockId : actualDockId
+BerthInfo "1" *-- "0..1" DiscrepancyReason : discrepancyReason
+
+note right of BerthInfo
+  Records actual berthing:
+  - Actual time vs planned
+  - Actual dock vs assigned
+  - Discrepancy reasons
+end note
+
+@enduml

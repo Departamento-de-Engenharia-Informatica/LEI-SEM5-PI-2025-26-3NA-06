@@ -1,0 +1,86 @@
+@startuml US_2.2.2_Domain_Model
+
+!define AGGREGATE_ROOT_COLOR #FFDDAA
+!define VALUE_OBJECT_COLOR #E8F5E9
+
+class Vessel <<Aggregate Root>> AGGREGATE_ROOT_COLOR {
+    - VesselId id
+    - IMOnumber imo
+    - VesselTypeId vesselTypeId
+    - VesselName vesselName
+    - Capacity capacity
+    - Rows rows
+    - Bays bays
+    - Tiers tiers
+    - Length length
+    + Vessel(imo, vesselTypeId, vesselName, capacity, rows, bays, tiers, length)
+    + UpdateDetails(vesselName, capacity, rows, bays, tiers, length, vesselTypeId)
+}
+
+class VesselId <<Value Object>> VALUE_OBJECT_COLOR {
+    - Guid value
+    + VesselId(value)
+}
+
+class IMOnumber <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + IMOnumber(value)
+    + ValidateImoFormat()
+}
+
+class VesselName <<Value Object>> VALUE_OBJECT_COLOR {
+    - string name
+    + VesselName(name)
+}
+
+class Capacity <<Value Object>> VALUE_OBJECT_COLOR {
+    - int value
+    + Capacity(value)
+}
+
+class Rows <<Value Object>> VALUE_OBJECT_COLOR {
+    - int value
+    + Rows(value)
+}
+
+class Bays <<Value Object>> VALUE_OBJECT_COLOR {
+    - int value
+    + Bays(value)
+}
+
+class Tiers <<Value Object>> VALUE_OBJECT_COLOR {
+    - int value
+    + Tiers(value)
+}
+
+class Length <<Value Object>> VALUE_OBJECT_COLOR {
+    - double value
+    + Length(value)
+}
+
+class VesselTypeId <<Value Object>> VALUE_OBJECT_COLOR {
+    - Guid value
+    + VesselTypeId(value)
+}
+
+Vessel "1" *-- "1" VesselId : id
+Vessel "1" *-- "1" IMOnumber : imo
+Vessel "1" *-- "1" VesselName : vesselName
+Vessel "1" *-- "1" Capacity : capacity
+Vessel "1" *-- "1" Rows : rows
+Vessel "1" *-- "1" Bays : bays
+Vessel "1" *-- "1" Tiers : tiers
+Vessel "1" *-- "1" Length : length
+Vessel "1" --> "1" VesselTypeId : vesselTypeId
+
+note right of Vessel
+  References VesselType aggregate
+  IMO number is immutable and unique
+end note
+
+note right of IMOnumber
+  7 digits + check digit validation
+  Format: IMO + 7 digits
+end note
+
+@enduml

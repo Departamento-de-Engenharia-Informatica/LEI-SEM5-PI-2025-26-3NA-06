@@ -1,0 +1,43 @@
+@startuml US_2.2.7_SSD
+autonumber
+
+actor "Port Authority\nOfficer" as Officer
+participant ":System" as System
+
+== Review Pending Notifications ==
+activate Officer
+Officer -> System: Acede à secção "Vessel Visit Notifications"
+activate System
+System --> Officer: Apresenta lista de VVNs pendentes
+deactivate System
+
+== Approve Notification ==
+Officer -> System: Seleciona VVN para revisão
+activate System
+System --> Officer: Apresenta detalhes da VVN
+deactivate System
+Officer -> System: Clica em "Approve" e seleciona dock
+activate System
+System --> Officer: Apresenta confirmação de aprovação
+deactivate System
+Officer -> System: Confirma aprovação
+activate System
+System --> Officer: devolve mensagem de sucesso
+deactivate System
+
+== Reject Notification ==
+Officer -> System: Seleciona outra VVN para revisão
+activate System
+System --> Officer: Apresenta detalhes da VVN
+deactivate System
+Officer -> System: Clica em "Reject" e introduz razão
+activate System
+System --> Officer: Apresenta confirmação de rejeição
+deactivate System
+Officer -> System: Confirma rejeição
+activate System
+System --> Officer: devolve mensagem de sucesso
+deactivate System
+deactivate Officer
+
+@enduml

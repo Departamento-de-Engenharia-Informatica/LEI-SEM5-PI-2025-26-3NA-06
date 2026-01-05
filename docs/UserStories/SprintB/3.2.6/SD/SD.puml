@@ -1,0 +1,224 @@
+@startuml US_3.2.6_Sequence_Diagram
+
+actor "New User" as NEWUSER
+participant "<<UI>>\n:ActivationComponent" as UI
+participant "<<Service>>\n:AuthService" as AuthService
+participant "<<Controller>>\n:AuthController" as Controller
+participant "<<Application>>\n:UserService" as UserService
+participant "<<Domain>>\n:User" as Domain
+participant "<<Repository>>\n:IUserRepository" as Repo
+participant "<<Service>>\n:EmailService" as EmailService
+database "<<Database>>\n:SQL Server" as DB
+
+== Receive Activation Email ==
+
+NEWUSER -> NEWUSER : Recebe email:\n"Bem-vindo! Ative sua conta\nclicando no link abaixo:\n{activationLink}"
+
+== Access Activation Page ==
+
+NEWUSER -> UI : Clica no link\nGET /activate/{token}
+activate UI
+
+UI -> UI : Extrai token da URL
+
+UI -> AuthService : validateActivationToken(token)
+activate AuthService
+
+AuthService -> Controller : GET /api/auth/validate-token/{token}
+activate Controller
+
+Controller -> UserService : ValidateActivationTokenAsync(token)
+activate UserService
+
+UserService -> Repo : GetByActivationTokenAsync(token)
+activate Repo
+
+Repo -> DB : SELECT * FROM Users\nWHERE ActivationToken = {token}\nAND Status = 'PendingActivation'
+activate DB
+DB --> Repo : User data or null
+deactivate DB
+
+Repo --> UserService : User or null
+deactivate Repo
+
+alt Token válido
+    UserService -> UserService : Verifica expiração\n(CreatedAt + 24h > Now)
+    
+    alt Token não expirado
+        UserService --> Controller : {valid: true, email: user.Email}
+        deactivate UserService
+        Controller --> AuthService : 200 OK {valid: true}
+        deactivate Controller
+        AuthService --> UI : Token válido
+        deactivate AuthService
+        
+        UI --> NEWUSER : Apresenta formulário:\n"Ativar conta para {email}"\n[Botão: Ativar Conta]
+        
+    else Token expirado
+        UserService --> Controller : {valid: false, reason: "expired"}
+        deactivate UserService
+        Controller --> AuthService : 200 OK {valid: false}
+        deactivate Controller
+        AuthService --> UI : Token expirado
+        deactivate AuthService
+        
+        UI --> NEWUSER : "Token de ativação expirado.\nContacte o administrador\npara novo link."
+    end
+    
+else Token inválido
+    UserService --> Controller : {valid: false, reason: "invalid"}
+    deactivate UserService
+    Controller --> AuthService : 200 OK {valid: false}
+    deactivate Controller
+    AuthService --> UI : Token inválido
+    deactivate AuthService
+    
+    UI --> NEWUSER : "Link de ativação inválido.\nVerifique o email ou contacte\no administrador."
+end
+
+deactivate UI
+
+== Activate Account ==
+
+NEWUSER -> UI : Clica em "Ativar Conta"
+activate UI
+
+UI -> AuthService : activateAccount(token)
+activate AuthService
+
+AuthService -> Controller : POST /api/auth/activate\n{activationToken}
+activate Controller
+
+Controller -> UserService : ActivateAccountAsync(token)
+activate UserService
+
+UserService -> Repo : GetByActivationTokenAsync(token)
+activate Repo
+
+Repo -> DB : SELECT * FROM Users\nWHERE ActivationToken = {token}
+activate DB
+DB --> Repo : User
+deactivate DB
+
+Repo --> UserService : User
+deactivate Repo
+
+UserService -> Domain : Activate()
+activate Domain
+
+Domain -> Domain : Valida Status = PendingActivation\nMuda Status para Active\nLimpa ActivationToken\nRegista ActivatedAt
+
+Domain --> UserService : User ativado
+deactivate Domain
+
+UserService -> Repo : UpdateAsync(user)
+activate Repo
+
+Repo -> DB : UPDATE Users SET\nStatus = 'Active',\nActivationToken = NULL,\nActivatedAt = NOW()\nWHERE Id = {userId}
+activate DB
+DB --> Repo : Success
+deactivate DB
+
+Repo --> UserService : Success
+deactivate Repo
+
+UserService -> Repo : UnitOfWork.CommitAsync()
+activate Repo
+Repo -> DB : COMMIT TRANSACTION
+activate DB
+DB --> Repo : Success
+deactivate DB
+Repo --> UserService : Success
+deactivate Repo
+
+UserService -> EmailService : SendWelcomeEmail(user)
+activate EmailService
+
+EmailService -> EmailService : Envia email de boas-vindas:\n"Conta ativada com sucesso!\nPode agora fazer login."
+
+EmailService --> UserService : Email sent
+deactivate EmailService
+
+UserService --> Controller : {success: true, userId}
+deactivate UserService
+
+Controller --> AuthService : 200 OK {activated: true}
+deactivate Controller
+
+AuthService --> UI : Account activated
+deactivate AuthService
+
+UI -> UI : showSuccessMessage(\n"Conta ativada com sucesso!"\n)
+
+UI -> UI : Aguarda 2 segundos
+
+UI -> UI : Redireciona para /login
+
+UI --> NEWUSER : "✓ Conta ativada!\nRedirecionando para login..."
+deactivate UI
+
+== First Login After Activation ==
+
+NEWUSER -> UI : Acede à página de login
+activate UI
+
+UI --> NEWUSER : Apresenta opções de login:\n[Login com Google]
+
+NEWUSER -> UI : Clica em "Login com Google"
+
+UI -> AuthService : loginWithGoogle()
+activate AuthService
+
+note right of AuthService
+  Ver US 3.2.1 para
+  fluxo completo de
+  Google OAuth2
+end note
+
+AuthService -> Controller : OAuth2 flow
+activate Controller
+
+Controller -> UserService : AuthenticateWithGoogleAsync(googleData)
+activate UserService
+
+UserService -> Repo : GetByEmailAsync(email)
+activate Repo
+
+Repo -> DB : SELECT * FROM Users\nWHERE Email = {email}
+activate DB
+DB --> Repo : User (Status=Active)
+deactivate DB
+
+Repo --> UserService : User
+deactivate Repo
+
+UserService -> Domain : UpdateGoogleId(googleId)
+activate Domain
+
+Domain -> Domain : Associa GoogleId à conta\nAtualiza LastLoginAt
+
+Domain --> UserService : User atualizado
+deactivate Domain
+
+UserService -> Repo : UpdateAsync(user)
+activate Repo
+Repo -> DB : UPDATE Users SET GoogleId={id}
+activate DB
+DB --> Repo : Success
+deactivate DB
+Repo --> UserService : Success
+deactivate Repo
+
+UserService --> Controller : {token, user}
+deactivate UserService
+
+Controller --> AuthService : JWT token
+deactivate Controller
+
+AuthService --> UI : Authenticated
+deactivate AuthService
+
+UI --> NEWUSER : Redireciona para dashboard\n"Bem-vindo, {name}!"
+deactivate UI
+
+@enduml

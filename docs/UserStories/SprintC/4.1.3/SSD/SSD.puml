@@ -1,0 +1,31 @@
+@startuml US_4.1.3_SSD
+autonumber
+
+actor "Logistics\nOperator" as Operator
+participant ":System" as System
+
+== Search Plans ==
+activate Operator
+Operator -> System: Acede à secção "Operation Plans"
+activate System
+System --> Operator: Apresenta interface de pesquisa
+deactivate System
+Operator -> System: Introduz critérios de pesquisa (intervalo de datas, filtros)
+activate System
+System --> Operator: Apresenta lista de planos filtrados
+deactivate System
+
+== Sort Results ==
+Operator -> System: Seleciona critério de ordenação
+activate System
+System --> Operator: Apresenta lista ordenada de planos
+deactivate System
+
+== View Plan Details ==
+Operator -> System: Seleciona um plano da lista
+activate System
+System --> Operator: Apresenta detalhes do plano (operations, schedule, resources)
+deactivate System
+deactivate Operator
+
+@enduml

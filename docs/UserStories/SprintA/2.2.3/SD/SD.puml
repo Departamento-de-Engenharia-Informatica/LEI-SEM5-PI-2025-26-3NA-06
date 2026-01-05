@@ -1,0 +1,191 @@
+@startuml US_2.2.3_Sequence_Diagram
+
+actor "Port Manager" as PM
+participant "<<UI>>\n:Angular\nComponent" as UI
+participant "<<Controller>>\n:DockController" as Controller
+participant "<<Application>>\n:DockService" as Service
+participant "<<Domain>>\n:Dock" as Domain
+participant "<<Repository>>\n:IDockRepository" as Repo
+participant "<<Repository>>\n:IVesselTypeRepository" as VTRepo
+database "<<Database>>\n:SQL Server" as DB
+
+== Create Dock ==
+
+PM -> UI : Clica em "Criar Doca"
+activate UI
+UI --> PM : Apresenta formulário
+
+PM -> UI : Introduz dados e submete\n(Code, Name, Coordinates,\nallowedVesselTypeIds)
+UI -> UI : Valida dados no frontend
+
+UI -> Controller : POST /api/docks\n{dockDTO}
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize(Roles = "PortManager")]
+
+Controller -> Service : CreateDockAsync(createDockDTO)
+activate Service
+
+Service -> Service : Valida Code único
+
+Service -> Repo : GetByCodeAsync(code)
+activate Repo
+
+Repo -> DB : SELECT * FROM Docks\nWHERE Code = {code}
+activate DB
+DB --> Repo : null (não existe)
+deactivate DB
+
+Repo --> Service : null
+deactivate Repo
+
+loop Para cada VesselTypeId
+    Service -> VTRepo : GetByIdAsync(vesselTypeId)
+    activate VTRepo
+    VTRepo -> DB : SELECT * FROM VesselTypes\nWHERE Id = {vesselTypeId}
+    activate DB
+    DB --> VTRepo : VesselType data
+    deactivate DB
+    VTRepo --> Service : VesselType
+    deactivate VTRepo
+end
+
+Service -> Domain : new Dock(\nCode, Name, Coordinates,\nallowedVesselTypeIds)
+activate Domain
+
+Domain -> Domain : Valida Value Objects\n- DockCode (não vazio)\n- DockName (não vazio)\n- Coordinates (válidas)\n- AllowedVesselTypeIds (> 0)
+
+Domain --> Service : Dock criado
+deactivate Domain
+
+Service -> Repo : AddAsync(dock)
+activate Repo
+
+Repo -> DB : INSERT INTO Docks VALUES (...)\nINSERT INTO DockAllowedVesselTypes
+activate DB
+DB --> Repo : Dock ID
+deactivate DB
+
+Repo --> Service : Dock persistido
+deactivate Repo
+
+Service -> Repo : UnitOfWork.CommitAsync()
+activate Repo
+Repo -> DB : COMMIT TRANSACTION
+activate DB
+DB --> Repo : Success
+deactivate DB
+Repo --> Service : Success
+deactivate Repo
+
+Service --> Controller : DockDTO
+deactivate Service
+
+Controller --> UI : 201 Created {dockDTO}
+deactivate Controller
+
+UI --> PM : Apresenta confirmação de sucesso
+deactivate UI
+
+== Update Dock ==
+
+PM -> UI : Seleciona doca e clica "Editar"
+activate UI
+
+UI -> Controller : GET /api/docks/{code}
+activate Controller
+
+Controller -> Service : GetDockByCodeAsync(code)
+activate Service
+
+Service -> Repo : GetByCodeAsync(code)
+activate Repo
+
+Repo -> DB : SELECT * FROM Docks d\nLEFT JOIN DockAllowedVesselTypes\nWHERE d.Code = {code}
+activate DB
+DB --> Repo : Dock data with allowed types
+deactivate DB
+
+Repo --> Service : Dock
+deactivate Repo
+
+Service --> Controller : DockDTO
+deactivate Service
+
+Controller --> UI : 200 OK {dockDTO}
+deactivate Controller
+
+UI --> PM : Apresenta formulário com dados atuais
+
+PM -> UI : Modifica dados e submete\n(Name, Coordinates, allowedVesselTypeIds)
+
+UI -> Controller : PUT /api/docks/{code}\n{updateDockDTO}
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize(Roles = "PortManager")]
+
+Controller -> Service : UpdateDockAsync(code, updateDockDTO)
+activate Service
+
+Service -> Repo : GetByCodeAsync(code)
+activate Repo
+
+Repo -> DB : SELECT * FROM Docks\nWHERE Code = {code}
+activate DB
+DB --> Repo : Dock data
+deactivate DB
+
+Repo --> Service : Dock
+deactivate Repo
+
+alt AllowedVesselTypeIds alterados
+    loop Para cada novo VesselTypeId
+        Service -> VTRepo : GetByIdAsync(vesselTypeId)
+        activate VTRepo
+        VTRepo -> DB : SELECT * FROM VesselTypes\nWHERE Id = {vesselTypeId}
+        activate DB
+        DB --> VTRepo : VesselType data
+        deactivate DB
+        VTRepo --> Service : VesselType
+        deactivate VTRepo
+    end
+end
+
+Service -> Domain : UpdateDetails(\nName, Coordinates,\nallowedVesselTypeIds)
+activate Domain
+
+Domain -> Domain : Valida Value Objects\n- DockName (não vazio)\n- Coordinates (válidas)\n- AllowedVesselTypeIds (> 0)
+
+Domain --> Service : Dock atualizado
+deactivate Domain
+
+Service -> Repo : UpdateAsync(dock)
+activate Repo
+
+Repo -> DB : UPDATE Docks SET ...\nDELETE FROM DockAllowedVesselTypes\nINSERT INTO DockAllowedVesselTypes
+activate DB
+DB --> Repo : Success
+deactivate DB
+
+Repo --> Service : Success
+deactivate Repo
+
+Service -> Repo : UnitOfWork.CommitAsync()
+activate Repo
+Repo -> DB : COMMIT TRANSACTION
+activate DB
+DB --> Repo : Success
+deactivate DB
+Repo --> Service : Success
+deactivate Repo
+
+Service --> Controller : DockDTO
+deactivate Service
+
+Controller --> UI : 200 OK {dockDTO}
+deactivate Controller
+
+UI --> PM : Apresenta confirmação de atualização
+deactivate UI
+
+@enduml

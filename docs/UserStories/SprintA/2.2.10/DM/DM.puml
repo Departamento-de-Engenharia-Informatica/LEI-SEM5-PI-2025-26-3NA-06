@@ -1,0 +1,89 @@
+@startuml US_2.2.10_Domain_Model
+
+!define AGGREGATE_ROOT_COLOR #FFDDAA
+!define VALUE_OBJECT_COLOR #E8F5E9
+
+class VesselVisitNotification <<Aggregate Root>> AGGREGATE_ROOT_COLOR {
+    - VvnId id
+    - VesselId vesselId
+    - ETA eta
+    - ETD etd
+    - CargoManifest cargoManifest
+    - CrewInfo crewInfo
+    - VvnStatus status
+    - DockId? assignedDockId
+    - RejectionReason? rejectionReason
+    - UserId createdBy
+    - DateTime createdAt
+    + GetStatus() : VvnStatus
+    + GetDetails() : VvnDetails
+}
+
+class VvnId <<Value Object>> VALUE_OBJECT_COLOR {
+    - Guid value
+    + VvnId(value)
+}
+
+class VesselId <<Value Object>> VALUE_OBJECT_COLOR {
+    - Guid value
+    + VesselId(value)
+}
+
+class ETA <<Value Object>> VALUE_OBJECT_COLOR {
+    - DateTime value
+    + ETA(value)
+}
+
+class ETD <<Value Object>> VALUE_OBJECT_COLOR {
+    - DateTime value
+    + ETD(value)
+}
+
+class CargoManifest <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + CargoManifest(value)
+}
+
+class CrewInfo <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + CrewInfo(value)
+}
+
+class VvnStatus <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + VvnStatus(value)
+}
+
+class DockId <<Value Object>> VALUE_OBJECT_COLOR {
+    - Guid value
+    + DockId(value)
+}
+
+class RejectionReason <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + RejectionReason(value)
+}
+
+class UserId <<Value Object>> VALUE_OBJECT_COLOR {
+    - Guid value
+    + UserId(value)
+}
+
+VesselVisitNotification "1" *-- "1" VvnId : id
+VesselVisitNotification "1" --> "1" VesselId : vesselId
+VesselVisitNotification "1" *-- "1" ETA : eta
+VesselVisitNotification "1" *-- "1" ETD : etd
+VesselVisitNotification "1" *-- "1" CargoManifest : cargoManifest
+VesselVisitNotification "1" *-- "1" CrewInfo : crewInfo
+VesselVisitNotification "1" *-- "1" VvnStatus : status
+VesselVisitNotification "1" --> "0..1" DockId : assignedDockId
+VesselVisitNotification "1" *-- "0..1" RejectionReason : rejectionReason
+VesselVisitNotification "1" --> "1" UserId : createdBy
+
+note right of VesselVisitNotification
+  Read-only view for Shipping Agent
+  Shows status, vessel, dates, cargo,
+  crew, dock assignment (if approved)
+end note
+
+@enduml

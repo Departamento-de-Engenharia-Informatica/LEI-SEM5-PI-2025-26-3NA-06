@@ -1,0 +1,57 @@
+@startuml US_4.1.9_Domain_Model
+
+!define AGGREGATE_ROOT_COLOR #FFDDAA
+!define VALUE_OBJECT_COLOR #E8F5E9
+
+class VesselVisitExecution <<Aggregate Root>> AGGREGATE_ROOT_COLOR {
+    - VveId id
+    - VvnId vvnId
+    - List<ExecutedOperation> operations
+    - ExecutionStatus status
+}
+
+class ExecutedOperation <<Value Object>> VALUE_OBJECT_COLOR {
+    - ExecutedOperationId id
+    - PlannedOperationId? plannedOperationId
+    - OperationType type
+    - DateTime? actualStartTime
+    - DateTime? actualEndTime
+    - List<ResourceId> actualResources
+    - OperationStatus operationStatus
+}
+
+class ExecutedOperationId <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + ExecutedOperationId(value)
+}
+
+class OperationType <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + OperationType(value)
+}
+
+class OperationStatus <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + OperationStatus(value)
+}
+
+class ResourceId <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + ResourceId(value)
+}
+
+VesselVisitExecution "1" *-- "*" ExecutedOperation : operations
+ExecutedOperation "1" *-- "1" ExecutedOperationId : id
+ExecutedOperation "1" *-- "1" OperationType : type
+ExecutedOperation "1" *-- "1" OperationStatus : operationStatus
+ExecutedOperation "1" --> "*" ResourceId : actualResources
+
+note right of ExecutedOperation
+  Operation execution tracking:
+  - Start/end times
+  - Resources used
+  - Completion status
+  - Links to planned operation
+end note
+
+@enduml

@@ -1,0 +1,145 @@
+@startuml US_3.1.4_Sequence_Diagram
+
+actor "User" as USER
+participant "<<UI>>\n:Angular\nComponent" as UI
+participant "<<Service>>\n:LoadingService" as LoadingService
+participant "<<Interceptor>>\n:LoadingInterceptor" as Interceptor
+participant "<<Component>>\n:LoadingSpinner" as Spinner
+participant "<<HTTP>>\n:Backend API" as API
+
+== Loading Indicator ==
+
+USER -> UI : Clica em "Carregar Dados"
+activate UI
+
+UI -> API : GET /api/vessels
+activate API
+
+note right of UI
+  HTTP Interceptor captura request
+end note
+
+Interceptor -> LoadingService : show()
+activate LoadingService
+
+LoadingService -> LoadingService : isLoading$ = true
+
+LoadingService -> Spinner : Observable emite true
+activate Spinner
+
+Spinner -> Spinner : Mostra spinner CSS\n(rotating animation)
+
+Spinner --> USER : Apresenta indicador de loading
+deactivate Spinner
+
+LoadingService --> Interceptor : Loading iniciado
+deactivate LoadingService
+
+API --> UI : 200 OK {data}
+deactivate API
+
+note right of UI
+  HTTP Interceptor captura response
+end note
+
+Interceptor -> LoadingService : hide()
+activate LoadingService
+
+LoadingService -> LoadingService : isLoading$ = false
+
+LoadingService -> Spinner : Observable emite false
+activate Spinner
+
+Spinner -> Spinner : Esconde spinner
+
+Spinner --> USER : Remove indicador de loading
+deactivate Spinner
+
+LoadingService --> Interceptor : Loading terminado
+deactivate LoadingService
+
+UI -> UI : Processa dados recebidos
+
+UI --> USER : Apresenta dados carregados
+deactivate UI
+
+== Error Feedback ==
+
+USER -> UI : Submete formulário inválido
+activate UI
+
+UI -> UI : Valida dados localmente
+
+UI -> UI : showErrorMessage(field, error)
+
+UI --> USER : Apresenta mensagens de erro\nem vermelho abaixo dos campos\n"Campo obrigatório"\n"Email inválido"
+deactivate UI
+
+== API Error Handling ==
+
+USER -> UI : Executa ação
+activate UI
+
+UI -> API : POST /api/vessels {invalidData}
+activate API
+
+Interceptor -> LoadingService : show()
+activate LoadingService
+LoadingService -> Spinner : Mostra loading
+activate Spinner
+Spinner --> USER : Loading indicator
+deactivate Spinner
+deactivate LoadingService
+
+API --> UI : 400 Bad Request\n{errors: ["IMO inválido"]}
+deactivate API
+
+Interceptor -> LoadingService : hide()
+activate LoadingService
+LoadingService -> Spinner : Esconde loading
+activate Spinner
+Spinner --> USER : Remove loading
+deactivate Spinner
+deactivate LoadingService
+
+UI -> UI : Intercepta erro no interceptor\nError Interceptor
+
+UI -> UI : showToast(\nmessage: errors[0],\ntype: 'error'\n)
+
+UI --> USER : Toast vermelho com erro\n"IMO inválido"
+deactivate UI
+
+== Success Feedback ==
+
+USER -> UI : Salva dados válidos
+activate UI
+
+UI -> API : POST /api/vessels {validData}
+activate API
+
+Interceptor -> LoadingService : show()
+activate LoadingService
+LoadingService -> Spinner : Mostra loading
+deactivate LoadingService
+
+API --> UI : 201 Created {vessel}
+deactivate API
+
+Interceptor -> LoadingService : hide()
+activate LoadingService
+LoadingService -> Spinner : Esconde loading
+deactivate LoadingService
+
+UI -> UI : showToast(\nmessage: 'Navio criado com sucesso',\ntype: 'success'\n)
+
+UI --> USER : Toast verde com sucesso\n✓ "Navio criado com sucesso"
+deactivate UI
+
+note right of USER
+  UX/Feedback User Story
+  Loading indicators
+  Error/Success messages
+  No domain aggregate
+end note
+
+@enduml

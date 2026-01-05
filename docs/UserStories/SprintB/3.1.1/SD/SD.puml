@@ -1,0 +1,85 @@
+@startuml US_3.1.1_Sequence_Diagram
+
+actor "Developer" as DEV
+participant "<<Terminal>>\n:Command Line" as CLI
+participant "<<Package Manager>>\n:npm" as NPM
+participant "<<Angular CLI>>\n:ng" as NG
+participant "<<File System>>\n:Workspace" as FS
+
+== Create Angular Project ==
+
+DEV -> CLI : ng new frontend
+activate CLI
+
+CLI -> NG : Executa Angular CLI
+activate NG
+
+NG -> NG : Valida configurações\n- Routing: Yes\n- Stylesheet: SCSS
+
+NG -> NPM : Inicializa package.json
+activate NPM
+
+NPM -> FS : Cria estrutura de diretórios\n- src/app\n- src/assets\n- src/environments
+activate FS
+
+FS --> NPM : Estrutura criada
+deactivate FS
+
+NPM -> NPM : Instala dependências\n(@angular/core, @angular/router, etc.)
+
+NPM --> NG : Dependências instaladas
+deactivate NPM
+
+NG -> FS : Gera ficheiros base\n- app.component.ts\n- app.routes.ts\n- main.ts
+activate FS
+
+FS --> NG : Ficheiros criados
+deactivate FS
+
+NG --> CLI : Projeto criado com sucesso
+deactivate NG
+
+CLI --> DEV : "✔ Project created successfully"
+deactivate CLI
+
+== Configure Project ==
+
+DEV -> CLI : Edita angular.json
+activate CLI
+
+CLI -> FS : Atualiza configurações\n- Build options\n- Dev server port\n- Output path
+activate FS
+
+FS --> CLI : Configurações atualizadas
+deactivate FS
+
+CLI --> DEV : Configuração concluída
+deactivate CLI
+
+== Start Development Server ==
+
+DEV -> CLI : ng serve
+activate CLI
+
+CLI -> NG : Inicia servidor de desenvolvimento
+activate NG
+
+NG -> NG : Compila aplicação\n- TypeScript -> JavaScript\n- SCSS -> CSS
+
+NG -> NG : Inicia servidor HTTP\nhttp://localhost:4200
+
+NG --> CLI : Server is running
+deactivate NG
+
+CLI --> DEV : "✔ Compiled successfully\n** Angular Live Development Server\n** Listening on localhost:4200"
+deactivate CLI
+
+DEV -> CLI : Abre browser em localhost:4200
+
+note right of DEV
+  Technical User Story
+  No domain logic
+  Infrastructure setup only
+end note
+
+@enduml

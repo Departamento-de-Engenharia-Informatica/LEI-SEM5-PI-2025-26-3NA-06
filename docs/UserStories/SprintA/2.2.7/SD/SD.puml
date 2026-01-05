@@ -1,0 +1,79 @@
+@startuml US_2.2.7_Sequence_Diagram
+
+actor "Captain" as CAP
+participant "<<UI>>\n:Angular\nComponent" as UI
+participant "<<Controller>>\n:VVNController" as Controller
+participant "<<Application>>\n:VVNService" as Service
+participant "<<Domain>>\n:VesselVisitNotification" as Domain
+participant "<<Repository>>\n:IVVNRepository" as Repo
+participant "<<Repository>>\n:IVesselRepository" as VesselRepo
+database "<<Database>>\n:SQL Server" as DB
+
+== Create Vessel Visit Notification ==
+
+CAP -> UI : Clica em "Criar Notificação de Visita"
+activate UI
+UI --> CAP : Apresenta formulário
+
+CAP -> UI : Introduz dados e submete\n(VesselIMO, ETA, ETD,\nOriginPort, DestinationPort,\nOperationType, CargoType)
+UI -> UI : Valida dados no frontend
+
+UI -> Controller : POST /api/vvn\n{vvnDTO}
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize(Roles = "Captain")]
+
+Controller -> Service : CreateVVNAsync(createVVNDTO, userId)
+activate Service
+
+Service -> VesselRepo : GetByIMOAsync(vesselIMO)
+activate VesselRepo
+
+VesselRepo -> DB : SELECT * FROM Vessels\nWHERE IMOnumber = {vesselIMO}
+activate DB
+DB --> VesselRepo : Vessel data
+deactivate DB
+
+VesselRepo --> Service : Vessel
+deactivate VesselRepo
+
+Service -> Service : Valida Vessel existe\nValida ETA < ETD\nValida Captain é responsável pelo navio
+
+Service -> Domain : new VesselVisitNotification(\nVesselId, ETA, ETD,\nOriginPort, DestinationPort,\nOperationType, CargoType,\nCaptainId, Status=Submitted)
+activate Domain
+
+Domain -> Domain : Valida Value Objects\n- ETA/ETD (futuras)\n- OriginPort/DestinationPort (não vazios)\n- OperationType (Load/Unload/Both)\n- CargoType (válido)\n- Status = Submitted
+
+Domain --> Service : VVN criado
+deactivate Domain
+
+Service -> Repo : AddAsync(vvn)
+activate Repo
+
+Repo -> DB : INSERT INTO VesselVisitNotifications\nVALUES (...)
+activate DB
+DB --> Repo : VVN ID
+deactivate DB
+
+Repo --> Service : VVN persistido
+deactivate Repo
+
+Service -> Repo : UnitOfWork.CommitAsync()
+activate Repo
+Repo -> DB : COMMIT TRANSACTION
+activate DB
+DB --> Repo : Success
+deactivate DB
+Repo --> Service : Success
+deactivate Repo
+
+Service --> Controller : VVNDTO
+deactivate Service
+
+Controller --> UI : 201 Created {vvnDTO}
+deactivate Controller
+
+UI --> CAP : Apresenta confirmação de sucesso\ncom status "Submitted"
+deactivate UI
+
+@enduml

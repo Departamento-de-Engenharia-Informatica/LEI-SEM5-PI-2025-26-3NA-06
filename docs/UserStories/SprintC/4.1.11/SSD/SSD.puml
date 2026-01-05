@@ -1,0 +1,27 @@
+@startuml US_4.1.11_SSD
+autonumber
+
+actor "Logistics\nOperator" as Operator
+participant ":System" as System
+
+== Get VVE ==
+activate Operator
+Operator -> System: Acede à VVE em execução
+activate System
+System --> Operator: Apresenta detalhes da VVE e operações
+deactivate System
+
+== Mark as Completed ==
+Operator -> System: Clica em "Complete VVE" e introduz hora unberthing e departure reais
+activate System
+System --> Operator: Apresenta resultado de validação (todas operações completas?)
+deactivate System
+
+== Confirm Completion ==
+Operator -> System: Confirma conclusão da VVE
+activate System
+System --> Operator: Apresenta confirmação de conclusão
+deactivate System
+deactivate Operator
+
+@enduml

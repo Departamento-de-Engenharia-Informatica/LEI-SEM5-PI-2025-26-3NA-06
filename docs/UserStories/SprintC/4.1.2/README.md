@@ -1,4 +1,4 @@
-# US 4.1.2 - Generate and Store Operation Plans
+﻿# US 4.1.2 - Generate and Store Operation Plans
 
 ## Descrição
 
@@ -17,17 +17,34 @@ As a Logistics Operator, I want to automatically generate and store Operation Pl
 
 ### 3.1. Domínio
 
-_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+**Aggregate Root:** OperationPlan
+
+**Entities:**
+
+- Assignment: Represents a VVN assigned to a dock with time window
+
+**Value Objects:**
+
+- planDate (YYYY-MM-DD): Date for which the plan is created
+- status: NotStarted, InProgress, Finished
+- isFeasible: Boolean indicating if plan has no conflicts
+- warnings: Array of conflict descriptions
+- algorithm: Algorithm used for scheduling (e.g., FIFO)
+
+**Repository:** OperationPlan collection in SQL database
 
 ### 3.2. Regras de Negócio
 
-_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+1. One Operation Plan per date (planDate must be unique)
+2. Operation Plan aggregates all VVNs scheduled for a specific day
+3. Feasibility check: No time conflicts between assignments on the same dock
+4. Status transitions: NotStarted → InProgress → Finished
+5. Plans must record metadata: creation date, author (userId), algorithm used
+6. Only LogisticOperator role can create/replace operation plans
+7. When replacing a plan, the old plan is deleted and new one is created
+8. Assignments must include: vvnId, dockId, arrival time, departure time, estimatedTEU
 
-### 3.3. Casos de Uso
-
-_A desenvolver: Descrever os principais casos de uso e seus fluxos._
-
-## Perguntas do Fórum (Dev-Cliente)
+### 3.2.1. Perguntas do Fórum (Dev-Cliente)
 
 **Q1:**
 O Operation Plan é gerado automaticamente através do módulo de planeamento. No entanto, para o módulo de planeamento conseguir dar a sequência das operações, este tem de ter acesso a que operações executar para cada VVN.
@@ -39,3 +56,305 @@ A tua pergunta revela um desconhecimento que não me parece aceitável para esta
 As operações advém dos manifestos de carga (cargo manifest).
 Recomendo ainda que leias com atenção este post:
 https://moodle.isep.ipp.pt/mod/forum/discuss.php?d=2246
+
+### 3.3. Casos de Uso
+
+#### UC1 - Generate Operation Plan
+
+Logistics Operator selects a date and algorithm. Scheduling module generates assignments for all approved VVNs on that date. OEM stores the plan with metadata.
+
+#### UC2 - Replace Operation Plan
+
+Logistics Operator regenerates plan for a date (e.g., with different algorithm). System deletes existing plan and creates new one.
+
+#### UC3 - Validate Feasibility
+
+System checks for dock conflicts in the operation plan and sets isFeasible flag accordingly.
+
+### 3.4. API Routes
+
+| Method | Endpoint                          | Description                               | Auth Required          |
+| ------ | --------------------------------- | ----------------------------------------- | ---------------------- |
+| POST   | /api/oem/operation-plans          | Create a new operation plan               | Yes (LogisticOperator) |
+| POST   | /api/oem/operation-plans/replace  | Replace an existing operation plan        | Yes (LogisticOperator) |
+| POST   | /api/oem/operation-plans/validate | Validate feasibility of an operation plan | Yes (LogisticOperator) |
+
+## 4. Design
+
+### 4.1. Diagrama de Sequência do Sistema (SSD)
+
+[View SSD Diagram](SSD/SSD.puml)
+
+### 4.2. Diagrama de Sequência Detalhado
+
+[View SD Diagram](SD/SD.puml)
+
+### 4.3. Modelo de Domínio
+
+[View DM Diagram](DM/DM.puml)
+
+## 5. Implementação
+
+### Abordagem
+
+A geração e armazenamento de Operation Plans foi implementada com integração entre SchedulingApi (.NET) e OemApiNode:
+
+1. **Scheduling Module**: Gera planos usando algoritmos (FIFO, etc.) com todas as VVNs aprovadas para uma data
+2. **OEM Service**: Recebe o plano gerado e armazena na sua BD
+3. **Feasibility Check**: Valida conflitos de horários/docas e marca warnings
+4. **Metadata Recording**: Regista data de criação, autor, algoritmo usado
+5. **Replace Capability**: Permite substituir plano existente (deleta antigo, cria novo)
+
+O OperationPlan agrega todos os assignments (VVN + Dock + TimeWindow) para um dia específico.
+
+### Excertos de Código Relevantes
+
+**1. Operation Plan Service - Create (OemApiNode/src/services/OperationPlanService.js)**
+
+```javascript
+const operationPlanRepository = require("../infrastructure/OperationPlanRepository");
+const OperationPlanMapper = require("../dtos/OperationPlanMapper");
+const backendApiClient = require("./BackendApiClient");
+const logger = require("../utils/logger");
+
+class OperationPlanService {
+  async createOperationPlanAsync(requestBody, userId, username) {
+    try {
+      // Convert request to DTO
+      const dto = OperationPlanMapper.fromRequest(requestBody);
+      dto.validate();
+
+      // Check if plan already exists for this date
+      const existingPlan = await operationPlanRepository.getByDateAsync(
+        dto.planDate
+      );
+      if (existingPlan) {
+        throw new Error(
+          `Operation plan already exists for date ${dto.planDate}`
+        );
+      }
+
+      // Convert DTO to domain entity (uses isFeasible and warnings from Schedule module)
+      const operationPlan = OperationPlanMapper.toDomain(dto);
+
+      // Set audit metadata
+      operationPlan.algorithm = "FIFO";
+      operationPlan.creationDate = new Date();
+      operationPlan.author = username || "Unknown";
+
+      logger.info(
+        `Saving operation plan for ${dto.planDate}: isFeasible=${operationPlan.isFeasible}, warnings=${operationPlan.warnings.length}, author=${operationPlan.author}`
+      );
+
+      // Persist to database (allow saving even with warnings/conflicts)
+      const savedPlan = await operationPlanRepository.createAsync(
+        operationPlan
+      );
+
+      logger.info(`Operation plan created successfully for ${dto.planDate}`);
+
+      const responseDto = OperationPlanMapper.toResponseDto(savedPlan);
+
+      return {
+        success: true,
+        data: responseDto,
+        message: "Operation plan created successfully",
+      };
+    } catch (error) {
+      logger.error("Error creating operation plan:", error);
+      return {
+        success: false,
+        error: error.message || "Unknown error occurred",
+      };
+    }
+  }
+
+  async replaceOperationPlanByDateAsync(requestBody, userId, username) {
+    try {
+      const dto = OperationPlanMapper.fromRequest(requestBody);
+      dto.validate();
+
+      // Delete existing plan if exists
+      const existingPlan = await operationPlanRepository.getByDateAsync(
+        dto.planDate
+      );
+      if (existingPlan) {
+        await operationPlanRepository.deleteAsync(existingPlan.id);
+        logger.info(`Deleted existing operation plan for ${dto.planDate}`);
+      }
+
+      // Create new plan
+      const operationPlan = OperationPlanMapper.toDomain(dto);
+      operationPlan.algorithm = dto.algorithm || "FIFO";
+      operationPlan.creationDate = new Date();
+      operationPlan.author = username || "Unknown";
+
+      const savedPlan = await operationPlanRepository.createAsync(
+        operationPlan
+      );
+
+      return {
+        success: true,
+        data: OperationPlanMapper.toResponseDto(savedPlan),
+        message: "Operation plan replaced successfully",
+      };
+    } catch (error) {
+      logger.error("Error replacing operation plan:", error);
+      return { success: false, error: error.message };
+    }
+  }
+}
+
+module.exports = new OperationPlanService();
+```
+
+**2. Operation Plan Controller (OemApiNode/src/controllers/operationPlanController.js) - Excerto**
+
+```javascript
+const operationPlanService = require("../services/OperationPlanService");
+const logger = require("../utils/logger");
+
+exports.create = async (req, res, next) => {
+  try {
+    const userId = req.user.sub || req.user.id;
+    const username = req.user.name || req.user.email || userId;
+
+    const result = await operationPlanService.createOperationPlanAsync(
+      req.body,
+      userId,
+      username
+    );
+
+    if (result.success) {
+      res.status(201).json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (error) {
+    logger.error("Error in create operation plan controller:", error);
+    next(error);
+  }
+};
+
+exports.replace = async (req, res, next) => {
+  try {
+    const userId = req.user.sub || req.user.id;
+    const username = req.user.name || req.user.email || userId;
+
+    const result = await operationPlanService.replaceOperationPlanByDateAsync(
+      req.body,
+      userId,
+      username
+    );
+
+    if (result.success) {
+      res.status(200).json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (error) {
+    logger.error("Error in replace operation plan controller:", error);
+    next(error);
+  }
+};
+```
+
+**3. Route Definition with RBAC (OemApiNode/src/routes/operationPlans.js) - Excerto**
+
+```javascript
+const express = require("express");
+const router = express.Router();
+const { authenticateJWT, authorizeRole } = require("../middleware/auth");
+const operationPlanController = require("../controllers/operationPlanController");
+
+// All routes require authentication and LogisticOperator role
+router.post(
+  "/",
+  authenticateJWT,
+  authorizeRole("LogisticOperator", "Admin"),
+  operationPlanController.create
+);
+
+router.post(
+  "/replace",
+  authenticateJWT,
+  authorizeRole("LogisticOperator", "Admin"),
+  operationPlanController.replace
+);
+
+router.post(
+  "/validate",
+  authenticateJWT,
+  authorizeRole("LogisticOperator", "Admin"),
+  operationPlanController.validate
+);
+
+module.exports = router;
+```
+
+## 6. Testes
+
+### Como Executar: `npm test -- --testPathPattern="OperationPlan"` | `npm run cypress:open`
+
+### Testes: ~60+ (OperationPlan domain 15+, service 20+, controller 15+, E2E)
+
+### Excertos
+
+**1. OperationPlan Entity**: `const plan = new OperationPlan({planDate, assignments}) → expect(plan.isValid()).toBe(true)`
+**2. Create Plan**: `POST /api/oem/operation-plans → Assert 201 Created and plan stored`
+**3. E2E**: `cy.generatePlan('2025-05-01') → cy.contains('Plan created successfully').should('exist')`
+
+## 7. Observações
+
+### Conformidade com Critérios de Aceitação
+
+✅ **Geração automática implementada:**
+
+1. **Target Day Selection**: Operator seleciona data para geração de plano.
+
+2. **Scheduling Algorithm**: Sistema usa SchedulingApi (algoritmo configurável: FIFO, etc.).
+
+3. **Aggregation**: Plan agrega todas VVNs agendadas para o dia (assignments com recursos, time windows).
+
+4. **View Before Save**: SPA permite review de plano gerado antes de confirmar.
+
+5. **Metadata**: Regista creation date, author (userId), algorithm usado.
+
+### Destaques da Implementação
+
+- **One Plan Per Date**: `planDate` é único (constraint de BD).
+- **Feasibility Check**: Sistema valida conflicts (mesma dock, overlapping times).
+- **Replace Operation**: Replan deleta plano antigo e cria novo (não modifica in-place).
+- **Assignment Structure**:
+  ```javascript
+  {
+    vvnId, dockId,
+    arrivalTime, departureTime,
+    estimatedTEU,
+    operations: [{type, startTime, endTime, resources}]
+  }
+  ```
+
+### Integração com SchedulingApi
+
+- **Flow**:
+  1. LogisticOperator seleciona data
+  2. OEM chama SchedulingApi com approved VVNs para essa data
+  3. SchedulingApi executa algoritmo, retorna assignments
+  4. OEM valida feasibility (no conflicts)
+  5. Frontend mostra preview
+  6. Operator confirma → OEM persiste plano
+
+### Observações do Cliente
+
+- **Operações derivam de Cargo Manifests**: Conforme resposta do cliente, operações vem dos manifestos de carga (load/unload operations).
+
+### Feasibility Validation
+
+- **Conflict Detection**: Dois assignments no mesmo dock com time overlap → `isFeasible = false`.
+- **Warnings**: Lista específica de conflicts ("Vessel A e Vessel B overlap no Dock 1").
+
+### Melhorias Implementadas
+
+- Status tracking: NotStarted (planeado) → InProgress (a executar) → Finished (completo).
+- Algorithm metadata permite análise de performance de diferentes algoritmos.

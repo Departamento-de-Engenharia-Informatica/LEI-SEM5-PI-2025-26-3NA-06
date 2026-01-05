@@ -1,0 +1,191 @@
+@startuml US_2.2.4_Sequence_Diagram
+
+actor "Port Manager" as PM
+participant "<<UI>>\n:Angular\nComponent" as UI
+participant "<<Controller>>\n:StorageAreaController" as Controller
+participant "<<Application>>\n:StorageAreaService" as Service
+participant "<<Domain>>\n:StorageArea" as Domain
+participant "<<Repository>>\n:IStorageAreaRepository" as Repo
+participant "<<Repository>>\n:IDockRepository" as DockRepo
+database "<<Database>>\n:SQL Server" as DB
+
+== Create Storage Area ==
+
+PM -> UI : Clica em "Criar Área de Armazenamento"
+activate UI
+UI --> PM : Apresenta formulário
+
+PM -> UI : Introduz dados e submete\n(Code, Name, Capacity, Coordinates,\ndockIds, distancesToDocks)
+UI -> UI : Valida dados no frontend
+
+UI -> Controller : POST /api/storageareas\n{storageAreaDTO}
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize(Roles = "PortManager")]
+
+Controller -> Service : CreateStorageAreaAsync(createStorageAreaDTO)
+activate Service
+
+Service -> Service : Valida Code único
+
+Service -> Repo : GetByCodeAsync(code)
+activate Repo
+
+Repo -> DB : SELECT * FROM StorageAreas\nWHERE Code = {code}
+activate DB
+DB --> Repo : null (não existe)
+deactivate DB
+
+Repo --> Service : null
+deactivate Repo
+
+loop Para cada DockId
+    Service -> DockRepo : GetByIdAsync(dockId)
+    activate DockRepo
+    DockRepo -> DB : SELECT * FROM Docks\nWHERE Id = {dockId}
+    activate DB
+    DB --> DockRepo : Dock data
+    deactivate DB
+    DockRepo --> Service : Dock
+    deactivate DockRepo
+end
+
+Service -> Domain : new StorageArea(\nCode, Name, Capacity,\nCoordinates, dockDistances)
+activate Domain
+
+Domain -> Domain : Valida Value Objects\n- StorageAreaCode (não vazio)\n- StorageAreaName (não vazio)\n- StorageCapacity (> 0)\n- Coordinates (válidas)\n- DockDistances (distâncias > 0)
+
+Domain --> Service : StorageArea criado
+deactivate Domain
+
+Service -> Repo : AddAsync(storageArea)
+activate Repo
+
+Repo -> DB : INSERT INTO StorageAreas VALUES (...)\nINSERT INTO StorageAreaDockDistances
+activate DB
+DB --> Repo : StorageArea ID
+deactivate DB
+
+Repo --> Service : StorageArea persistido
+deactivate Repo
+
+Service -> Repo : UnitOfWork.CommitAsync()
+activate Repo
+Repo -> DB : COMMIT TRANSACTION
+activate DB
+DB --> Repo : Success
+deactivate DB
+Repo --> Service : Success
+deactivate Repo
+
+Service --> Controller : StorageAreaDTO
+deactivate Service
+
+Controller --> UI : 201 Created {storageAreaDTO}
+deactivate Controller
+
+UI --> PM : Apresenta confirmação de sucesso
+deactivate UI
+
+== Update Storage Area ==
+
+PM -> UI : Seleciona área e clica "Editar"
+activate UI
+
+UI -> Controller : GET /api/storageareas/{code}
+activate Controller
+
+Controller -> Service : GetStorageAreaByCodeAsync(code)
+activate Service
+
+Service -> Repo : GetByCodeAsync(code)
+activate Repo
+
+Repo -> DB : SELECT * FROM StorageAreas sa\nLEFT JOIN StorageAreaDockDistances\nWHERE sa.Code = {code}
+activate DB
+DB --> Repo : StorageArea data with distances
+deactivate DB
+
+Repo --> Service : StorageArea
+deactivate Repo
+
+Service --> Controller : StorageAreaDTO
+deactivate Service
+
+Controller --> UI : 200 OK {storageAreaDTO}
+deactivate Controller
+
+UI --> PM : Apresenta formulário com dados atuais
+
+PM -> UI : Modifica dados e submete\n(Name, Capacity, Coordinates,\ndockDistances)
+
+UI -> Controller : PUT /api/storageareas/{code}\n{updateStorageAreaDTO}
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize(Roles = "PortManager")]
+
+Controller -> Service : UpdateStorageAreaAsync(code, updateStorageAreaDTO)
+activate Service
+
+Service -> Repo : GetByCodeAsync(code)
+activate Repo
+
+Repo -> DB : SELECT * FROM StorageAreas\nWHERE Code = {code}
+activate DB
+DB --> Repo : StorageArea data
+deactivate DB
+
+Repo --> Service : StorageArea
+deactivate Repo
+
+alt DockDistances alteradas
+    loop Para cada DockId
+        Service -> DockRepo : GetByIdAsync(dockId)
+        activate DockRepo
+        DockRepo -> DB : SELECT * FROM Docks\nWHERE Id = {dockId}
+        activate DB
+        DB --> DockRepo : Dock data
+        deactivate DB
+        DockRepo --> Service : Dock
+        deactivate DockRepo
+    end
+end
+
+Service -> Domain : UpdateDetails(\nName, Capacity, Coordinates,\ndockDistances)
+activate Domain
+
+Domain -> Domain : Valida Value Objects\n- StorageAreaName (não vazio)\n- StorageCapacity (> 0)\n- Coordinates (válidas)\n- DockDistances (distâncias > 0)
+
+Domain --> Service : StorageArea atualizado
+deactivate Domain
+
+Service -> Repo : UpdateAsync(storageArea)
+activate Repo
+
+Repo -> DB : UPDATE StorageAreas SET ...\nDELETE FROM StorageAreaDockDistances\nINSERT INTO StorageAreaDockDistances
+activate DB
+DB --> Repo : Success
+deactivate DB
+
+Repo --> Service : Success
+deactivate Repo
+
+Service -> Repo : UnitOfWork.CommitAsync()
+activate Repo
+Repo -> DB : COMMIT TRANSACTION
+activate DB
+DB --> Repo : Success
+deactivate DB
+Repo --> Service : Success
+deactivate Repo
+
+Service --> Controller : StorageAreaDTO
+deactivate Service
+
+Controller --> UI : 200 OK {storageAreaDTO}
+deactivate Controller
+
+UI --> PM : Apresenta confirmação de atualização
+deactivate UI
+
+@enduml

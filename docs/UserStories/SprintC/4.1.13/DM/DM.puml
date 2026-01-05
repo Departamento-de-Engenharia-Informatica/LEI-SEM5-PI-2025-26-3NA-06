@@ -1,0 +1,74 @@
+@startuml US_4.1.13_Domain_Model
+
+!define AGGREGATE_ROOT_COLOR #FFDDAA
+!define VALUE_OBJECT_COLOR #E8F5E9
+
+class Incident <<Aggregate Root>> AGGREGATE_ROOT_COLOR {
+    - IncidentId id
+    - IncidentTypeId incidentTypeId
+    - DateTime startTime
+    - DateTime? endTime
+    - Severity severity
+    - IncidentDescription description
+    - AffectedScope affectedScope
+    - IncidentStatus status
+    - UserId reportedBy
+    + RecordIncident(typeId, startTime, severity, description, scope, userId)
+    + UpdateIncident(updates)
+    + ResolveIncident(endTime)
+}
+
+class IncidentId <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + IncidentId(value)
+}
+
+class IncidentTypeId <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + IncidentTypeId(value)
+}
+
+class Severity <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + Severity(value)
+}
+
+class IncidentDescription <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + IncidentDescription(value)
+}
+
+class AffectedScope <<Value Object>> VALUE_OBJECT_COLOR {
+    - List<string> affectedResources
+    - List<string> affectedOperations
+    + AffectedScope(resources, operations)
+}
+
+class IncidentStatus <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + IncidentStatus(value)
+}
+
+class UserId <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + UserId(value)
+}
+
+Incident "1" *-- "1" IncidentId : id
+Incident "1" --> "1" IncidentTypeId : incidentTypeId
+Incident "1" *-- "1" Severity : severity
+Incident "1" *-- "1" IncidentDescription : description
+Incident "1" *-- "1" AffectedScope : affectedScope
+Incident "1" *-- "1" IncidentStatus : status
+Incident "1" --> "1" UserId : reportedBy
+
+note right of Incident
+  Incident lifecycle:
+  - Record (Open)
+  - Update (in progress)
+  - Resolve (Resolved)
+  
+  Tracks impact on operations
+end note
+
+@enduml

@@ -1,0 +1,29 @@
+@startuml US_4.1.1_SSD
+autonumber
+
+actor "Project\nManager" as PM
+participant ":System" as System
+
+note over PM, System: Desenvolvimento do módulo OEM
+
+== Initialize OEM Service ==
+activate PM
+PM -> System: Cria projeto Node.js com TypeScript
+activate System
+System --> PM: Apresenta estrutura de projeto OEM criada
+deactivate System
+
+== Configure API ==
+PM -> System: Configura rotas REST no Express
+activate System
+System --> PM: Confirma configuração da API REST
+deactivate System
+
+== Integrate Authentication ==
+PM -> System: Integra JWT authentication com IAM
+activate System
+System --> PM: Confirma integração de autenticação
+deactivate System
+deactivate PM
+
+@enduml

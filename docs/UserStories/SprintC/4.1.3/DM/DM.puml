@@ -1,0 +1,61 @@
+@startuml US_4.1.3_Domain_Model
+
+!define AGGREGATE_ROOT_COLOR #FFDDAA
+!define VALUE_OBJECT_COLOR #E8F5E9
+
+class OperationPlan <<Aggregate Root>> AGGREGATE_ROOT_COLOR {
+    - OperationPlanId id
+    - DateTime planDate
+    - AlgorithmUsed algorithmUsed
+    - List<PlannedOperation> operations
+    - PlanStatus status
+    - DateTime createdAt
+    + SearchByDate(dateRange) : List<OperationPlan>
+    + SearchByFilters(filters) : List<OperationPlan>
+    + GetDetails() : PlanDetails
+}
+
+class OperationPlanId <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + OperationPlanId(value)
+}
+
+class AlgorithmUsed <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + AlgorithmUsed(value)
+}
+
+class PlannedOperation <<Value Object>> VALUE_OBJECT_COLOR {
+    - VvnId vvnId
+    - OperationType type
+    - DateTime startTime
+    - DateTime endTime
+    - List<ResourceId> resources
+}
+
+class PlanStatus <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + PlanStatus(value)
+}
+
+class PlanDetails <<Value Object>> VALUE_OBJECT_COLOR {
+    - OperationPlanId planId
+    - int totalOperations
+    - List<ResourceAllocation> resources
+    - ScheduleSummary summary
+}
+
+OperationPlan "1" *-- "1" OperationPlanId : id
+OperationPlan "1" *-- "1" AlgorithmUsed : algorithmUsed
+OperationPlan "1" *-- "*" PlannedOperation : operations
+OperationPlan "1" *-- "1" PlanStatus : status
+
+note right of OperationPlan
+  Searchable by:
+  - Date range
+  - Status
+  - Algorithm used
+  - VVN references
+end note
+
+@enduml

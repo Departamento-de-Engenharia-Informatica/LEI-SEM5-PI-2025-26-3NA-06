@@ -1,0 +1,205 @@
+@startuml US_3.2.3_Sequence_Diagram
+
+actor "User" as USER
+participant "<<UI>>\n:Angular\nComponent" as UI
+participant "<<Service>>\n:AuthService" as AuthService
+participant "<<Interceptor>>\n:AuthInterceptor" as Interceptor
+participant "<<Controller>>\n:AuthController" as Controller
+participant "<<Application>>\n:TokenService" as TokenService
+participant "<<Service>>\n:JwtTokenGenerator" as JWT
+participant "<<Repository>>\n:IUserRepository" as Repo
+database "<<Database>>\n:SQL Server" as DB
+
+== Normal Request with Valid Token ==
+
+USER -> UI : Navega ou faz ação
+activate UI
+
+UI -> AuthService : API request
+activate AuthService
+
+AuthService -> Interceptor : HTTP request interceptado
+activate Interceptor
+
+Interceptor -> AuthService : getToken()
+AuthService --> Interceptor : Valid JWT token
+
+Interceptor -> Interceptor : Adiciona header\nAuthorization: Bearer {token}
+
+Interceptor -> Controller : Request com token
+activate Controller
+
+Controller -> Controller : Valida token\n- Assinatura válida\n- Não expirado
+
+Controller --> Interceptor : 200 OK {data}
+deactivate Controller
+
+Interceptor --> AuthService : Response
+deactivate Interceptor
+
+AuthService --> UI : Data
+deactivate AuthService
+
+UI --> USER : Apresenta resultado
+deactivate UI
+
+== Token Expiration Detected ==
+
+USER -> UI : Faz request
+activate UI
+
+UI -> AuthService : API request
+activate AuthService
+
+AuthService -> Interceptor : HTTP request interceptado
+activate Interceptor
+
+Interceptor -> AuthService : getToken()
+AuthService --> Interceptor : JWT token (quase expirado)
+
+Interceptor -> Interceptor : Adiciona header
+
+Interceptor -> Controller : Request com token
+activate Controller
+
+Controller -> Controller : Valida token\nToken expirado (exp < now)
+
+Controller --> Interceptor : 401 Unauthorized\n{error: "Token expired"}
+deactivate Controller
+
+Interceptor -> Interceptor : Detecta erro 401
+
+Interceptor -> AuthService : isTokenExpired()
+activate AuthService
+
+AuthService -> AuthService : Decodifica token\nVerifica exp claim
+
+AuthService --> Interceptor : true (expirado)
+deactivate AuthService
+
+Interceptor -> AuthService : refreshToken()
+activate AuthService
+
+AuthService -> Controller : POST /api/auth/refresh
+activate Controller
+
+Controller -> Controller : Extrai userId do token expirado\n(ainda confiável para refresh)
+
+Controller -> TokenService : RefreshTokenAsync(userId)
+activate TokenService
+
+TokenService -> Repo : GetByIdAsync(userId)
+activate Repo
+
+Repo -> DB : SELECT * FROM Users\nWHERE Id = {userId}
+activate DB
+DB --> Repo : User data
+deactivate DB
+
+Repo --> TokenService : User
+deactivate Repo
+
+TokenService -> TokenService : Valida user\n- Status = Active\n- Não deletado
+
+TokenService -> JWT : GenerateToken(user)
+activate JWT
+
+JWT -> JWT : Cria novo token\n- Novas claims\n- Nova expiração (exp = now + 1h)\n- Mesmos dados do user
+
+JWT --> TokenService : New JWT token
+deactivate JWT
+
+TokenService --> Controller : {token}
+deactivate TokenService
+
+Controller --> AuthService : 200 OK {token}
+deactivate Controller
+
+AuthService -> AuthService : Armazena novo token\nem localStorage
+
+AuthService --> Interceptor : Token refreshed
+deactivate AuthService
+
+Interceptor -> Interceptor : Retry original request\ncom novo token
+
+Interceptor -> Controller : Original request\nAuthorization: Bearer {newToken}
+activate Controller
+
+Controller -> Controller : Valida novo token\n(válido)
+
+Controller --> Interceptor : 200 OK {data}
+deactivate Controller
+
+Interceptor --> AuthService : Response
+deactivate Interceptor
+
+AuthService --> UI : Data
+deactivate AuthService
+
+UI --> USER : Apresenta resultado\n(transparente para o user)
+deactivate UI
+
+== Refresh Token Fails ==
+
+USER -> UI : Faz request
+activate UI
+
+UI -> AuthService : API request
+activate AuthService
+
+AuthService -> Interceptor : HTTP request
+activate Interceptor
+
+Interceptor -> Controller : Request (token expirado)
+activate Controller
+Controller --> Interceptor : 401 Unauthorized
+deactivate Controller
+
+Interceptor -> AuthService : refreshToken()
+activate AuthService
+
+AuthService -> Controller : POST /api/auth/refresh
+activate Controller
+
+Controller -> TokenService : RefreshTokenAsync(userId)
+activate TokenService
+
+TokenService -> Repo : GetByIdAsync(userId)
+activate Repo
+Repo -> DB : SELECT query
+activate DB
+DB --> Repo : User
+deactivate DB
+Repo --> TokenService : User
+deactivate Repo
+
+alt User inativo ou deletado
+    TokenService --> Controller : null
+    deactivate TokenService
+    Controller --> AuthService : 401 Unauthorized\n{error: "User inactive"}
+    deactivate Controller
+end
+
+AuthService -> AuthService : Remove token\nlocalStorage.removeItem('token')
+
+AuthService --> Interceptor : Refresh failed
+deactivate AuthService
+
+Interceptor --> AuthService : Error
+deactivate Interceptor
+
+AuthService --> UI : Unauthorized
+deactivate AuthService
+
+UI -> UI : Redireciona para /login
+
+UI --> USER : Mensagem:\n"Sessão expirada.\nPor favor, faça login novamente."
+deactivate UI
+
+note right of USER
+  JWT Token Refresh
+  Transparent to user
+  Extends session automatically
+end note
+
+@enduml

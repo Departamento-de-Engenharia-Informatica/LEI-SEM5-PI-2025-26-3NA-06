@@ -1,0 +1,43 @@
+@startuml US_2.2.1_SSD
+autonumber
+
+actor "Fleet Manager" as FM
+participant ":System" as System
+
+== Create Vessel Type ==
+activate FM
+FM -> System: Clica na secção "Vessel Types"
+activate System
+System --> FM: Apresenta página com lista de vessel types e opção "Create Vessel Type"
+deactivate System
+FM -> System: Clica em "Create Vessel Type"
+activate System
+System --> FM: Apresenta formulário de criação
+deactivate System
+FM -> System: Introduz dados do vessel type (name, description, capacity, maxRows, maxBays, maxTiers) e submete
+activate System
+System --> FM: devolve mensagem de sucesso ou erro
+deactivate System
+
+== Update Vessel Type ==
+FM -> System: Seleciona vessel type da lista
+activate System
+System --> FM: Apresenta detalhes do vessel type
+deactivate System
+FM -> System: Clica em "Edit Vessel Type"
+activate System
+System --> FM: Apresenta formulário de edição preenchido
+deactivate System
+FM -> System: Modifica dados do vessel type e submete
+activate System
+System --> FM: devolve mensagem de sucesso ou erro
+deactivate System
+
+== List Vessel Types ==
+FM -> System: Acede à lista de vessel types
+activate System
+System --> FM: Apresenta lista de todos os vessel types registados
+deactivate System
+deactivate FM
+
+@enduml

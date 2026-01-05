@@ -1,0 +1,257 @@
+@startuml US_3.1.5_Sequence_Diagram
+
+actor "Fleet Manager" as FM
+participant "<<UI>>\n:VesselList\nComponent" as UI
+participant "<<Service>>\n:VesselService" as VesselService
+participant "<<HTTP>>\n:HttpClient" as HTTP
+participant "<<Controller>>\n:VesselController" as Controller
+participant "<<Application>>\n:VesselService" as BackendService
+participant "<<Repository>>\n:IVesselRepository" as Repo
+database "<<Database>>\n:SQL Server" as DB
+
+== CRUD - List Vessels ==
+
+FM -> UI : Acede à página de navios
+activate UI
+
+UI -> VesselService : getVessels()
+activate VesselService
+
+VesselService -> HTTP : GET /api/vessels
+activate HTTP
+
+HTTP -> Controller : GET /api/vessels
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize]
+
+Controller -> BackendService : GetAllVesselsAsync()
+activate BackendService
+
+BackendService -> Repo : GetAllAsync()
+activate Repo
+
+Repo -> DB : SELECT v.*, vt.Name as TypeName\nFROM Vessels v\nJOIN VesselTypes vt
+activate DB
+DB --> Repo : List of vessels
+deactivate DB
+
+Repo --> BackendService : List<Vessel>
+deactivate Repo
+
+BackendService --> Controller : List<VesselDTO>
+deactivate BackendService
+
+Controller --> HTTP : 200 OK {vessels[]}
+deactivate Controller
+
+HTTP --> VesselService : Observable<VesselDTO[]>
+deactivate HTTP
+
+VesselService --> UI : Vessels data
+deactivate VesselService
+
+UI -> UI : Renderiza tabela com vessels
+
+UI --> FM : Apresenta lista de navios
+deactivate UI
+
+== CRUD - Create Vessel ==
+
+FM -> UI : Clica em "Novo Navio"
+activate UI
+
+UI --> FM : Apresenta formulário
+
+FM -> UI : Preenche e submete dados\n{IMO, CallSign, Name, TypeId}
+
+UI -> VesselService : createVessel(vesselData)
+activate VesselService
+
+VesselService -> HTTP : POST /api/vessels {data}
+activate HTTP
+
+HTTP -> Controller : POST /api/vessels
+activate Controller
+
+Controller -> BackendService : CreateVesselAsync(createDTO)
+activate BackendService
+
+note right of BackendService
+  Ver US 2.2.2 para
+  detalhes de criação
+  no backend
+end note
+
+BackendService --> Controller : VesselDTO
+deactivate BackendService
+
+Controller --> HTTP : 201 Created {vessel}
+deactivate Controller
+
+HTTP --> VesselService : Observable<VesselDTO>
+deactivate HTTP
+
+VesselService --> UI : Created vessel
+deactivate VesselService
+
+UI -> UI : showToast('Navio criado')
+
+UI -> VesselService : getVessels() (refresh list)
+activate VesselService
+VesselService --> UI : Updated list
+deactivate VesselService
+
+UI --> FM : Lista atualizada com novo navio
+deactivate UI
+
+== CRUD - Update Vessel ==
+
+FM -> UI : Clica em "Editar" num navio
+activate UI
+
+UI -> VesselService : getVessel(imo)
+activate VesselService
+
+VesselService -> HTTP : GET /api/vessels/{imo}
+activate HTTP
+
+HTTP -> Controller : GET /api/vessels/{imo}
+activate Controller
+
+Controller -> BackendService : GetVesselByIMOAsync(imo)
+activate BackendService
+
+BackendService -> Repo : GetByIMOAsync(imo)
+activate Repo
+Repo -> DB : SELECT query
+activate DB
+DB --> Repo : Vessel data
+deactivate DB
+Repo --> BackendService : Vessel
+deactivate Repo
+
+BackendService --> Controller : VesselDTO
+deactivate BackendService
+
+Controller --> HTTP : 200 OK {vessel}
+deactivate Controller
+
+HTTP --> VesselService : Observable<VesselDTO>
+deactivate HTTP
+
+VesselService --> UI : Vessel data
+deactivate VesselService
+
+UI --> FM : Apresenta formulário preenchido
+
+FM -> UI : Modifica dados e submete
+
+UI -> VesselService : updateVessel(imo, updates)
+activate VesselService
+
+VesselService -> HTTP : PUT /api/vessels/{imo} {updates}
+activate HTTP
+
+HTTP -> Controller : PUT /api/vessels/{imo}
+activate Controller
+
+Controller -> BackendService : UpdateVesselAsync(imo, updateDTO)
+activate BackendService
+
+note right of BackendService
+  Ver US 2.2.2 para
+  detalhes de atualização
+  no backend
+end note
+
+BackendService --> Controller : VesselDTO
+deactivate BackendService
+
+Controller --> HTTP : 200 OK {vessel}
+deactivate Controller
+
+HTTP --> VesselService : Observable<VesselDTO>
+deactivate HTTP
+
+VesselService --> UI : Updated vessel
+deactivate VesselService
+
+UI -> UI : showToast('Navio atualizado')
+
+UI --> FM : Apresenta dados atualizados
+deactivate UI
+
+== CRUD - Delete Vessel ==
+
+FM -> UI : Clica em "Eliminar"
+activate UI
+
+UI --> FM : Confirma eliminação
+
+FM -> UI : Confirma
+
+UI -> VesselService : deleteVessel(imo)
+activate VesselService
+
+VesselService -> HTTP : DELETE /api/vessels/{imo}
+activate HTTP
+
+HTTP -> Controller : DELETE /api/vessels/{imo}
+activate Controller
+
+Controller -> BackendService : DeleteVesselAsync(imo)
+activate BackendService
+
+BackendService -> Repo : GetByIMOAsync(imo)
+activate Repo
+Repo -> DB : SELECT query
+activate DB
+DB --> Repo : Vessel
+deactivate DB
+Repo --> BackendService : Vessel
+deactivate Repo
+
+BackendService -> Repo : DeleteAsync(vessel)
+activate Repo
+Repo -> DB : DELETE FROM Vessels\nWHERE IMOnumber = {imo}
+activate DB
+DB --> Repo : Success
+deactivate DB
+Repo --> BackendService : Success
+deactivate Repo
+
+BackendService -> Repo : UnitOfWork.CommitAsync()
+activate Repo
+Repo -> DB : COMMIT
+activate DB
+DB --> Repo : Success
+deactivate DB
+Repo --> BackendService : Success
+deactivate Repo
+
+BackendService --> Controller : Success
+deactivate BackendService
+
+Controller --> HTTP : 204 No Content
+deactivate Controller
+
+HTTP --> VesselService : Success
+deactivate HTTP
+
+VesselService --> UI : Deleted
+deactivate VesselService
+
+UI -> UI : showToast('Navio eliminado')
+UI -> UI : Remove item da lista
+
+UI --> FM : Lista atualizada
+deactivate UI
+
+note right of FM
+  Frontend CRUD Integration
+  Calls Backend APIs (Sprint A)
+  UI layer only
+end note
+
+@enduml

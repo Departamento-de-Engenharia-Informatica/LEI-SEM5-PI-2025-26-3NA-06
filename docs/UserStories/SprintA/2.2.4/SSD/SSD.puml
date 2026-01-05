@@ -1,0 +1,43 @@
+@startuml US_2.2.4_SSD
+autonumber
+
+actor "Port Authority\nOfficer" as Officer
+participant ":System" as System
+
+== Register Storage Area ==
+activate Officer
+Officer -> System: Clica na secção "Storage Areas"
+activate System
+System --> Officer: Apresenta página com lista de storage areas e opção "Register Storage Area"
+deactivate System
+Officer -> System: Clica em "Register Storage Area"
+activate System
+System --> Officer: Apresenta formulário de registo de storage area
+deactivate System
+Officer -> System: Introduz dados da storage area (name, areaType, location, maxCapacity, servedDocks, distances) e submete
+activate System
+System --> Officer: devolve mensagem de sucesso ou erro
+deactivate System
+
+== Update Storage Area ==
+Officer -> System: Seleciona storage area da lista
+activate System
+System --> Officer: Apresenta detalhes da storage area
+deactivate System
+Officer -> System: Clica em "Edit Storage Area"
+activate System
+System --> Officer: Apresenta formulário de edição preenchido
+deactivate System
+Officer -> System: Modifica dados da storage area e submete
+activate System
+System --> Officer: devolve mensagem de sucesso ou erro
+deactivate System
+
+== Search Storage Areas ==
+Officer -> System: Introduz critérios de pesquisa (name, type, location)
+activate System
+System --> Officer: Apresenta lista de storage areas filtradas
+deactivate System
+deactivate Officer
+
+@enduml

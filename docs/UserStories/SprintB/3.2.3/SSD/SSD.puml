@@ -1,0 +1,28 @@
+@startuml US_3.2.3_SSD
+autonumber
+
+actor "System\nUser" as User
+participant ":System" as System
+
+== Use Application ==
+activate User
+User -> System: Executa ação na aplicação
+activate System
+System --> User: Apresenta resultado da ação
+deactivate System
+
+note over User, System: Token mantido durante a sessão
+
+== Token Expired ==
+User -> System: Tenta executar outra ação
+activate System
+System --> User: Apresenta mensagem de token expirado
+deactivate System
+
+User -> System: Clica em "Refresh Session"
+activate System
+System --> User: Apresenta interface atualizada com novo token
+deactivate System
+deactivate User
+
+@enduml

@@ -1,0 +1,63 @@
+@startuml US_4.1.2_Sequence_Diagram
+
+actor "OEM Manager" as OEM
+participant "<<UI>>\n:PlanningComponent" as UI
+participant "<<Controller>>\n:OperationPlanController" as Controller
+participant "<<Application>>\n:OperationPlanService" as Service
+participant "<<Domain>>\n:OperationPlan" as Domain
+participant "<<Repository>>\n:OperationPlanRepository" as Repo
+participant "<<External>>\n:SchedulingApi" as SchedulingAPI
+database "<<Database>>\n:OEM SQL DB" as DB
+
+== Generate Operation Plan ==
+
+OEM -> UI : Clica em "Gerar Plano de Operações"
+activate UI
+
+UI --> OEM : Apresenta formulário:\n- Data\n- Algoritmo
+
+OEM -> UI : Seleciona data e algoritmo\ne confirma
+
+UI -> Controller : POST /api/operation-plans/generate\n{date, algorithmUsed}
+activate Controller
+
+Controller -> Controller : Valida request\nauth: JWT token
+
+Controller -> SchedulingAPI : GET /api/scheduling/plans\n?date={date}&algorithm={algorithm}
+activate SchedulingAPI
+
+SchedulingAPI --> Controller : OperationPlan from Scheduling API
+deactivate SchedulingAPI
+
+Controller -> Service : CreateFromSchedulingPlan(\nschedulingPlanDTO)
+activate Service
+
+Service -> Domain : new OperationPlan(\nplanDate, algorithmUsed,\nplannedOperations[])
+activate Domain
+
+Domain -> Domain : Valida:\n- planDate não vazio\n- operations > 0\n- Sem conflitos
+
+Domain --> Service : OperationPlan criado
+deactivate Domain
+
+Service -> Repo : save(operationPlan)
+activate Repo
+
+Repo -> DB : INSERT INTO OperationPlans\n(PlanDate, AlgorithmUsed,\nOperations, Status)\nVALUES (..., 'Draft')
+activate DB
+DB --> Repo : Inserted ID
+deactivate DB
+
+Repo --> Service : OperationPlan persistido
+deactivate Repo
+
+Service --> Controller : OperationPlanDTO
+deactivate Service
+
+Controller --> UI : 201 Created {operationPlan}
+deactivate Controller
+
+UI --> OEM : Plano gerado com sucesso
+deactivate UI
+
+@enduml

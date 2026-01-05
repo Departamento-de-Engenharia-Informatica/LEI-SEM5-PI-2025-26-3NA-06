@@ -1,0 +1,140 @@
+@startuml US_2.2.9_Sequence_Diagram
+
+actor "Captain" as CAP
+participant "<<UI>>\n:Angular\nComponent" as UI
+participant "<<Controller>>\n:VVNController" as Controller
+participant "<<Application>>\n:VVNService" as Service
+participant "<<Domain>>\n:VesselVisitNotification" as Domain
+participant "<<Repository>>\n:IVVNRepository" as Repo
+database "<<Database>>\n:SQL Server" as DB
+
+== Update Vessel Visit Notification ==
+
+CAP -> UI : Acede às suas notificações
+activate UI
+
+UI -> Controller : GET /api/vvn/my-notifications
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize(Roles = "Captain")]
+
+Controller -> Service : GetVVNsByCaptainAsync(captainId)
+activate Service
+
+Service -> Repo : GetByCaptainIdAsync(captainId)
+activate Repo
+
+Repo -> DB : SELECT * FROM VesselVisitNotifications\nWHERE CaptainId = {captainId}
+activate DB
+DB --> Repo : List of VVNs
+deactivate DB
+
+Repo --> Service : List<VVN>
+deactivate Repo
+
+Service --> Controller : List<VVNDTO>
+deactivate Service
+
+Controller --> UI : 200 OK {vvns[]}
+deactivate Controller
+
+UI --> CAP : Apresenta lista de VVNs\n(Submitted, Approved, Rejected)
+
+CAP -> UI : Seleciona VVN e clica "Editar"
+
+UI -> Controller : GET /api/vvn/{id}
+activate Controller
+
+Controller -> Service : GetVVNByIdAsync(id)
+activate Service
+
+Service -> Repo : GetByIdAsync(id)
+activate Repo
+
+Repo -> DB : SELECT * FROM VesselVisitNotifications\nWHERE Id = {id}
+activate DB
+DB --> Repo : VVN data
+deactivate DB
+
+Repo --> Service : VVN
+deactivate Repo
+
+Service -> Service : Valida Captain é owner
+
+Service --> Controller : VVNDTO
+deactivate Service
+
+Controller --> UI : 200 OK {vvnDTO}
+deactivate Controller
+
+UI --> CAP : Apresenta formulário com dados atuais\n(se Status = Submitted ou Rejected)
+
+alt Status = Approved
+    UI --> CAP : Bloqueia edição\n(VVN já aprovado)
+end
+
+CAP -> UI : Modifica dados e submete\n(ETA, ETD, OriginPort,\nDestinationPort, OperationType)
+
+UI -> Controller : PUT /api/vvn/{id}\n{updateVVNDTO}
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize(Roles = "Captain")]
+
+Controller -> Service : UpdateVVNAsync(id, updateVVNDTO, captainId)
+activate Service
+
+Service -> Repo : GetByIdAsync(id)
+activate Repo
+
+Repo -> DB : SELECT * FROM VesselVisitNotifications\nWHERE Id = {id}
+activate DB
+DB --> Repo : VVN data
+deactivate DB
+
+Repo --> Service : VVN
+deactivate Repo
+
+Service -> Service : Valida Captain é owner\nValida Status != Approved
+
+Service -> Domain : UpdateDetails(\nETA, ETD, OriginPort,\nDestinationPort, OperationType,\nCargoType)
+activate Domain
+
+Domain -> Domain : Valida Value Objects\n- ETA < ETD\n- ETA futura\n- OriginPort/DestinationPort (não vazios)\n- OperationType válido
+
+alt Status era Rejected
+    Domain -> Domain : Muda Status para Submitted\n(resubmissão)
+end
+
+Domain --> Service : VVN atualizado
+deactivate Domain
+
+Service -> Repo : UpdateAsync(vvn)
+activate Repo
+
+Repo -> DB : UPDATE VesselVisitNotifications\nSET ... WHERE Id = {id}
+activate DB
+DB --> Repo : Success
+deactivate DB
+
+Repo --> Service : Success
+deactivate Repo
+
+Service -> Repo : UnitOfWork.CommitAsync()
+activate Repo
+Repo -> DB : COMMIT TRANSACTION
+activate DB
+DB --> Repo : Success
+deactivate DB
+Repo --> Service : Success
+deactivate Repo
+
+Service --> Controller : VVNDTO
+deactivate Service
+
+Controller --> UI : 200 OK {vvnDTO}
+deactivate Controller
+
+UI --> CAP : Apresenta confirmação de atualização\n(Status volta para "Submitted" se era Rejected)
+deactivate UI
+
+@enduml

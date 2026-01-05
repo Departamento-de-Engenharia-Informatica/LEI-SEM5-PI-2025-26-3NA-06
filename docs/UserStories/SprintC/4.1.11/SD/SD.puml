@@ -1,0 +1,65 @@
+@startuml US_4.1.11_Sequence_Diagram
+
+actor "Dock Operator" as OPER
+participant "<<UI>>\n:VVEComponent" as UI
+participant "<<Controller>>\n:VVEController" as Controller
+participant "<<Application>>\n:VVEService" as Service
+participant "<<Domain>>\n:VesselVisitExecution" as Domain
+participant "<<Repository>>\n:VVERepository" as Repo
+database "<<Database>>\n:OEM SQL DB" as DB
+
+== Complete Vessel Visit ==
+
+OPER -> UI : Todas operações terminadas\nNavio pronto para partir
+activate UI
+
+UI --> OPER : Apresenta VVE com:\n- Todas operations completed\n- Pronto para unberthing
+
+OPER -> UI : Regista unberthing e departure:\n- Actual unberth time\n- Actual departure time
+
+UI -> Controller : PUT /api/vve/{id}/complete\n{actualUnberthTime, actualDepartureTime}
+activate Controller
+
+Controller -> Service : completeVVE(id, completionData)
+activate Service
+
+Service -> Repo : findById(id)
+activate Repo
+Repo -> DB : SELECT * FROM VesselVisitExecutions\nWHERE Id = ?
+activate DB
+DB --> Repo : VVE
+deactivate DB
+Repo --> Service : VesselVisitExecution
+deactivate Repo
+
+Service -> Domain : complete(\nactualUnberthTime,\nactualDepartureTime)
+activate Domain
+
+Domain -> Domain : Valida:\n- Todas operations Completed\n- unberth >= last operation end\n- departure >= unberth\n- Status = Berthed
+
+Domain -> Domain : Atualiza:\n- departureInfo\n- status = Completed\n- completedAt = now
+
+Domain -> Domain : Calcula métricas finais:\n- Total duration\n- Delay vs planned\n- Efficiency
+
+Domain --> Service : VVE completed
+deactivate Domain
+
+Service -> Repo : update(vve)
+activate Repo
+Repo -> DB : UPDATE VesselVisitExecutions\nSET DepartureInfo=..., Status=..., Metrics=...\nWHERE Id = ?
+activate DB
+DB --> Repo : Modified
+deactivate DB
+Repo --> Service : Success
+deactivate Repo
+
+Service --> Controller : VVEDTO
+deactivate Service
+
+Controller --> UI : 200 OK {vve}
+deactivate Controller
+
+UI --> OPER : Visita concluída:\nResumo:\n- Duração total: 6h\n- Operações: 2 ✓\n- Status: Completed
+deactivate UI
+
+@enduml

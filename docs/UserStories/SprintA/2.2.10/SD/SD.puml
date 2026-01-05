@@ -1,0 +1,155 @@
+@startuml US_2.2.10_Sequence_Diagram
+
+actor "User" as USER
+participant "<<UI>>\n:Angular\nComponent" as UI
+participant "<<Controller>>\n:VVNController" as Controller
+participant "<<Application>>\n:VVNService" as Service
+participant "<<Repository>>\n:IVVNRepository" as Repo
+database "<<Database>>\n:SQL Server" as DB
+
+== View All VVNs (List) ==
+
+USER -> UI : Acede à página de VVNs
+activate UI
+
+UI -> Controller : GET /api/vvn
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize]
+
+Controller -> Service : GetAllVVNsAsync()
+activate Service
+
+Service -> Repo : GetAllAsync()
+activate Repo
+
+Repo -> DB : SELECT * FROM VesselVisitNotifications\nORDER BY ETA DESC
+activate DB
+DB --> Repo : List of VVNs
+deactivate DB
+
+Repo --> Service : List<VVN>
+deactivate Repo
+
+Service --> Controller : List<VVNDTO>
+deactivate Service
+
+Controller --> UI : 200 OK {vvns[]}
+deactivate Controller
+
+UI --> USER : Apresenta lista de VVNs com:\n- Vessel Name\n- ETA/ETD\n- Origin/Destination\n- Status (Submitted/Approved/Rejected)
+deactivate UI
+
+== View VVN Details ==
+
+USER -> UI : Clica em VVN para ver detalhes
+activate UI
+
+UI -> Controller : GET /api/vvn/{id}
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize]
+
+Controller -> Service : GetVVNByIdAsync(id)
+activate Service
+
+Service -> Repo : GetByIdAsync(id)
+activate Repo
+
+Repo -> DB : SELECT vvn.*, v.VesselName, v.IMOnumber\nFROM VesselVisitNotifications vvn\nJOIN Vessels v ON vvn.VesselId = v.Id\nWHERE vvn.Id = {id}
+activate DB
+DB --> Repo : VVN data with vessel info
+deactivate DB
+
+Repo --> Service : VVN (with related data)
+deactivate Repo
+
+Service --> Controller : VVNDTO (detailed)
+deactivate Service
+
+Controller --> UI : 200 OK {vvnDTO}
+deactivate Controller
+
+UI --> USER : Apresenta detalhes completos:\n- Vessel Information\n- ETA/ETD\n- Origin/Destination Ports\n- Operation Type\n- Cargo Type\n- Status\n- Approval/Rejection info (se aplicável)\n- Captain information
+deactivate UI
+
+== Search/Filter VVNs ==
+
+USER -> UI : Aplica filtros\n(Status, Date Range, Vessel)
+activate UI
+
+UI -> Controller : GET /api/vvn?status={status}&\nfrom={date}&to={date}&vessel={imo}
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize]
+
+Controller -> Service : SearchVVNsAsync(searchCriteria)
+activate Service
+
+Service -> Repo : SearchAsync(criteria)
+activate Repo
+
+Repo -> DB : SELECT * FROM VesselVisitNotifications\nWHERE Status = {status}\nAND ETA BETWEEN {from} AND {to}\nAND VesselId IN (...)\nORDER BY ETA
+activate DB
+DB --> Repo : Filtered list of VVNs
+deactivate DB
+
+Repo --> Service : List<VVN>
+deactivate Repo
+
+Service --> Controller : List<VVNDTO>
+deactivate Service
+
+Controller --> UI : 200 OK {vvns[]}
+deactivate Controller
+
+UI --> USER : Apresenta lista filtrada
+deactivate UI
+
+== View VVN by Role ==
+
+alt User is Captain
+    USER -> UI : Acede a "Minhas Notificações"
+    activate UI
+    UI -> Controller : GET /api/vvn/my-notifications
+    activate Controller
+    Controller -> Service : GetVVNsByCaptainAsync(captainId)
+    activate Service
+    Service -> Repo : GetByCaptainIdAsync(captainId)
+    activate Repo
+    Repo -> DB : SELECT * FROM VesselVisitNotifications\nWHERE CaptainId = {captainId}
+    activate DB
+    DB --> Repo : Captain's VVNs
+    deactivate DB
+    Repo --> Service : List<VVN>
+    deactivate Repo
+    Service --> Controller : List<VVNDTO>
+    deactivate Service
+    Controller --> UI : 200 OK {vvns[]}
+    deactivate Controller
+    UI --> USER : Apresenta VVNs do Captain
+    deactivate UI
+else User is PortAuthority
+    USER -> UI : Acede a "Pendentes de Revisão"
+    activate UI
+    UI -> Controller : GET /api/vvn?status=Submitted
+    activate Controller
+    Controller -> Service : GetVVNsByStatusAsync(Submitted)
+    activate Service
+    Service -> Repo : GetByStatusAsync(Submitted)
+    activate Repo
+    Repo -> DB : SELECT * FROM VesselVisitNotifications\nWHERE Status = 'Submitted'
+    activate DB
+    DB --> Repo : Submitted VVNs
+    deactivate DB
+    Repo --> Service : List<VVN>
+    deactivate Repo
+    Service --> Controller : List<VVNDTO>
+    deactivate Service
+    Controller --> UI : 200 OK {vvns[]}
+    deactivate Controller
+    UI --> USER : Apresenta VVNs pendentes
+    deactivate UI
+end
+
+@enduml

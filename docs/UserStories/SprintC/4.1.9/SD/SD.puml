@@ -1,0 +1,111 @@
+@startuml US_4.1.9_Sequence_Diagram
+
+actor "Dock Operator" as OPER
+participant "<<UI>>\n:OperationTracking\nComponent" as UI
+participant "<<Controller>>\n:VVEController" as Controller
+participant "<<Application>>\n:VVEService" as Service
+participant "<<Domain>>\n:VesselVisitExecution" as Domain
+participant "<<Repository>>\n:VVERepository" as Repo
+database "<<Database>>\n:OEM SQL DB" as DB
+
+== Start Operation ==
+
+OPER -> UI : Inicia operação (Load/Unload)
+activate UI
+
+UI --> OPER : Apresenta operações planeadas
+
+OPER -> UI : Clica "Iniciar Operação"
+
+UI -> Controller : POST /api/vve/{id}/operations/start\n{operationType, resources}
+activate Controller
+
+Controller -> Service : startOperation(id, operationData)
+activate Service
+
+Service -> Repo : findById(id)
+activate Repo
+Repo -> DB : SELECT * FROM VesselVisitExecutions\nWHERE Id = ?
+activate DB
+DB --> Repo : VVE
+deactivate DB
+Repo --> Service : VesselVisitExecution
+deactivate Repo
+
+Service -> Domain : addExecutedOperation(\noperationType, actualStartTime,\nresources)
+activate Domain
+
+Domain -> Domain : Valida:\n- Status = Berthed\n- Operation type válido\n- Resources disponíveis
+
+Domain -> Domain : Cria ExecutedOperation:\n- actualStartTime = now\n- operationStatus = InProgress
+
+Domain --> Service : Operation added
+deactivate Domain
+
+Service -> Repo : update(vve)
+activate Repo
+Repo -> DB : UPDATE VesselVisitExecutions\nSET ExecutedOperations=...\nWHERE Id = ?
+activate DB
+DB --> Repo : Modified
+deactivate DB
+Repo --> Service : Success
+deactivate Repo
+
+Service --> Controller : VVEDTO
+deactivate Service
+
+Controller --> UI : 200 OK {vve}
+deactivate Controller
+
+UI --> OPER : Operação iniciada
+deactivate UI
+
+== Complete Operation ==
+
+OPER -> UI : Operação termina
+activate UI
+
+OPER -> UI : Clica "Concluir Operação"
+
+UI -> Controller : PUT /api/vve/{id}/operations/{opId}/complete
+activate Controller
+
+Controller -> Service : completeOperation(id, opId)
+activate Service
+
+Service -> Repo : findById(id)
+activate Repo
+Repo -> DB : SELECT * FROM VesselVisitExecutions\nWHERE Id = ?
+activate DB
+DB --> Repo : VVE
+deactivate DB
+Repo --> Service : VesselVisitExecution
+deactivate Repo
+
+Service -> Domain : completeOperation(opId)
+activate Domain
+
+Domain -> Domain : Atualiza ExecutedOperation:\n- actualEndTime = now\n- operationStatus = Completed
+
+Domain --> Service : Operation completed
+deactivate Domain
+
+Service -> Repo : update(vve)
+activate Repo
+Repo -> DB : UPDATE VesselVisitExecutions\nSET ExecutedOperations=...\nWHERE Id = ?
+activate DB
+DB --> Repo : Modified
+deactivate DB
+Repo --> Service : Success
+deactivate Repo
+
+Service --> Controller : VVEDTO
+deactivate Service
+
+Controller --> UI : 200 OK {vve}
+deactivate Controller
+
+UI --> OPER : Operação concluída:\nDuração: {duration}
+deactivate UI
+
+@enduml

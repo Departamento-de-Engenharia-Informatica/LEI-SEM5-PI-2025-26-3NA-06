@@ -1,0 +1,49 @@
+@startuml US_3.2.4_Domain_Model
+
+!define AGGREGATE_ROOT_COLOR #FFDDAA
+!define VALUE_OBJECT_COLOR #E8F5E9
+
+class User <<Aggregate Root>> AGGREGATE_ROOT_COLOR {
+    - UserId id
+    - Email email
+    - UserRole role
+    - UserStatus status
+    + HasPermission(resource, action) : bool
+    + CanAccess(feature) : bool
+}
+
+class UserId <<Value Object>> VALUE_OBJECT_COLOR {
+    - Guid value
+    + UserId(value)
+}
+
+class Email <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + Email(value)
+}
+
+class UserRole <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + UserRole(value)
+    + GetPermissions() : List<Permission>
+}
+
+class UserStatus <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + UserStatus(value)
+    + IsActive() : bool
+}
+
+User "1" *-- "1" UserId : id
+User "1" *-- "1" Email : email
+User "1" *-- "1" UserRole : role
+User "1" *-- "1" UserStatus : status
+
+note right of User
+  Authorization checks on:
+  - Backend endpoints
+  - Frontend routes
+  - UI components
+end note
+
+@enduml

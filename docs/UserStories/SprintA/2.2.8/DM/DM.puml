@@ -1,0 +1,75 @@
+@startuml US_2.2.8_Domain_Model
+
+!define AGGREGATE_ROOT_COLOR #FFDDAA
+!define VALUE_OBJECT_COLOR #E8F5E9
+
+class VesselVisitNotification <<Aggregate Root>> AGGREGATE_ROOT_COLOR {
+    - VvnId id
+    - VesselId vesselId
+    - ETA eta
+    - ETD etd
+    - CargoManifest cargoManifest
+    - CrewInfo crewInfo
+    - VvnStatus status
+    - UserId createdBy
+    - DateTime createdAt
+    + CreateVvn(vesselId, eta, etd, cargoManifest, crewInfo, userId)
+    + SubmitForApproval()
+}
+
+class VvnId <<Value Object>> VALUE_OBJECT_COLOR {
+    - Guid value
+    + VvnId(value)
+}
+
+class VesselId <<Value Object>> VALUE_OBJECT_COLOR {
+    - Guid value
+    + VesselId(value)
+}
+
+class ETA <<Value Object>> VALUE_OBJECT_COLOR {
+    - DateTime value
+    + ETA(value)
+}
+
+class ETD <<Value Object>> VALUE_OBJECT_COLOR {
+    - DateTime value
+    + ETD(value)
+}
+
+class CargoManifest <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + CargoManifest(value)
+}
+
+class CrewInfo <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + CrewInfo(value)
+}
+
+class VvnStatus <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + VvnStatus(value)
+}
+
+class UserId <<Value Object>> VALUE_OBJECT_COLOR {
+    - Guid value
+    + UserId(value)
+}
+
+VesselVisitNotification "1" *-- "1" VvnId : id
+VesselVisitNotification "1" --> "1" VesselId : vesselId
+VesselVisitNotification "1" *-- "1" ETA : eta
+VesselVisitNotification "1" *-- "1" ETD : etd
+VesselVisitNotification "1" *-- "1" CargoManifest : cargoManifest
+VesselVisitNotification "1" *-- "1" CrewInfo : crewInfo
+VesselVisitNotification "1" *-- "1" VvnStatus : status
+VesselVisitNotification "1" --> "1" UserId : createdBy
+
+note right of VesselVisitNotification
+  Created by Shipping Agent
+  Status transitions:
+  InProgress -> Pending
+end note
+
+@enduml

@@ -1,0 +1,45 @@
+@startuml US_4.1.12_SSD
+autonumber
+
+actor "Port Authority\nOfficer" as Officer
+participant ":System" as System
+
+== Create Incident Type ==
+activate Officer
+Officer -> System: Acede à secção "Incident Types"
+activate System
+System --> Officer: Apresenta lista de tipos e opção "Create New"
+deactivate System
+Officer -> System: Clica em "Create New"
+activate System
+System --> Officer: Apresenta formulário de criação
+deactivate System
+Officer -> System: Introduz dados (code, name, description, severity, parent) e submete
+activate System
+System --> Officer: Apresenta confirmação de criação
+deactivate System
+
+== Update Incident Type ==
+Officer -> System: Seleciona tipo da lista e clica em "Edit"
+activate System
+System --> Officer: Apresenta formulário de edição
+deactivate System
+Officer -> System: Modifica dados e submete
+activate System
+System --> Officer: Apresenta confirmação de atualização
+deactivate System
+
+== View Hierarchy ==
+Officer -> System: Clica em "View Hierarchy"
+activate System
+System --> Officer: Apresenta árvore hierárquica de tipos de incidentes
+deactivate System
+
+== Delete Incident Type ==
+Officer -> System: Seleciona tipo e clica em "Delete"
+activate System
+System --> Officer: Apresenta confirmação de eliminação
+deactivate System
+deactivate Officer
+
+@enduml

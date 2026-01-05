@@ -1,0 +1,158 @@
+@startuml US_3.1.3_Sequence_Diagram
+
+actor "Admin" as ADMIN
+participant "<<UI>>\n:UserManagement\nComponent" as UI
+participant "<<Service>>\n:AuthService" as AuthService
+participant "<<Guard>>\n:RoleGuard" as Guard
+participant "<<Controller>>\n:UserController" as Controller
+participant "<<Application>>\n:UserService" as Service
+participant "<<Domain>>\n:User" as Domain
+participant "<<Repository>>\n:IUserRepository" as Repo
+database "<<Database>>\n:SQL Server" as DB
+
+== Role-Based Access Control ==
+
+ADMIN -> UI : Navega para /admin/users
+activate UI
+
+UI -> Guard : canActivate(route)
+activate Guard
+
+Guard -> AuthService : getCurrentUser()
+activate AuthService
+
+AuthService -> AuthService : Descodifica JWT token
+
+AuthService --> Guard : User with roles: [Admin]
+deactivate AuthService
+
+Guard -> Guard : Verifica se contém role 'Admin'
+
+alt User has Admin role
+    Guard --> UI : true (permite acesso)
+    deactivate Guard
+else User lacks Admin role
+    Guard --> UI : false (bloqueia acesso)
+    UI --> ADMIN : Redireciona para /unauthorized
+    deactivate UI
+end
+
+UI -> Controller : GET /api/users
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize(Roles = "Admin")]
+
+Controller -> Service : GetAllUsersAsync()
+activate Service
+
+Service -> Repo : GetAllAsync()
+activate Repo
+
+Repo -> DB : SELECT * FROM Users
+activate DB
+DB --> Repo : List of users
+deactivate DB
+
+Repo --> Service : List<User>
+deactivate Repo
+
+Service --> Controller : List<UserDTO>
+deactivate Service
+
+Controller --> UI : 200 OK {users[]}
+deactivate Controller
+
+UI --> ADMIN : Apresenta lista de utilizadores\ncom suas roles
+deactivate UI
+
+== Assign Role to User ==
+
+ADMIN -> UI : Seleciona user e clica "Edit Roles"
+activate UI
+
+UI --> ADMIN : Apresenta modal com roles disponíveis\n(Admin, FleetManager, PortAuthority,\nPortManager, Captain)
+
+ADMIN -> UI : Seleciona roles e confirma
+
+UI -> Controller : PUT /api/users/{id}/roles\n{roleIds: [1, 3]}
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize(Roles = "Admin")]
+
+Controller -> Service : UpdateUserRolesAsync(userId, roleIds)
+activate Service
+
+Service -> Repo : GetByIdAsync(userId)
+activate Repo
+
+Repo -> DB : SELECT * FROM Users\nWHERE Id = {userId}
+activate DB
+DB --> Repo : User data
+deactivate DB
+
+Repo --> Service : User
+deactivate Repo
+
+Service -> Domain : UpdateRoles(roleIds)
+activate Domain
+
+Domain -> Domain : Valida roles\n- Pelo menos 1 role\n- Roles válidas
+
+Domain --> Service : User roles atualizadas
+deactivate Domain
+
+Service -> Repo : UpdateAsync(user)
+activate Repo
+
+Repo -> DB : DELETE FROM UserRoles WHERE UserId={id}\nINSERT INTO UserRoles (UserId, RoleId)\nVALUES (...)
+activate DB
+DB --> Repo : Success
+deactivate DB
+
+Repo --> Service : Success
+deactivate Repo
+
+Service -> Repo : UnitOfWork.CommitAsync()
+activate Repo
+Repo -> DB : COMMIT TRANSACTION
+activate DB
+DB --> Repo : Success
+deactivate DB
+Repo --> Service : Success
+deactivate Repo
+
+Service --> Controller : UserDTO
+deactivate Service
+
+Controller --> UI : 200 OK {userDTO}
+deactivate Controller
+
+UI --> ADMIN : Apresenta confirmação\n"Roles atualizadas com sucesso"
+deactivate UI
+
+== Check Permissions in UI ==
+
+actor "User" as USER
+
+USER -> UI : Acede à aplicação
+activate UI
+
+UI -> AuthService : getCurrentUser()
+activate AuthService
+
+AuthService -> AuthService : Descodifica JWT token
+
+AuthService --> UI : User with roles
+deactivate AuthService
+
+UI -> UI : Avalia permissões\n*ngIf="hasRole('FleetManager')"
+
+alt User has required role
+    UI --> USER : Mostra botões/menus\npara essa role
+else User lacks role
+    UI --> USER : Esconde funcionalidades\nnão autorizadas
+end
+
+deactivate UI
+
+@enduml

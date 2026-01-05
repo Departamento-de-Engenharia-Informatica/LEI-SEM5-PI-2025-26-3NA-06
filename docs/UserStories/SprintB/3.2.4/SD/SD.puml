@@ -1,0 +1,190 @@
+@startuml US_3.2.4_Sequence_Diagram
+
+actor "User" as USER
+participant "<<UI>>\n:Angular\nComponent" as UI
+participant "<<Guard>>\n:AuthGuard" as Guard
+participant "<<Service>>\n:AuthService" as AuthService
+participant "<<Guard>>\n:RoleGuard" as RoleGuard
+participant "<<Controller>>\n:ResourceController" as Controller
+participant "<<Middleware>>\n:AuthorizationMiddleware" as Middleware
+participant "<<Repository>>\n:IUserRepository" as Repo
+database "<<Database>>\n:SQL Server" as DB
+
+== Frontend Route Protection ==
+
+USER -> UI : Navega para /admin/users
+activate UI
+
+UI -> Guard : canActivate(route)
+activate Guard
+
+Guard -> AuthService : isAuthenticated()
+activate AuthService
+
+AuthService -> AuthService : Verifica se token existe\ne não está expirado
+
+alt Token válido
+    AuthService --> Guard : true
+    deactivate AuthService
+    
+    Guard -> RoleGuard : checkRole(route)
+    activate RoleGuard
+    
+    RoleGuard -> AuthService : getCurrentUser()
+    activate AuthService
+    AuthService -> AuthService : Decodifica JWT\nExtrai roles
+    AuthService --> RoleGuard : User {roles: ['Admin', 'FleetManager']}
+    deactivate AuthService
+    
+    RoleGuard -> RoleGuard : Verifica se route.data.roles\ncontém alguma role do user
+    
+    alt User tem role necessária
+        RoleGuard --> Guard : true
+        deactivate RoleGuard
+        Guard --> UI : Acesso permitido
+        deactivate Guard
+        UI --> USER : Carrega página /admin/users
+    else User não tem role
+        RoleGuard --> Guard : false
+        deactivate RoleGuard
+        Guard --> UI : Acesso negado
+        deactivate Guard
+        UI --> USER : Redireciona para /forbidden\n"Acesso não autorizado"
+    end
+else Token inválido/ausente
+    AuthService --> Guard : false
+    deactivate AuthService
+    Guard --> UI : Não autenticado
+    deactivate Guard
+    UI --> USER : Redireciona para /login
+end
+
+deactivate UI
+
+== Backend Authorization Validation ==
+
+USER -> UI : Executa ação (ex: delete vessel)
+activate UI
+
+UI -> Controller : DELETE /api/vessels/{imo}\nAuthorization: Bearer {token}
+activate Controller
+
+Controller -> Middleware : Valida authorization
+activate Middleware
+
+Middleware -> Middleware : Extrai token do header\nBearer {token}
+
+Middleware -> Middleware : Valida assinatura JWT\ne expiração
+
+Middleware -> Middleware : Extrai claims:\n- userId\n- email\n- roles[]
+
+Middleware -> Middleware : Verifica [Authorize(Roles = "FleetManager")]\nno endpoint
+
+alt User tem role necessária
+    Middleware -> Repo : GetByIdAsync(userId)
+    activate Repo
+    
+    Repo -> DB : SELECT u.*, r.Name as RoleName\nFROM Users u\nJOIN UserRoles ur ON u.Id = ur.UserId\nJOIN Roles r ON ur.RoleId = r.Id\nWHERE u.Id = {userId}
+    activate DB
+    DB --> Repo : User with current roles
+    deactivate DB
+    
+    Repo --> Middleware : User
+    deactivate Repo
+    
+    Middleware -> Middleware : Valida user.Status = Active\nValida roles batem com token
+    
+    Middleware --> Controller : Authorization OK\nUser context available
+    deactivate Middleware
+    
+    Controller -> Controller : Executa lógica do endpoint
+    
+    Controller --> UI : 200 OK {result}
+    deactivate Controller
+    
+    UI --> USER : Ação executada com sucesso
+    deactivate UI
+    
+else User não tem role
+    Middleware --> Controller : 403 Forbidden\n{error: "Insufficient permissions"}
+    deactivate Middleware
+    Controller --> UI : 403 Forbidden
+    deactivate Controller
+    UI --> USER : "Não tem permissões\npara executar esta ação"
+    deactivate UI
+end
+
+== Resource-Level Authorization ==
+
+USER -> UI : Tenta editar VVN de outro Captain
+activate UI
+
+UI -> Controller : PUT /api/vvn/{id}\nAuthorization: Bearer {token}
+activate Controller
+
+Controller -> Middleware : Valida authorization
+activate Middleware
+
+Middleware -> Middleware : Valida JWT\nExtrai userId, roles
+
+Middleware -> Repo : GetByIdAsync(userId)
+activate Repo
+Repo -> DB : SELECT user with roles
+activate DB
+DB --> Repo : User
+deactivate DB
+Repo --> Middleware : User
+deactivate Repo
+
+Middleware --> Controller : Authorization OK\nUser: {id, roles: ['Captain']}
+deactivate Middleware
+
+Controller -> Controller : GetVVNByIdAsync(id)
+
+Controller -> Controller : Valida ownership:\nvvn.CaptainId == userId
+
+alt User é owner do recurso
+    Controller -> Controller : Permite edição
+    Controller --> UI : 200 OK {vvn}
+else User não é owner
+    Controller --> UI : 403 Forbidden\n{error: "You can only edit your own VVNs"}
+end
+
+deactivate Controller
+
+UI --> USER : Resultado da validação
+deactivate UI
+
+== Permission Check in UI ==
+
+USER -> UI : Página carrega
+activate UI
+
+UI -> AuthService : getCurrentUser()
+activate AuthService
+
+AuthService -> AuthService : Decodifica token
+
+AuthService --> UI : User {roles: ['Captain']}
+deactivate AuthService
+
+UI -> UI : *ngIf="hasPermission('delete-vessel')"\ncheckPermissions()
+
+UI -> UI : Mapeia roles para permissões:\n- Admin: all permissions\n- FleetManager: vessel CRUD\n- Captain: only own VVNs
+
+alt User tem permissão
+    UI --> USER : Mostra botão "Delete"
+else User não tem permissão
+    UI --> USER : Esconde botão\n(disabled ou não renderiza)
+end
+
+deactivate UI
+
+note right of USER
+  Multi-layer authorization:
+  - Frontend: Guards + UI permissions
+  - Backend: JWT validation + Role checks
+  - Resource: Ownership validation
+end note
+
+@enduml

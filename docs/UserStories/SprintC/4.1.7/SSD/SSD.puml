@@ -1,0 +1,31 @@
+@startuml US_4.1.7_SSD
+autonumber
+
+actor "Logistics\nOperator" as Operator
+participant ":System" as System
+
+== Select VVN ==
+activate Operator
+Operator -> System: Acede à secção "Approved VVNs"
+activate System
+System --> Operator: Apresenta lista de VVNs aprovadas
+deactivate System
+Operator -> System: Seleciona VVN da lista
+activate System
+System --> Operator: Apresenta detalhes da VVN
+deactivate System
+
+== Create VVE ==
+Operator -> System: Clica em "Start Execution" e introduz hora real de chegada
+activate System
+System --> Operator: Apresenta confirmação de criação de VVE
+deactivate System
+
+== View VVE ==
+Operator -> System: Acede à execução criada
+activate System
+System --> Operator: Apresenta detalhes da VVE (status, timings, operations)
+deactivate System
+deactivate Operator
+
+@enduml

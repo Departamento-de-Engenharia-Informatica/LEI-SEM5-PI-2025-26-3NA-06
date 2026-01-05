@@ -1,0 +1,49 @@
+@startuml US_4.1.13_SSD
+autonumber
+
+actor "Logistics\nOperator" as Operator
+participant ":System" as System
+
+== Record Incident ==
+activate Operator
+Operator -> System: Acede à secção "Incidents"
+activate System
+System --> Operator: Apresenta lista de incidentes e opção "Record New"
+deactivate System
+Operator -> System: Clica em "Record New"
+activate System
+System --> Operator: Apresenta formulário de registo
+deactivate System
+Operator -> System: Introduz dados (type, startTime, severity, description, scope) e submete
+activate System
+System --> Operator: Apresenta confirmação de registo
+deactivate System
+
+== Update Incident ==
+Operator -> System: Seleciona incidente da lista e clica em "Edit"
+activate System
+System --> Operator: Apresenta formulário de edição
+deactivate System
+Operator -> System: Modifica dados e submete
+activate System
+System --> Operator: Apresenta confirmação de atualização
+deactivate System
+
+== Mark as Resolved ==
+Operator -> System: Seleciona incidente ativo e clica em "Mark Resolved"
+activate System
+System --> Operator: Apresenta formulário com hora de fim
+deactivate System
+Operator -> System: Introduz endTime e submete
+activate System
+System --> Operator: Apresenta confirmação de resolução
+deactivate System
+
+== Search Incidents ==
+Operator -> System: Introduz critérios de pesquisa (data, tipo, severity)
+activate System
+System --> Operator: Apresenta lista de incidentes filtrados
+deactivate System
+deactivate Operator
+
+@enduml

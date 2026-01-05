@@ -1,0 +1,15 @@
+@startuml US_3.1.1_Domain_Model
+
+!define TECHNICAL_COLOR #E3F2FD
+
+note as N1
+  Technical User Story
+  No specific domain aggregate
+  
+  Frontend Infrastructure:
+  - Angular SPA Framework
+  - HttpClient configuration
+  - API communication setup
+end note
+
+@enduml

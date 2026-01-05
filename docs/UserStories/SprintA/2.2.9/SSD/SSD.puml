@@ -1,0 +1,33 @@
+@startuml US_2.2.9_SSD
+autonumber
+
+actor "Shipping Agent\nRepresentative" as Agent
+participant ":System" as System
+
+== Update VVN in Progress ==
+activate Agent
+Agent -> System: Acede à secção "My Vessel Visits"
+activate System
+System --> Agent: Apresenta lista de VVNs
+deactivate System
+Agent -> System: Seleciona VVN "In Progress" para editar
+activate System
+System --> Agent: Apresenta formulário de edição com dados atuais
+deactivate System
+Agent -> System: Modifica dados (eta, etd, cargoManifest, crewInfo) e submete
+activate System
+System --> Agent: devolve mensagem de sucesso ou erro
+deactivate System
+
+== Cannot Update Submitted VVN ==
+Agent -> System: Seleciona VVN "Pending" ou "Approved"
+activate System
+System --> Agent: Apresenta detalhes da VVN (modo leitura)
+deactivate System
+Agent -> System: Tenta editar
+activate System
+System --> Agent: devolve mensagem de erro (não pode editar VVN submetida)
+deactivate System
+deactivate Agent
+
+@enduml

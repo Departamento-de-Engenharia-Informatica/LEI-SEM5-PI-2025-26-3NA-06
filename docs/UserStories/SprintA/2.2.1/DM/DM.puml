@@ -1,0 +1,66 @@
+@startuml US_2.2.1_Domain_Model
+
+!define AGGREGATE_ROOT_COLOR #FFDDAA
+!define VALUE_OBJECT_COLOR #E8F5E9
+
+class VesselType <<Aggregate Root>> AGGREGATE_ROOT_COLOR {
+    - VesselTypeId id
+    - TypeName typeName
+    - TypeDescription typeDescription
+    - TypeCapacity typeCapacity
+    - MaxRows maxRows
+    - MaxBays maxBays
+    - MaxTiers maxTiers
+    + VesselType(typeName, typeDescription, typeCapacity, maxRows, maxBays, maxTiers)
+    + UpdateDetails(typeName, typeDescription, typeCapacity, maxRows, maxBays, maxTiers)
+}
+
+class VesselTypeId <<Value Object>> VALUE_OBJECT_COLOR {
+    - Guid value
+    + VesselTypeId(value)
+}
+
+class TypeName <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + TypeName(value)
+}
+
+class TypeDescription <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + TypeDescription(value)
+}
+
+class TypeCapacity <<Value Object>> VALUE_OBJECT_COLOR {
+    - int value
+    + TypeCapacity(value)
+}
+
+class MaxRows <<Value Object>> VALUE_OBJECT_COLOR {
+    - int value
+    + MaxRows(value)
+}
+
+class MaxBays <<Value Object>> VALUE_OBJECT_COLOR {
+    - int value
+    + MaxBays(value)
+}
+
+class MaxTiers <<Value Object>> VALUE_OBJECT_COLOR {
+    - int value
+    + MaxTiers(value)
+}
+
+VesselType "1" *-- "1" VesselTypeId : id
+VesselType "1" *-- "1" TypeName : typeName
+VesselType "1" *-- "1" TypeDescription : typeDescription
+VesselType "1" *-- "1" TypeCapacity : typeCapacity
+VesselType "1" *-- "1" MaxRows : maxRows
+VesselType "1" *-- "1" MaxBays : maxBays
+VesselType "1" *-- "1" MaxTiers : maxTiers
+
+note right of VesselType
+  Aggregate Root for vessel classification
+  Used by: Vessel, Dock
+end note
+
+@enduml

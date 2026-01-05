@@ -1,0 +1,246 @@
+@startuml US_3.2.2_Sequence_Diagram
+
+actor "Admin" as ADMIN
+participant "<<UI>>\n:RoleMapping\nComponent" as UI
+participant "<<Service>>\n:RoleMappingService" as RoleService
+participant "<<Controller>>\n:RoleController" as Controller
+participant "<<Application>>\n:RoleService" as BackendRoleService
+participant "<<Domain>>\n:UserRole" as Domain
+participant "<<Repository>>\n:IRoleRepository" as RoleRepo
+participant "<<Repository>>\n:IUserRepository" as UserRepo
+database "<<Database>>\n:SQL Server" as DB
+
+== View Role Mappings ==
+
+ADMIN -> UI : Acede a "Gestão de Roles"
+activate UI
+
+UI -> RoleService : getAllRoles()
+activate RoleService
+
+RoleService -> Controller : GET /api/roles
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize(Roles = "Admin")]
+
+Controller -> BackendRoleService : GetAllRolesAsync()
+activate BackendRoleService
+
+BackendRoleService -> RoleRepo : GetAllAsync()
+activate RoleRepo
+
+RoleRepo -> DB : SELECT * FROM Roles
+activate DB
+DB --> RoleRepo : List of roles
+deactivate DB
+
+RoleRepo --> BackendRoleService : List<Role>
+deactivate RoleRepo
+
+BackendRoleService --> Controller : List<RoleDTO>
+deactivate BackendRoleService
+
+Controller --> RoleService : 200 OK {roles[]}
+deactivate Controller
+
+RoleService --> UI : Roles data
+deactivate RoleService
+
+UI -> RoleService : getUsersWithRoles()
+activate RoleService
+
+RoleService -> Controller : GET /api/users/with-roles
+activate Controller
+
+Controller -> BackendRoleService : GetUsersWithRolesAsync()
+activate BackendRoleService
+
+BackendRoleService -> UserRepo : GetAllWithRolesAsync()
+activate UserRepo
+
+UserRepo -> DB : SELECT u.*, r.Name as RoleName\nFROM Users u\nLEFT JOIN UserRoles ur ON u.Id = ur.UserId\nLEFT JOIN Roles r ON ur.RoleId = r.Id
+activate DB
+DB --> UserRepo : Users with their roles
+deactivate DB
+
+UserRepo --> BackendRoleService : List<User with Roles>
+deactivate UserRepo
+
+BackendRoleService --> Controller : List<UserRoleMappingDTO>
+deactivate BackendRoleService
+
+Controller --> RoleService : 200 OK {mappings[]}
+deactivate Controller
+
+RoleService --> UI : User-Role mappings
+deactivate RoleService
+
+UI --> ADMIN : Apresenta tabela:\n- User | Email | Roles
+deactivate UI
+
+== Map Google Account to System Roles ==
+
+ADMIN -> UI : Seleciona utilizador\nclica "Atribuir Roles"
+activate UI
+
+UI --> ADMIN : Apresenta modal com:\n- User info (Google email)\n- Checkboxes para cada role
+
+ADMIN -> UI : Seleciona roles desejadas\n(FleetManager, Captain)
+
+ADMIN -> UI : Confirma atribuição
+
+UI -> RoleService : assignRolesToUser(userId, roleIds)
+activate RoleService
+
+RoleService -> Controller : POST /api/users/{userId}/roles\n{roleIds: [2, 5]}
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize(Roles = "Admin")]
+
+Controller -> BackendRoleService : AssignRolesToUserAsync(userId, roleIds)
+activate BackendRoleService
+
+BackendRoleService -> UserRepo : GetByIdAsync(userId)
+activate UserRepo
+
+UserRepo -> DB : SELECT * FROM Users\nWHERE Id = {userId}
+activate DB
+DB --> UserRepo : User data
+deactivate DB
+
+UserRepo --> BackendRoleService : User
+deactivate UserRepo
+
+loop Para cada roleId
+    BackendRoleService -> RoleRepo : GetByIdAsync(roleId)
+    activate RoleRepo
+    RoleRepo -> DB : SELECT * FROM Roles\nWHERE Id = {roleId}
+    activate DB
+    DB --> RoleRepo : Role data
+    deactivate DB
+    RoleRepo --> BackendRoleService : Role
+    deactivate RoleRepo
+end
+
+BackendRoleService -> Domain : AssignRoles(roleIds)
+activate Domain
+
+Domain -> Domain : Valida:\n- Pelo menos 1 role\n- Roles existem\n- Sem duplicados
+
+Domain --> BackendRoleService : Roles atribuídas
+deactivate Domain
+
+BackendRoleService -> UserRepo : UpdateUserRolesAsync(userId, roleIds)
+activate UserRepo
+
+UserRepo -> DB : DELETE FROM UserRoles\nWHERE UserId = {userId}
+activate DB
+DB --> UserRepo : Deleted
+deactivate DB
+
+UserRepo -> DB : INSERT INTO UserRoles\n(UserId, RoleId)\nVALUES ({userId}, {roleId})...
+activate DB
+DB --> UserRepo : Inserted
+deactivate DB
+
+UserRepo --> BackendRoleService : Success
+deactivate UserRepo
+
+BackendRoleService -> UserRepo : UnitOfWork.CommitAsync()
+activate UserRepo
+UserRepo -> DB : COMMIT TRANSACTION
+activate DB
+DB --> UserRepo : Success
+deactivate DB
+UserRepo --> BackendRoleService : Success
+deactivate UserRepo
+
+BackendRoleService --> Controller : UserWithRolesDTO
+deactivate BackendRoleService
+
+Controller --> RoleService : 200 OK {userRolesDTO}
+deactivate Controller
+
+RoleService --> UI : Roles assigned
+deactivate RoleService
+
+UI -> UI : showToast(\n'Roles atribuídas com sucesso'\n)
+
+UI -> UI : Refresh user list
+
+UI --> ADMIN : Apresenta utilizador com\nnovas roles atribuídas
+deactivate UI
+
+== Remove Role from User ==
+
+ADMIN -> UI : Clica em "X" numa role\ndo utilizador
+activate UI
+
+UI --> ADMIN : Confirma remoção
+
+ADMIN -> UI : Confirma
+
+UI -> RoleService : removeRoleFromUser(userId, roleId)
+activate RoleService
+
+RoleService -> Controller : DELETE /api/users/{userId}/roles/{roleId}
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize(Roles = "Admin")]
+
+Controller -> BackendRoleService : RemoveRoleFromUserAsync(userId, roleId)
+activate BackendRoleService
+
+BackendRoleService -> UserRepo : GetByIdAsync(userId)
+activate UserRepo
+UserRepo -> DB : SELECT with roles
+activate DB
+DB --> UserRepo : User with roles
+deactivate DB
+UserRepo --> BackendRoleService : User
+deactivate UserRepo
+
+BackendRoleService -> Domain : RemoveRole(roleId)
+activate Domain
+
+Domain -> Domain : Valida:\n- User tem a role\n- User terá pelo menos 1 role restante
+
+Domain --> BackendRoleService : Role removida
+deactivate Domain
+
+BackendRoleService -> UserRepo : DeleteUserRoleAsync(userId, roleId)
+activate UserRepo
+
+UserRepo -> DB : DELETE FROM UserRoles\nWHERE UserId={userId}\nAND RoleId={roleId}
+activate DB
+DB --> UserRepo : Success
+deactivate DB
+
+UserRepo --> BackendRoleService : Success
+deactivate UserRepo
+
+BackendRoleService -> UserRepo : UnitOfWork.CommitAsync()
+activate UserRepo
+UserRepo -> DB : COMMIT
+activate DB
+DB --> UserRepo : Success
+deactivate DB
+UserRepo --> BackendRoleService : Success
+deactivate UserRepo
+
+BackendRoleService --> Controller : Success
+deactivate BackendRoleService
+
+Controller --> RoleService : 204 No Content
+deactivate Controller
+
+RoleService --> UI : Role removed
+deactivate RoleService
+
+UI -> UI : showToast('Role removida')
+UI -> UI : Atualiza lista
+
+UI --> ADMIN : Role removida da visualização
+deactivate UI
+
+@enduml

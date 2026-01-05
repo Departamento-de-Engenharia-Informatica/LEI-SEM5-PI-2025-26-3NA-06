@@ -1,0 +1,33 @@
+@startuml US_3.1.5_SSD
+autonumber
+
+actor "System\nUser" as User
+participant ":System" as System
+
+== Access Feature Page ==
+activate User
+User -> System: Clica numa secção do menu (ex: "Vessels")
+activate System
+System --> User: Apresenta página com formulário e lista de dados
+deactivate System
+
+== Submit Form ==
+User -> System: Preenche formulário e submete
+activate System
+System --> User: Apresenta confirmação de submissão
+deactivate System
+
+== Search/Filter Data ==
+User -> System: Introduz critérios de pesquisa na caixa de filtro
+activate System
+System --> User: Apresenta resultados filtrados
+deactivate System
+
+== View List ==
+User -> System: Seleciona opção de visualização (table/grid)
+activate System
+System --> User: Apresenta lista de dados no formato selecionado
+deactivate System
+deactivate User
+
+@enduml

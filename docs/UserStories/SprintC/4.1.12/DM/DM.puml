@@ -1,0 +1,59 @@
+@startuml US_4.1.12_Domain_Model
+
+!define AGGREGATE_ROOT_COLOR #FFDDAA
+!define VALUE_OBJECT_COLOR #E8F5E9
+
+class IncidentType <<Aggregate Root>> AGGREGATE_ROOT_COLOR {
+    - IncidentTypeId id
+    - IncidentCode code
+    - IncidentTypeName name
+    - IncidentDescription description
+    - Severity severity
+    - IncidentTypeId? parentTypeId
+    + CreateIncidentType(code, name, description, severity, parentId)
+    + UpdateDetails(code, name, description, severity, parentId)
+    + GetHierarchy() : HierarchyNode
+}
+
+class IncidentTypeId <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + IncidentTypeId(value)
+}
+
+class IncidentCode <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + IncidentCode(value)
+}
+
+class IncidentTypeName <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + IncidentTypeName(value)
+}
+
+class IncidentDescription <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + IncidentDescription(value)
+}
+
+class Severity <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + Severity(value)
+}
+
+IncidentType "1" *-- "1" IncidentTypeId : id
+IncidentType "1" *-- "1" IncidentCode : code
+IncidentType "1" *-- "1" IncidentTypeName : name
+IncidentType "1" *-- "1" IncidentDescription : description
+IncidentType "1" *-- "1" Severity : severity
+IncidentType "1" --> "0..1" IncidentTypeId : parentTypeId
+
+note right of IncidentType
+  Hierarchical structure:
+  - Root types (no parent)
+  - Child types (with parent)
+  
+  Severity levels:
+  Low, Medium, High, Critical
+end note
+
+@enduml

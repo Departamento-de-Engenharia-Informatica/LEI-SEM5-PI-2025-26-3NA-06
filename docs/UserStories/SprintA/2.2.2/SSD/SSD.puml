@@ -1,0 +1,43 @@
+@startuml US_2.2.2_SSD
+autonumber
+
+actor "Port Authority\nOfficer" as Officer
+participant ":System" as System
+
+== Register Vessel ==
+activate Officer
+Officer -> System: Clica na secção "Vessel"
+activate System
+System --> Officer: Apresenta página com lista de vessels registados e opção "Register Vessel"
+deactivate System
+Officer -> System: Clica em "Register Vessel"
+activate System
+System --> Officer: Apresenta formulário de registo de vessel
+deactivate System
+Officer -> System: Introduz dados do vessel(vesselName, vesselTypeId, operator, capacity, rows, bays, tiers, length) e submete
+activate System
+System --> Officer: devolve mensagem de sucesso ou erro
+deactivate System
+
+== Update Vessel ==
+Officer -> System: Seleciona vessel da lista
+activate System
+System --> Officer: Apresenta detalhes do vessel
+deactivate System
+Officer -> System: Clica em "Edit Vessel"
+activate System
+System --> Officer: Apresenta formulário de edição preenchido
+deactivate System
+Officer -> System: Modifica dados do vessel e submete
+activate System
+System --> Officer: devolve mensagem de sucesso ou erro
+deactivate System
+
+== Search Vessels ==
+Officer -> System: Introduz critérios de pesquisa (IMO, name, operator)
+activate System
+System --> Officer: Apresenta lista de vessels filtrados
+deactivate System
+deactivate Officer
+
+@enduml

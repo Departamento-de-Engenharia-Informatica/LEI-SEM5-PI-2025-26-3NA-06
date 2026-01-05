@@ -1,0 +1,194 @@
+@startuml US_2.2.8_Sequence_Diagram
+
+actor "Port Authority" as PA
+participant "<<UI>>\n:Angular\nComponent" as UI
+participant "<<Controller>>\n:VVNController" as Controller
+participant "<<Application>>\n:VVNService" as Service
+participant "<<Domain>>\n:VesselVisitNotification" as Domain
+participant "<<Repository>>\n:IVVNRepository" as Repo
+database "<<Database>>\n:SQL Server" as DB
+
+== Review Vessel Visit Notifications ==
+
+PA -> UI : Acede à página de revisão de VVNs
+activate UI
+
+UI -> Controller : GET /api/vvn?status=Submitted
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize(Roles = "PortAuthority")]
+
+Controller -> Service : GetVVNsByStatusAsync(status=Submitted)
+activate Service
+
+Service -> Repo : GetByStatusAsync(Submitted)
+activate Repo
+
+Repo -> DB : SELECT * FROM VesselVisitNotifications\nWHERE Status = 'Submitted'
+activate DB
+DB --> Repo : List of VVNs
+deactivate DB
+
+Repo --> Service : List<VVN>
+deactivate Repo
+
+Service --> Controller : List<VVNDTO>
+deactivate Service
+
+Controller --> UI : 200 OK {vvns[]}
+deactivate Controller
+
+UI --> PA : Apresenta lista de VVNs pendentes
+
+PA -> UI : Seleciona VVN para revisar
+UI -> Controller : GET /api/vvn/{id}
+activate Controller
+
+Controller -> Service : GetVVNByIdAsync(id)
+activate Service
+
+Service -> Repo : GetByIdAsync(id)
+activate Repo
+
+Repo -> DB : SELECT * FROM VesselVisitNotifications\nWHERE Id = {id}
+activate DB
+DB --> Repo : VVN data
+deactivate DB
+
+Repo --> Service : VVN
+deactivate Repo
+
+Service --> Controller : VVNDTO
+deactivate Service
+
+Controller --> UI : 200 OK {vvnDTO}
+deactivate Controller
+
+UI --> PA : Apresenta detalhes completos do VVN
+
+== Approve VVN ==
+
+PA -> UI : Clica em "Aprovar"
+UI -> UI : Solicita confirmação
+
+PA -> UI : Confirma aprovação
+
+UI -> Controller : PUT /api/vvn/{id}/approve
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize(Roles = "PortAuthority")]
+
+Controller -> Service : ApproveVVNAsync(id, userId)
+activate Service
+
+Service -> Repo : GetByIdAsync(id)
+activate Repo
+
+Repo -> DB : SELECT * FROM VesselVisitNotifications\nWHERE Id = {id}
+activate DB
+DB --> Repo : VVN data
+deactivate DB
+
+Repo --> Service : VVN
+deactivate Repo
+
+Service -> Domain : Approve(portAuthorityId)
+activate Domain
+
+Domain -> Domain : Valida Status = Submitted\nMuda Status para Approved\nRegista PortAuthorityId\nRegista ApprovalDate
+
+Domain --> Service : VVN aprovado
+deactivate Domain
+
+Service -> Repo : UpdateAsync(vvn)
+activate Repo
+
+Repo -> DB : UPDATE VesselVisitNotifications\nSET Status='Approved',\nApprovedBy={userId},\nApprovalDate=NOW()
+activate DB
+DB --> Repo : Success
+deactivate DB
+
+Repo --> Service : Success
+deactivate Repo
+
+Service -> Repo : UnitOfWork.CommitAsync()
+activate Repo
+Repo -> DB : COMMIT TRANSACTION
+activate DB
+DB --> Repo : Success
+deactivate DB
+Repo --> Service : Success
+deactivate Repo
+
+Service --> Controller : VVNDTO
+deactivate Service
+
+Controller --> UI : 200 OK {vvnDTO}
+deactivate Controller
+
+UI --> PA : Apresenta confirmação de aprovação
+
+== Reject VVN ==
+
+PA -> UI : Clica em "Rejeitar"
+UI --> PA : Solicita motivo de rejeição
+
+PA -> UI : Introduz motivo e confirma
+
+UI -> Controller : PUT /api/vvn/{id}/reject\n{rejectionReason}
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize(Roles = "PortAuthority")]
+
+Controller -> Service : RejectVVNAsync(id, reason, userId)
+activate Service
+
+Service -> Repo : GetByIdAsync(id)
+activate Repo
+
+Repo -> DB : SELECT * FROM VesselVisitNotifications\nWHERE Id = {id}
+activate DB
+DB --> Repo : VVN data
+deactivate DB
+
+Repo --> Service : VVN
+deactivate Repo
+
+Service -> Domain : Reject(reason, portAuthorityId)
+activate Domain
+
+Domain -> Domain : Valida Status = Submitted\nMuda Status para Rejected\nRegista RejectionReason\nRegista PortAuthorityId\nRegista RejectionDate
+
+Domain --> Service : VVN rejeitado
+deactivate Domain
+
+Service -> Repo : UpdateAsync(vvn)
+activate Repo
+
+Repo -> DB : UPDATE VesselVisitNotifications\nSET Status='Rejected',\nRejectedBy={userId},\nRejectionReason={reason},\nRejectionDate=NOW()
+activate DB
+DB --> Repo : Success
+deactivate DB
+
+Repo --> Service : Success
+deactivate Repo
+
+Service -> Repo : UnitOfWork.CommitAsync()
+activate Repo
+Repo -> DB : COMMIT TRANSACTION
+activate DB
+DB --> Repo : Success
+deactivate DB
+Repo --> Service : Success
+deactivate Repo
+
+Service --> Controller : VVNDTO
+deactivate Service
+
+Controller --> UI : 200 OK {vvnDTO}
+deactivate Controller
+
+UI --> PA : Apresenta confirmação de rejeição
+deactivate UI
+
+@enduml

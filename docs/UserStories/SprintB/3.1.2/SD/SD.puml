@@ -1,0 +1,125 @@
+@startuml US_3.1.2_Sequence_Diagram
+
+actor "Developer" as DEV
+participant "<<UI>>\n:Angular\nComponent" as UI
+participant "<<Service>>\n:TranslationService" as TransService
+participant "<<Library>>\n:ngx-translate" as I18N
+participant "<<File System>>\n:Assets" as FS
+
+== Setup i18n ==
+
+DEV -> FS : Cria ficheiros de tradução\n- assets/i18n/en.json\n- assets/i18n/pt.json
+activate FS
+
+FS --> DEV : Ficheiros criados com keys
+deactivate FS
+
+DEV -> TransService : Configura TranslateModule\nem app.config.ts
+activate TransService
+
+TransService -> I18N : TranslateModule.forRoot({\ndefaultLanguage: 'pt',\nloader: HttpLoaderFactory\n})
+activate I18N
+
+I18N --> TransService : Módulo configurado
+deactivate I18N
+
+TransService --> DEV : i18n pronto
+deactivate TransService
+
+== Load Translations ==
+
+actor "User" as USER
+
+USER -> UI : Acede à aplicação
+activate UI
+
+UI -> TransService : use('pt')
+activate TransService
+
+TransService -> I18N : setDefaultLang('pt')
+activate I18N
+
+I18N -> FS : GET /assets/i18n/pt.json
+activate FS
+
+FS --> I18N : Translation JSON
+deactivate FS
+
+I18N -> I18N : Carrega traduções em memória
+
+I18N --> TransService : Translations loaded
+deactivate I18N
+
+TransService --> UI : Language set to 'pt'
+deactivate TransService
+
+UI -> UI : Renderiza com traduções\n{{ 'home.title' | translate }}
+
+UI --> USER : Apresenta interface em Português
+deactivate UI
+
+== Change Language ==
+
+USER -> UI : Clica em "EN" flag
+activate UI
+
+UI -> TransService : switchLanguage('en')
+activate TransService
+
+TransService -> I18N : use('en')
+activate I18N
+
+I18N -> FS : GET /assets/i18n/en.json
+activate FS
+
+FS --> I18N : Translation JSON
+deactivate FS
+
+I18N -> I18N : Atualiza traduções em memória
+
+I18N --> TransService : Language changed
+deactivate I18N
+
+TransService --> UI : Language updated
+deactivate TransService
+
+UI -> UI : Re-renderiza com novas traduções
+
+UI --> USER : Apresenta interface em English
+deactivate UI
+
+== Add Toast Notifications ==
+
+USER -> UI : Executa ação (ex: submit form)
+activate UI
+
+UI -> UI : Valida dados
+
+alt Sucesso
+    UI -> TransService : instant('messages.success')
+    activate TransService
+    TransService --> UI : "Operação concluída com sucesso"
+    deactivate TransService
+    
+    UI -> UI : showToast(message, 'success')
+    UI --> USER : Toast verde com mensagem
+else Erro
+    UI -> TransService : instant('messages.error')
+    activate TransService
+    TransService --> UI : "Erro ao processar operação"
+    deactivate TransService
+    
+    UI -> UI : showToast(message, 'error')
+    UI --> USER : Toast vermelho com mensagem
+end
+
+deactivate UI
+
+note right of DEV
+  UI/UX User Story
+  Translation service
+  Toast notifications
+  No domain aggregate
+end note
+
+@enduml

@@ -1,0 +1,27 @@
+@startuml US_4.1.8_SSD
+autonumber
+
+actor "Logistics\nOperator" as Operator
+participant ":System" as System
+
+== Get VVE ==
+activate Operator
+Operator -> System: Acede à execução em curso
+activate System
+System --> Operator: Apresenta detalhes da VVE
+deactivate System
+
+== Update Berth Info ==
+Operator -> System: Clica em "Record Berth" e introduz hora e dock reais
+activate System
+System --> Operator: Apresenta aviso de discrepância (se diferente do planeado)
+deactivate System
+
+== Confirm Update ==
+Operator -> System: Introduz razão da discrepância e confirma
+activate System
+System --> Operator: Apresenta confirmação de atualização
+deactivate System
+deactivate Operator
+
+@enduml

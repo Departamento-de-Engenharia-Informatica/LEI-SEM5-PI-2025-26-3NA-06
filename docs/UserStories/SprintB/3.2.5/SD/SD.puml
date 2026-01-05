@@ -1,0 +1,242 @@
+@startuml US_3.2.5_Sequence_Diagram
+
+actor "Admin" as ADMIN
+participant "<<UI>>\n:UserManagement\nComponent" as UI
+participant "<<Service>>\n:UserService" as UserService
+participant "<<Controller>>\n:UserController" as Controller
+participant "<<Application>>\n:UserService" as BackendUserService
+participant "<<Domain>>\n:User" as Domain
+participant "<<Service>>\n:EmailService" as EmailService
+participant "<<Repository>>\n:IUserRepository" as Repo
+database "<<Database>>\n:SQL Server" as DB
+
+== Create User Account ==
+
+ADMIN -> UI : Clica em "Criar Utilizador"
+activate UI
+
+UI --> ADMIN : Apresenta formulário\n(Email, Name, Roles)
+
+ADMIN -> UI : Preenche dados e submete\n{email, name, roleIds}
+
+UI -> UserService : createUser(userData)
+activate UserService
+
+UserService -> Controller : POST /api/users/create
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize(Roles = "Admin")]
+
+Controller -> BackendUserService : CreateUserAsync(createUserDTO, adminId)
+activate BackendUserService
+
+BackendUserService -> Repo : GetByEmailAsync(email)
+activate Repo
+
+Repo -> DB : SELECT * FROM Users\nWHERE Email = {email}
+activate DB
+DB --> Repo : null (não existe)
+deactivate DB
+
+Repo --> BackendUserService : null
+deactivate Repo
+
+BackendUserService -> BackendUserService : Gera token de ativação\nGuid.NewGuid()
+
+BackendUserService -> Domain : new User(\nemail, name, roleIds,\nstatus=PendingActivation,\nactivationToken)
+activate Domain
+
+Domain -> Domain : Valida Value Objects\n- Email (formato válido)\n- Name (não vazio)\n- Roles (> 0)\n- Status = PendingActivation\n- ActivationToken (único)
+
+Domain --> BackendUserService : User criado
+deactivate Domain
+
+BackendUserService -> Repo : AddAsync(user)
+activate Repo
+
+Repo -> DB : INSERT INTO Users\nVALUES (...)\nINSERT INTO UserRoles
+activate DB
+DB --> Repo : User ID
+deactivate DB
+
+Repo --> BackendUserService : User persistido
+deactivate Repo
+
+BackendUserService -> Repo : UnitOfWork.CommitAsync()
+activate Repo
+Repo -> DB : COMMIT TRANSACTION
+activate DB
+DB --> Repo : Success
+deactivate DB
+Repo --> BackendUserService : Success
+deactivate Repo
+
+BackendUserService -> EmailService : SendActivationEmail(\nemail, name, activationToken)
+activate EmailService
+
+EmailService -> EmailService : Cria email com:\n- Activation link\n- Instruções\n- Token expiration (24h)
+
+EmailService -> EmailService : SMTP send\nLink: /activate/{activationToken}
+
+EmailService --> BackendUserService : Email sent
+deactivate EmailService
+
+BackendUserService --> Controller : UserDTO
+deactivate BackendUserService
+
+Controller --> UserService : 201 Created {userDTO}
+deactivate Controller
+
+UserService --> UI : User created
+deactivate UserService
+
+UI -> UI : showToast(\n'Utilizador criado.\nEmail de ativação enviado.'\n)
+
+UI --> ADMIN : Apresenta confirmação\nUtilizador aparece na lista\ncom status "Pending Activation"
+deactivate UI
+
+== Activate Account ==
+
+actor "New User" as NEWUSER
+
+NEWUSER -> NEWUSER : Recebe email de ativação
+
+NEWUSER -> UI : Clica no link de ativação\n/activate/{activationToken}
+activate UI
+
+UI -> UserService : activateAccount(activationToken)
+activate UserService
+
+UserService -> Controller : POST /api/users/activate\n{activationToken}
+activate Controller
+
+Controller -> BackendUserService : ActivateUserAsync(activationToken)
+activate BackendUserService
+
+BackendUserService -> Repo : GetByActivationTokenAsync(activationToken)
+activate Repo
+
+Repo -> DB : SELECT * FROM Users\nWHERE ActivationToken = {token}\nAND Status = 'PendingActivation'
+activate DB
+DB --> Repo : User data
+deactivate DB
+
+Repo --> BackendUserService : User
+deactivate Repo
+
+BackendUserService -> BackendUserService : Valida token não expirado\n(CreatedAt + 24h > Now)
+
+alt Token válido e não expirado
+    BackendUserService -> Domain : Activate()
+    activate Domain
+    
+    Domain -> Domain : Muda Status para Active\nLimpa ActivationToken\nRegista ActivatedAt
+    
+    Domain --> BackendUserService : User ativado
+    deactivate Domain
+    
+    BackendUserService -> Repo : UpdateAsync(user)
+    activate Repo
+    
+    Repo -> DB : UPDATE Users\nSET Status='Active',\nActivationToken=NULL,\nActivatedAt=NOW()
+    activate DB
+    DB --> Repo : Success
+    deactivate DB
+    
+    Repo --> BackendUserService : Success
+    deactivate Repo
+    
+    BackendUserService -> Repo : UnitOfWork.CommitAsync()
+    activate Repo
+    Repo -> DB : COMMIT
+    activate DB
+    DB --> Repo : Success
+    deactivate DB
+    Repo --> BackendUserService : Success
+    deactivate Repo
+    
+    BackendUserService --> Controller : Success
+    deactivate BackendUserService
+    
+    Controller --> UserService : 200 OK\n{message: "Account activated"}
+    deactivate Controller
+    
+    UserService --> UI : Account activated
+    deactivate UserService
+    
+    UI --> NEWUSER : "Conta ativada com sucesso!\nPode agora fazer login."
+    
+    UI -> UI : Redireciona para /login
+    deactivate UI
+    
+else Token expirado
+    BackendUserService --> Controller : 400 Bad Request\n{error: "Token expired"}
+    deactivate BackendUserService
+    Controller --> UserService : Error
+    deactivate Controller
+    UserService --> UI : Token expired
+    deactivate UserService
+    UI --> NEWUSER : "Token expirado.\nContacte o administrador."
+    deactivate UI
+end
+
+== Resend Activation Token ==
+
+ADMIN -> UI : Seleciona user pendente\nclica "Reenviar Ativação"
+activate UI
+
+UI -> UserService : resendActivation(userId)
+activate UserService
+
+UserService -> Controller : POST /api/users/{userId}/resend-activation
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize(Roles = "Admin")]
+
+Controller -> BackendUserService : ResendActivationAsync(userId)
+activate BackendUserService
+
+BackendUserService -> Repo : GetByIdAsync(userId)
+activate Repo
+Repo -> DB : SELECT query
+activate DB
+DB --> Repo : User
+deactivate DB
+Repo --> BackendUserService : User
+deactivate Repo
+
+BackendUserService -> BackendUserService : Valida Status = PendingActivation
+
+BackendUserService -> Domain : GenerateNewActivationToken()
+activate Domain
+Domain -> Domain : Gera novo token\nAtualiza CreatedAt
+Domain --> BackendUserService : Token atualizado
+deactivate Domain
+
+BackendUserService -> Repo : UpdateAsync(user)
+activate Repo
+Repo -> DB : UPDATE ActivationToken
+activate DB
+DB --> Repo : Success
+deactivate DB
+Repo --> BackendUserService : Success
+deactivate Repo
+
+BackendUserService -> EmailService : SendActivationEmail(user)
+activate EmailService
+EmailService --> BackendUserService : Email sent
+deactivate EmailService
+
+BackendUserService --> Controller : Success
+deactivate BackendUserService
+
+Controller --> UserService : 200 OK
+deactivate Controller
+
+UserService --> UI : Activation resent
+deactivate UserService
+
+UI --> ADMIN : "Email de ativação\nreenviado com sucesso"
+deactivate UI
+
+@enduml

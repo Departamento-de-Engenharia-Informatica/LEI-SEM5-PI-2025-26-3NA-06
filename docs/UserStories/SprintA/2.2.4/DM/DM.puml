@@ -1,0 +1,71 @@
+@startuml US_2.2.4_Domain_Model
+
+!define AGGREGATE_ROOT_COLOR #FFDDAA
+!define VALUE_OBJECT_COLOR #E8F5E9
+
+class StorageArea <<Aggregate Root>> AGGREGATE_ROOT_COLOR {
+    - StorageAreaId id
+    - StorageAreaName name
+    - AreaType areaType
+    - Location location
+    - MaxCapacity maxCapacity
+    - List<DockId> servedDocks
+    - Dictionary<DockId, Distance> distances
+    + StorageArea(name, areaType, location, maxCapacity, servedDocks, distances)
+    + UpdateDetails(name, areaType, location, maxCapacity, servedDocks, distances)
+}
+
+class StorageAreaId <<Value Object>> VALUE_OBJECT_COLOR {
+    - Guid value
+    + StorageAreaId(value)
+}
+
+class StorageAreaName <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + StorageAreaName(value)
+}
+
+class AreaType <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + AreaType(value)
+}
+
+class Location <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + Location(value)
+}
+
+class MaxCapacity <<Value Object>> VALUE_OBJECT_COLOR {
+    - int value
+    + MaxCapacity(value)
+}
+
+class DockId <<Value Object>> VALUE_OBJECT_COLOR {
+    - Guid value
+    + DockId(value)
+}
+
+class Distance <<Value Object>> VALUE_OBJECT_COLOR {
+    - double value
+    + Distance(value)
+}
+
+StorageArea "1" *-- "1" StorageAreaId : id
+StorageArea "1" *-- "1" StorageAreaName : name
+StorageArea "1" *-- "1" AreaType : areaType
+StorageArea "1" *-- "1" Location : location
+StorageArea "1" *-- "1" MaxCapacity : maxCapacity
+StorageArea "1" *-- "*" DockId : servedDocks
+StorageArea "1" *-- "*" Distance : distances
+
+note right of StorageArea
+  References Dock aggregate
+  via DockId references
+end note
+
+note bottom of Distance
+  Distance from storage area
+  to each served dock
+end note
+
+@enduml

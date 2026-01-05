@@ -1,0 +1,53 @@
+@startuml US_4.1.11_Domain_Model
+
+!define AGGREGATE_ROOT_COLOR #FFDDAA
+!define VALUE_OBJECT_COLOR #E8F5E9
+
+class VesselVisitExecution <<Aggregate Root>> AGGREGATE_ROOT_COLOR {
+    - VveId id
+    - VvnId vvnId
+    - DateTime actualArrivalTime
+    - BerthInfo berthInfo
+    - DepartureInfo? departureInfo
+    - List<ExecutedOperation> operations
+    - ExecutionStatus status
+    + CompleteExecution(actualUnberthTime, actualDepartureTime)
+    + ValidateCompletion() : ValidationResult
+}
+
+class VveId <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + VveId(value)
+}
+
+class DepartureInfo <<Value Object>> VALUE_OBJECT_COLOR {
+    - DateTime actualUnberthTime
+    - DateTime actualDepartureTime
+    - DateTime recordedAt
+}
+
+class ExecutionStatus <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + ExecutionStatus(value)
+}
+
+class ValidationResult <<Value Object>> VALUE_OBJECT_COLOR {
+    - bool isValid
+    - List<string> errors
+    - List<string> warnings
+}
+
+VesselVisitExecution "1" *-- "1" VveId : id
+VesselVisitExecution "1" *-- "0..1" DepartureInfo : departureInfo
+VesselVisitExecution "1" *-- "1" ExecutionStatus : status
+
+note right of VesselVisitExecution
+  Completion requires:
+  - All operations finished
+  - Unberthing time recorded
+  - Departure time recorded
+  
+  Status: InProgress -> Completed
+end note
+
+@enduml

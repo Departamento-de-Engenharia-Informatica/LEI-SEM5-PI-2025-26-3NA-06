@@ -1,0 +1,143 @@
+@startuml US_4.1.13_Sequence_Diagram
+
+actor "Dock Operator" as OPER
+participant "<<UI>>\n:IncidentComponent" as UI
+participant "<<Controller>>\n:IncidentController" as Controller
+participant "<<Application>>\n:IncidentService" as Service
+participant "<<Domain>>\n:Incident" as Domain
+participant "<<Repository>>\n:IncidentRepository" as Repo
+database "<<Database>>\n:OEM SQL DB" as DB
+
+== Record Incident ==
+
+OPER -> UI : Ocorre incidente durante operação
+activate UI
+
+UI --> OPER : Apresenta formulário:\n- VVE\n- Incident Type\n- Start time\n- Description\n- Affected scope
+
+OPER -> UI : Preenche e submete
+
+UI -> Controller : POST /api/incidents\n{vveId, incidentTypeId, startTime, description, affectedScope}
+activate Controller
+
+Controller -> Service : recordIncident(incidentDTO, userId)
+activate Service
+
+Service -> Service : Valida VVE e IncidentType existem
+
+Service -> Domain : new Incident(\nincidentTypeId, startTime,\ndescription, affectedScope,\nreportedBy, status: Open)
+activate Domain
+
+Domain -> Domain : Valida:\n- IncidentType existe\n- startTime válido\n- Description não vazio\n- Status inicial = Open
+
+Domain --> Service : Incident criado
+deactivate Domain
+
+Service -> Repo : save(incident)
+activate Repo
+Repo -> DB : INSERT INTO Incidents
+activate DB
+DB --> Repo : Inserted
+deactivate DB
+Repo --> Service : Saved
+deactivate Repo
+
+Service --> Controller : IncidentDTO
+deactivate Service
+
+Controller --> UI : 201 Created {incident}
+deactivate Controller
+
+UI --> OPER : Incidente registado
+deactivate UI
+
+== Update Incident ==
+
+OPER -> UI : Atualiza informações do incidente
+activate UI
+
+UI -> Controller : PUT /api/incidents/{id}\n{updates}
+activate Controller
+
+Controller -> Service : updateIncident(id, updates)
+activate Service
+
+Service -> Repo : findById(id)
+activate Repo
+Repo -> DB : SELECT * FROM Incidents\nWHERE Id = ?
+activate DB
+DB --> Repo : Incident
+deactivate DB
+Repo --> Service : Incident
+deactivate Repo
+
+Service -> Domain : updateDetails(updates)
+activate Domain
+Domain --> Service : Updated
+deactivate Domain
+
+Service -> Repo : update(incident)
+activate Repo
+Repo -> DB : UPDATE Incidents\nSET ... WHERE Id = ?
+activate DB
+DB --> Repo : Modified
+deactivate DB
+Repo --> Service : Success
+deactivate Repo
+
+Service --> Controller : IncidentDTO
+deactivate Service
+
+Controller --> UI : 200 OK {incident}
+deactivate Controller
+
+UI --> OPER : Incidente atualizado
+deactivate UI
+
+== Resolve Incident ==
+
+OPER -> UI : Incidente resolvido
+activate UI
+
+UI -> Controller : PUT /api/incidents/{id}/resolve\n{endTime, resolution}
+activate Controller
+
+Controller -> Service : resolveIncident(id, endTime, resolution)
+activate Service
+
+Service -> Repo : findById(id)
+activate Repo
+Repo -> DB : SELECT * FROM Incidents\nWHERE Id = ?
+activate DB
+DB --> Repo : Incident
+deactivate DB
+Repo --> Service : Incident
+deactivate Repo
+
+Service -> Domain : resolve(endTime, resolution)
+activate Domain
+
+Domain -> Domain : Valida:\n- endTime >= startTime\n- Resolution description\n- Muda status para Resolved
+
+Domain --> Service : Incident resolved
+deactivate Domain
+
+Service -> Repo : update(incident)
+activate Repo
+Repo -> DB : UPDATE Incidents\nSET EndTime=?, Resolution=?, Status=?\nWHERE Id = ?
+activate DB
+DB --> Repo : Modified
+deactivate DB
+Repo --> Service : Success
+deactivate Repo
+
+Service --> Controller : IncidentDTO
+deactivate Service
+
+Controller --> UI : 200 OK {incident}
+deactivate Controller
+
+UI --> OPER : Incidente resolvido:\nDuração: {duration}
+deactivate UI
+
+@enduml

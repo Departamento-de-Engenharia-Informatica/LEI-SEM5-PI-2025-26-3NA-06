@@ -1,0 +1,37 @@
+@startuml US_2.2.8_SSD
+autonumber
+
+actor "Shipping Agent\nRepresentative" as Agent
+participant ":System" as System
+
+== Create VVN ==
+activate Agent
+Agent -> System: Acede à secção "My Vessel Visits"
+activate System
+System --> Agent: Apresenta lista de VVNs e opção "Create New"
+deactivate System
+Agent -> System: Clica em "Create New VVN"
+activate System
+System --> Agent: Apresenta formulário de criação de VVN
+deactivate System
+Agent -> System: Introduz dados (vesselId, eta, etd, cargoManifest, crewInfo) e guarda como "In Progress"
+activate System
+System --> Agent: devolve mensagem de sucesso
+deactivate System
+
+== Submit VVN for Approval ==
+Agent -> System: Seleciona VVN "In Progress"
+activate System
+System --> Agent: Apresenta detalhes da VVN
+deactivate System
+Agent -> System: Clica em "Submit for Approval"
+activate System
+System --> Agent: Apresenta confirmação de submissão
+deactivate System
+Agent -> System: Confirma submissão
+activate System
+System --> Agent: devolve mensagem de sucesso
+deactivate System
+deactivate Agent
+
+@enduml

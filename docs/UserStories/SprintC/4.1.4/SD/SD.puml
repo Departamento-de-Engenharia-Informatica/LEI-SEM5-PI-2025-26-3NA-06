@@ -1,0 +1,80 @@
+@startuml US_4.1.4_Sequence_Diagram
+
+actor "OEM Manager" as OEM
+participant "<<UI>>\n:PlanEditComponent" as UI
+participant "<<Controller>>\n:OperationPlanController" as Controller
+participant "<<Application>>\n:OperationPlanService" as Service
+participant "<<Domain>>\n:OperationPlan" as Domain
+participant "<<Repository>>\n:OperationPlanRepository" as Repo
+database "<<Database>>\n:OEM SQL DB" as DB
+
+== Update Operation Plan ==
+
+OEM -> UI : Seleciona plano e clica "Editar"
+activate UI
+
+UI -> Controller : GET /api/operation-plans/{id}
+activate Controller
+Controller -> Service : getById(id)
+activate Service
+Service -> Repo : findById(id)
+activate Repo
+Repo -> DB : findOne query
+activate DB
+DB --> Repo : Plan
+deactivate DB
+Repo --> Service : OperationPlan
+deactivate Repo
+Service --> Controller : OperationPlanDTO
+deactivate Service
+Controller --> UI : 200 OK {plan}
+deactivate Controller
+
+UI --> OEM : Apresenta formulário preenchido
+
+OEM -> UI : Modifica operations e submete\n(time adjustments, resource changes)
+
+UI -> Controller : PUT /api/operation-plans/{id}\n{updates}
+activate Controller
+
+Controller -> Service : updatePlan(id, updateDTO)
+activate Service
+
+Service -> Repo : findById(id)
+activate Repo
+Repo -> DB : findOne query
+activate DB
+DB --> Repo : Plan
+deactivate DB
+Repo --> Service : OperationPlan
+deactivate Repo
+
+Service -> Domain : updateOperations(newOperations)
+activate Domain
+
+Domain -> Domain : Valida:\n- Sem conflitos de timing\n- Resources disponíveis\n- Constraints respeitadas
+
+Domain --> Service : OperationPlan atualizado
+deactivate Domain
+
+Service -> Repo : update(operationPlan)
+activate Repo
+
+Repo -> DB : db.operationPlans.updateOne(\n{_id}, {$set: updates}\n)
+activate DB
+DB --> Repo : Modified count
+deactivate DB
+
+Repo --> Service : Success
+deactivate Repo
+
+Service --> Controller : OperationPlanDTO
+deactivate Service
+
+Controller --> UI : 200 OK {updatedPlan}
+deactivate Controller
+
+UI --> OEM : Plano atualizado com sucesso
+deactivate UI
+
+@enduml

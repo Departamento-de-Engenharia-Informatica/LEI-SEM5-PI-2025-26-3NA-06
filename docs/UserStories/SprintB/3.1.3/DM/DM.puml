@@ -1,0 +1,52 @@
+@startuml US_3.1.3_Domain_Model
+
+!define AGGREGATE_ROOT_COLOR #FFDDAA
+!define VALUE_OBJECT_COLOR #E8F5E9
+
+class User <<Aggregate Root>> AGGREGATE_ROOT_COLOR {
+    - UserId id
+    - Email email
+    - UserRole role
+    - UserStatus status
+    + GetRole() : UserRole
+    + CanAccess(feature) : bool
+}
+
+class UserId <<Value Object>> VALUE_OBJECT_COLOR {
+    - Guid value
+    + UserId(value)
+}
+
+class Email <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + Email(value)
+}
+
+class UserRole <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + UserRole(value)
+}
+
+class UserStatus <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + UserStatus(value)
+}
+
+User "1" *-- "1" UserId : id
+User "1" *-- "1" Email : email
+User "1" *-- "1" UserRole : role
+User "1" *-- "1" UserStatus : status
+
+note right of User
+  User roles:
+  - PortAuthorityOfficer
+  - ShippingAgent
+  - Administrator
+end note
+
+note bottom of UserRole
+  Role-based access control
+  Determines available features
+end note
+
+@enduml

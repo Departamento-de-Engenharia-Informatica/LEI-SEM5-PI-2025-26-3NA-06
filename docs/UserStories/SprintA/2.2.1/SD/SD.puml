@@ -1,0 +1,164 @@
+@startuml US_2.2.1_Sequence_Diagram
+
+actor "Fleet Manager" as FM
+participant "<<UI>>\n:Angular\nComponent" as UI
+participant "<<Controller>>\n:VesselTypeController" as Controller
+participant "<<Application>>\n:VesselTypeService" as Service
+participant "<<Domain>>\n:VesselType" as Domain
+participant "<<Repository>>\n:IVesselTypeRepository" as Repo
+database "<<Database>>\n:SQL Server" as DB
+
+== Create Vessel Type ==
+activate FM
+FM -> UI : Clica em "Criar Tipo de Navio"
+activate UI
+UI --> FM : Apresenta formulário
+
+FM -> UI : Introduz dados e submete\n(Name, Description, Capacity, MaxRows, MaxBays, MaxTiers)
+UI -> UI : Valida dados no frontend
+
+UI -> Controller : POST /api/vesseltypes\n{vesselTypeDTO}
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize(Roles = "FleetManager")]
+
+Controller -> Service : CreateVesselTypeAsync(createVesselTypeDTO)
+activate Service
+
+Service -> Service : Valida regras de negócio\n(Name único, Capacity > 0, etc.)
+
+Service -> Domain : new VesselType(\nTypeName, TypeDescription,\nTypeCapacity, MaxRows,\nMaxBays, MaxTiers)
+activate Domain
+
+Domain -> Domain : Valida Value Objects\n- TypeName (não vazio)\n- TypeCapacity (> 0)\n- MaxRows/Bays/Tiers (> 0)
+
+Domain --> Service : VesselType criado
+deactivate Domain
+
+Service -> Repo : AddAsync(vesselType)
+activate Repo
+
+Repo -> DB : INSERT INTO VesselTypes\nVALUES (...)
+activate DB
+
+DB --> Repo : Vessel Type ID
+deactivate DB
+
+Repo --> Service : VesselType persistido
+deactivate Repo
+
+Service -> Repo : UnitOfWork.CommitAsync()
+activate Repo
+
+Repo -> DB : COMMIT TRANSACTION
+activate DB
+DB --> Repo : Success
+deactivate DB
+
+Repo --> Service : Success
+deactivate Repo
+
+Service --> Controller : VesselTypeDTO
+deactivate Service
+
+Controller --> UI : 201 Created\n{vesselTypeDTO}
+deactivate Controller
+
+UI --> FM : Apresenta confirmação de sucesso
+deactivate UI
+
+== Update Vessel Type ==
+
+FM -> UI : Seleciona tipo de navio e clica "Editar"
+activate UI
+
+UI -> Controller : GET /api/vesseltypes/{id}
+activate Controller
+
+Controller -> Service : GetVesselTypeByIdAsync(id)
+activate Service
+
+Service -> Repo : GetByIdAsync(id)
+activate Repo
+
+Repo -> DB : SELECT * FROM VesselTypes\nWHERE Id = {id}
+activate DB
+
+DB --> Repo : Vessel Type data
+deactivate DB
+
+Repo --> Service : VesselType
+deactivate Repo
+
+Service --> Controller : VesselTypeDTO
+deactivate Service
+
+Controller --> UI : 200 OK {vesselTypeDTO}
+deactivate Controller
+
+UI --> FM : Apresenta formulário com dados atuais
+
+FM -> UI : Modifica dados e submete\n(Description, Capacity, etc.)
+
+UI -> Controller : PUT /api/vesseltypes/{id}\n{updateVesselTypeDTO}
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize(Roles = "FleetManager")]
+
+Controller -> Service : UpdateVesselTypeAsync(id, updateVesselTypeDTO)
+activate Service
+
+Service -> Repo : GetByIdAsync(id)
+activate Repo
+
+Repo -> DB : SELECT * FROM VesselTypes\nWHERE Id = {id}
+activate DB
+
+DB --> Repo : Vessel Type data
+deactivate DB
+
+Repo --> Service : VesselType
+deactivate Repo
+
+Service -> Domain : UpdateDetails(\nTypeDescription,\nTypeCapacity,\nMaxRows, MaxBays, MaxTiers)
+activate Domain
+
+Domain -> Domain : Valida Value Objects\n- TypeCapacity (> 0)\n- MaxRows/Bays/Tiers (> 0)
+
+Domain --> Service : VesselType atualizado
+deactivate Domain
+
+Service -> Repo : UpdateAsync(vesselType)
+activate Repo
+
+Repo -> DB : UPDATE VesselTypes\nSET ... WHERE Id = {id}
+activate DB
+
+DB --> Repo : Success
+deactivate DB
+
+Repo --> Service : Success
+deactivate Repo
+
+Service -> Repo : UnitOfWork.CommitAsync()
+activate Repo
+
+Repo -> DB : COMMIT TRANSACTION
+activate DB
+DB --> Repo : Success
+deactivate DB
+
+Repo --> Service : Success
+deactivate Repo
+
+Service --> Controller : VesselTypeDTO
+deactivate Service
+
+Controller --> UI : 200 OK {vesselTypeDTO}
+deactivate Controller
+
+UI --> FM : Apresenta confirmação de atualização
+deactivate UI
+deactivate FM
+
+@enduml

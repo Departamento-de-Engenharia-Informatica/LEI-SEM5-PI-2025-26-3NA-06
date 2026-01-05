@@ -1,0 +1,21 @@
+@startuml US_2.2.10_SSD
+autonumber
+
+actor "Shipping Agent\nRepresentative" as Agent
+participant ":System" as System
+
+== View All My VVNs ==
+activate Agent
+Agent -> System: Acede à secção "My Vessel Visits"
+activate System
+System --> Agent: Apresenta lista de todas as VVNs do agent com status
+deactivate System
+
+== View Single VVN Status ==
+Agent -> System: Seleciona uma VVN da lista
+activate System
+System --> Agent: Apresenta detalhes completos da VVN (status, vessel, dates, cargo, crew, dock assignment)
+deactivate System
+deactivate Agent
+
+@enduml

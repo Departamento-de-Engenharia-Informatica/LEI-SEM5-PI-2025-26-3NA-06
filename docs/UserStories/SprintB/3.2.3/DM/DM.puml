@@ -1,0 +1,16 @@
+@startuml US_3.2.3_Domain_Model
+
+!define TECHNICAL_COLOR #E3F2FD
+
+note as N1
+  Technical User Story
+  No specific domain aggregate
+  
+  Authentication Infrastructure:
+  - JWT token refresh mechanism
+  - Token expiration handling
+  - Session persistence
+  - Automatic token renewal
+end note
+
+@enduml

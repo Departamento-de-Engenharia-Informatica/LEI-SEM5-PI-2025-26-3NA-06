@@ -1,0 +1,31 @@
+@startuml US_3.1.3_SSD
+autonumber
+
+actor "System\nUser" as User
+participant ":System" as System
+
+== Login ==
+activate User
+User -> System: Clica em "Login"
+activate System
+System --> User: Apresenta formulário de login
+deactivate System
+User -> System: Introduz credenciais e submete
+activate System
+System --> User: devolve sessão autenticada
+deactivate System
+
+== View Menu ==
+User -> System: Acede ao menu principal
+activate System
+System --> User: Apresenta menu baseado no perfil do utilizador
+deactivate System
+
+== Attempt Unauthorized Access ==
+User -> System: Tenta aceder a funcionalidade restrita
+activate System
+System --> User: devolve mensagem de acesso negado
+deactivate System
+deactivate User
+
+@enduml

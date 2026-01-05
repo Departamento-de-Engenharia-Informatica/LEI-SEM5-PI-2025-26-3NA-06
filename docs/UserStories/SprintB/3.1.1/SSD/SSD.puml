@@ -1,0 +1,29 @@
+@startuml US_3.1.1_SSD
+autonumber
+
+actor "Project\nManager" as PM
+participant ":System" as System
+
+note over PM, System: Setup e configuração técnica
+
+== Initialize SPA Framework ==
+activate PM
+PM -> System: Executa comando de criação do projeto Angular
+activate System
+System --> PM: Apresenta estrutura de projeto criada
+deactivate System
+
+== Configure HTTP Client ==
+PM -> System: Configura HttpClient no app.config.ts com baseURL
+activate System
+System --> PM: Confirma configuração do HTTP Client
+deactivate System
+
+== Test API Connection ==
+PM -> System: Testa conexão com Backend API
+activate System
+System --> PM: Apresenta resultado do teste de conectividade
+deactivate System
+deactivate PM
+
+@enduml

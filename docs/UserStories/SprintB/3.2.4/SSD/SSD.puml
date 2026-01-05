@@ -1,0 +1,27 @@
+@startuml US_3.2.4_SSD
+autonumber
+
+actor "System\nUser" as User
+participant ":System" as System
+
+== Access Authorized Feature ==
+activate User
+User -> System: Clica numa funcionalidade autorizada para o seu perfil
+activate System
+System --> User: Apresenta conteúdo da funcionalidade
+deactivate System
+
+== Attempt Unauthorized Action ==
+User -> System: Tenta executar ação não autorizada (ex: eliminar dados)
+activate System
+System --> User: Apresenta mensagem de erro "Forbidden"
+deactivate System
+
+== Access Unauthorized Page ==
+User -> System: Tenta navegar para página restrita
+activate System
+System --> User: Apresenta página de acesso negado
+deactivate System
+deactivate User
+
+@enduml

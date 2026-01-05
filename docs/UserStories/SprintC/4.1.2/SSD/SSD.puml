@@ -1,0 +1,43 @@
+@startuml US_4.1.2_SSD
+autonumber
+
+actor "Logistics\nOperator" as Operator
+participant ":System" as System
+
+== Select Date ==
+activate Operator
+Operator -> System: Acede à secção "Operation Planning"
+activate System
+System --> Operator: Apresenta interface de planeamento
+deactivate System
+Operator -> System: Seleciona data no calendário
+activate System
+System --> Operator: Confirma seleção de data
+deactivate System
+
+== Select Algorithm ==
+Operator -> System: Seleciona algoritmo de scheduling
+activate System
+System --> Operator: Confirma seleção do algoritmo
+deactivate System
+
+== Generate Plans ==
+Operator -> System: Clica em "Generate Plans"
+activate System
+System --> Operator: Apresenta planos de operação gerados
+deactivate System
+
+== Review Plans ==
+Operator -> System: Revê lista de planos gerados
+activate System
+System --> Operator: Apresenta detalhes dos planos
+deactivate System
+
+== Save Plans ==
+Operator -> System: Clica em "Save Plans"
+activate System
+System --> Operator: Apresenta confirmação de gravação
+deactivate System
+deactivate Operator
+
+@enduml

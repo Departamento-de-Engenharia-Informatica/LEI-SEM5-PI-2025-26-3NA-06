@@ -1,0 +1,16 @@
+@startuml US_3.1.4_Domain_Model
+
+!define TECHNICAL_COLOR #E3F2FD
+
+note as N1
+  Technical User Story
+  No specific domain aggregate
+  
+  Frontend UX Features:
+  - Success/error feedback
+  - Form validation messages
+  - Loading indicators
+  - User notifications
+end note
+
+@enduml

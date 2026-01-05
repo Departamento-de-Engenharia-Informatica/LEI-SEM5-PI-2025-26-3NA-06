@@ -1,0 +1,31 @@
+@startuml US_4.1.4_SSD
+autonumber
+
+actor "Logistics\nOperator" as Operator
+participant ":System" as System
+
+== Get Plan ==
+activate Operator
+Operator -> System: Seleciona plano de operações da lista
+activate System
+System --> Operator: Apresenta detalhes do plano
+deactivate System
+
+== Update Plan ==
+Operator -> System: Clica em "Edit Plan"
+activate System
+System --> Operator: Apresenta formulário de edição
+deactivate System
+Operator -> System: Modifica operações/timings e introduz razão, e submete
+activate System
+System --> Operator: Apresenta avisos de validação (se houver conflitos)
+deactivate System
+
+== Confirm Update ==
+Operator -> System: Revê avisos e clica em "Confirm Update"
+activate System
+System --> Operator: Apresenta confirmação de atualização
+deactivate System
+deactivate Operator
+
+@enduml

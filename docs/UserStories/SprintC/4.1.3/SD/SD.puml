@@ -1,0 +1,76 @@
+@startuml US_4.1.3_Sequence_Diagram
+
+actor "OEM Manager" as OEM
+participant "<<UI>>\n:PlanSearchComponent" as UI
+participant "<<Controller>>\n:OperationPlanController" as Controller
+participant "<<Application>>\n:OperationPlanService" as Service
+participant "<<Repository>>\n:OperationPlanRepository" as Repo
+database "<<Database>>\n:OEM SQL DB" as DB
+
+== Search Operation Plans ==
+
+OEM -> UI : Acede à pesquisa de planos
+activate UI
+
+UI --> OEM : Apresenta filtros:\n- Date range\n- Status\n- Algorithm
+
+OEM -> UI : Aplica filtros e pesquisa
+
+UI -> Controller : GET /api/operation-plans?\nfromDate={from}&toDate={to}&\nstatus={status}
+activate Controller
+
+Controller -> Service : searchPlans(searchCriteria)
+activate Service
+
+Service -> Repo : find(criteria)
+activate Repo
+
+Repo -> DB : SELECT * FROM OperationPlans\nWHERE PlanDate BETWEEN ? AND ?\nAND Status = ?
+activate DB
+DB --> Repo : Matched plans
+deactivate DB
+
+Repo --> Service : List<OperationPlan>
+deactivate Repo
+
+Service --> Controller : List<OperationPlanDTO>
+deactivate Service
+
+Controller --> UI : 200 OK {plans[]}
+deactivate Controller
+
+UI --> OEM : Lista de planos encontrados
+deactivate UI
+
+== View Plan Details ==
+
+OEM -> UI : Clica num plano
+activate UI
+
+UI -> Controller : GET /api/operation-plans/{id}
+activate Controller
+
+Controller -> Service : getById(id)
+activate Service
+
+Service -> Repo : findById(id)
+activate Repo
+
+Repo -> DB : db.operationPlans.findOne({_id})
+activate DB
+DB --> Repo : Plan document
+deactivate DB
+
+Repo --> Service : OperationPlan
+deactivate Repo
+
+Service --> Controller : OperationPlanDTO (detalhado)
+deactivate Service
+
+Controller --> UI : 200 OK {plan}
+deactivate Controller
+
+UI --> OEM : Detalhes completos:\n- Operations list\n- Timeline\n- Resources
+deactivate UI
+
+@enduml

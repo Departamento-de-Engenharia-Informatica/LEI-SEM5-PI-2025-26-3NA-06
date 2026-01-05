@@ -1,0 +1,43 @@
+@startuml US_2.2.3_SSD
+autonumber
+
+actor "Port Authority\nOfficer" as Officer
+participant ":System" as System
+
+== Register Dock ==
+activate Officer
+Officer -> System: Clica na secção "Docks"
+activate System
+System --> Officer: Apresenta página com lista de docks e opção "Register Dock"
+deactivate System
+Officer -> System: Clica em "Register Dock"
+activate System
+System --> Officer: Apresenta formulário de registo de dock
+deactivate System
+Officer -> System: Introduz dados do dock (name, location, length, depth, maxDraft, allowedVesselTypes) e submete
+activate System
+System --> Officer: devolve mensagem de sucesso ou erro
+deactivate System
+
+== Update Dock ==
+Officer -> System: Seleciona dock da lista
+activate System
+System --> Officer: Apresenta detalhes do dock
+deactivate System
+Officer -> System: Clica em "Edit Dock"
+activate System
+System --> Officer: Apresenta formulário de edição preenchido
+deactivate System
+Officer -> System: Modifica dados do dock e submete
+activate System
+System --> Officer: devolve mensagem de sucesso ou erro
+deactivate System
+
+== Search Docks ==
+Officer -> System: Introduz critérios de pesquisa (name, vesselType, location)
+activate System
+System --> Officer: Apresenta lista de docks filtrados
+deactivate System
+deactivate Officer
+
+@enduml

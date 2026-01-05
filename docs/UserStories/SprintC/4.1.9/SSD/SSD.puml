@@ -1,0 +1,31 @@
+@startuml US_4.1.9_SSD
+autonumber
+
+actor "Logistics\nOperator" as Operator
+participant ":System" as System
+
+== Get VVE Operations ==
+activate Operator
+Operator -> System: Acede à VVE em execução
+activate System
+System --> Operator: Apresenta lista de operações planeadas e status
+deactivate System
+
+== Update Operation ==
+Operator -> System: Seleciona operação e clica em "Record Execution"
+activate System
+System --> Operator: Apresenta formulário de registo
+deactivate System
+Operator -> System: Introduz hora início/fim reais e recursos utilizados, e submete
+activate System
+System --> Operator: Apresenta confirmação de atualização
+deactivate System
+
+== Mark Operation Complete ==
+Operator -> System: Marca operação como completa
+activate System
+System --> Operator: Apresenta confirmação de conclusão
+deactivate System
+deactivate Operator
+
+@enduml

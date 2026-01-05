@@ -1,0 +1,48 @@
+@startuml US_4.1.7_Domain_Model
+
+!define AGGREGATE_ROOT_COLOR #FFDDAA
+!define VALUE_OBJECT_COLOR #E8F5E9
+
+class VesselVisitExecution <<Aggregate Root>> AGGREGATE_ROOT_COLOR {
+    - VveId id
+    - VvnId vvnId
+    - DateTime actualArrivalTime
+    - ExecutionStatus status
+    - DateTime createdAt
+    - UserId createdBy
+    + CreateExecution(vvnId, actualArrivalTime, userId)
+    + GetDetails() : VveDetails
+}
+
+class VveId <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + VveId(value)
+}
+
+class VvnId <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + VvnId(value)
+}
+
+class ExecutionStatus <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + ExecutionStatus(value)
+}
+
+class UserId <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + UserId(value)
+}
+
+VesselVisitExecution "1" *-- "1" VveId : id
+VesselVisitExecution "1" --> "1" VvnId : vvnId
+VesselVisitExecution "1" *-- "1" ExecutionStatus : status
+VesselVisitExecution "1" --> "1" UserId : createdBy
+
+note right of VesselVisitExecution
+  Tracks actual vessel visit execution
+  Created when vessel arrives
+  Links to approved VVN
+end note
+
+@enduml

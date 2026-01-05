@@ -1,0 +1,109 @@
+@startuml US_4.1.12_Sequence_Diagram
+
+actor "OEM Manager" as OEM
+participant "<<UI>>\n:IncidentTypeComponent" as UI
+participant "<<Controller>>\n:IncidentTypeController" as Controller
+participant "<<Application>>\n:IncidentTypeService" as Service
+participant "<<Domain>>\n:IncidentType" as Domain
+participant "<<Repository>>\n:IncidentTypeRepository" as Repo
+database "<<Database>>\n:OEM SQL DB" as DB
+
+== Create Incident Type ==
+
+OEM -> UI : Clica em "Criar Tipo de Incidente"
+activate UI
+
+UI --> OEM : Apresenta formulário:\n- Code\n- Name\n- Description\n- Severity\n- Parent Type (opcional)
+
+OEM -> UI : Preenche e submete
+
+UI -> Controller : POST /api/incident-types\n{code, name, description, severity, parentTypeId}
+activate Controller
+
+Controller -> Service : createIncidentType(dto)
+activate Service
+
+alt Tem parent type
+    Service -> Repo : findById(parentTypeId)
+    activate Repo
+    Repo -> DB : SELECT * FROM IncidentTypes\n    WHERE Id = ?
+    activate DB
+    DB --> Repo : Parent type
+    deactivate DB
+    Repo --> Service : Parent exists
+    deactivate Repo
+end
+
+Service -> Domain : new IncidentType(\ncode, name, description,\nseverity, parentTypeId)
+activate Domain
+
+Domain -> Domain : Valida:\n- Code único\n- Name não vazio\n- Severity válido (Low/Medium/High/Critical)\n- ParentType existe (se especificado)
+
+Domain --> Service : IncidentType criado
+deactivate Domain
+
+Service -> Repo : save(incidentType)
+activate Repo
+Repo -> DB : INSERT INTO IncidentTypes
+activate DB
+DB --> Repo : Inserted
+deactivate DB
+Repo --> Service : Saved
+deactivate Repo
+
+Service --> Controller : IncidentTypeDTO
+deactivate Service
+
+Controller --> UI : 201 Created {incidentType}
+deactivate Controller
+
+UI --> OEM : Tipo criado com sucesso
+deactivate UI
+
+== View Hierarchy ==
+
+OEM -> UI : Clica em "Ver Hierarquia"
+activate UI
+
+UI -> Controller : GET /api/incident-types/hierarchy
+activate Controller
+
+Controller -> Service : getHierarchy()
+activate Service
+
+Service -> Repo : findAll()
+activate Repo
+Repo -> DB : SELECT * FROM IncidentTypes
+activate DB
+DB --> Repo : All types
+deactivate DB
+Repo --> Service : List<IncidentType>
+deactivate Repo
+
+Service -> Service : Constrói árvore hierárquica:\n- Root types (sem parent)\n- Child types agrupados
+
+Service --> Controller : Hierarchical structure
+deactivate Service
+
+Controller --> UI : 200 OK {hierarchy}
+deactivate Controller
+
+UI --> OEM : Apresenta árvore:
+note right of OEM
+  Incident Types Hierarchy:
+  
+  🔴 Operational (Critical)
+    ├─ 🟡 Equipment Failure (High)
+    │   ├─ 🟢 Crane Malfunction (Medium)
+    │   └─ 🟢 Power Outage (Medium)
+    ├─ 🟡 Cargo Damage (High)
+    └─ 🟢 Delay (Low)
+  
+  🔴 Safety (Critical)
+    ├─ 🟡 Injury (High)
+    └─ 🟢 Near Miss (Low)
+end note
+
+deactivate UI
+
+@enduml

@@ -1,0 +1,59 @@
+@startuml US_4.1.1_Sequence_Diagram
+
+actor "Developer" as DEV
+participant "<<Terminal>>\n:Command Line" as CLI
+participant "<<Package Manager>>\n:npm" as NPM
+participant "<<File System>>\n:Workspace" as FS
+
+== Initialize OEM Module ==
+
+DEV -> CLI : mkdir OemApiNode && cd OemApiNode
+activate CLI
+
+CLI -> FS : Cria diretório
+activate FS
+FS --> CLI : Directory created
+deactivate FS
+
+DEV -> CLI : npm init -y
+CLI -> NPM : Inicializa package.json
+activate NPM
+NPM --> CLI : package.json created
+deactivate NPM
+
+DEV -> CLI : npm install express typescript\n@types/node @types/express
+
+CLI -> NPM : Instala dependências
+activate NPM
+NPM --> CLI : Dependencies installed
+deactivate NPM
+
+DEV -> CLI : npx tsc --init
+
+CLI -> FS : Cria tsconfig.json
+activate FS
+FS --> CLI : TypeScript configured
+deactivate FS
+
+DEV -> FS : Cria estrutura DDD:\n- src/domain\n- src/application\n- src/infrastructure\n- src/presentation
+activate FS
+FS --> DEV : Structure created
+deactivate FS
+
+DEV -> FS : Cria src/server.ts\ncom Express setup
+activate FS
+FS --> DEV : Server file created
+deactivate FS
+
+DEV -> CLI : npm run dev
+
+CLI --> DEV : "✔ OEM API running on port 3000"
+deactivate CLI
+
+note right of DEV
+  Technical User Story
+  OEM Module setup
+  Node.js + TypeScript + Express
+end note
+
+@enduml

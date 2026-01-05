@@ -1,0 +1,27 @@
+@startuml US_3.2.2_SSD
+autonumber
+
+actor "System\nUser" as User
+participant ":System" as System
+
+== After IAM Authentication ==
+activate User
+User -> System: Completa autenticação Google
+activate System
+System --> User: Apresenta interface com perfil interno atribuído
+deactivate System
+
+== Access Allowed Features ==
+User -> System: Clica numa funcionalidade permitida pelo seu perfil
+activate System
+System --> User: Apresenta conteúdo da funcionalidade
+deactivate System
+
+== Access Denied ==
+User -> System: Tenta aceder a funcionalidade não autorizada
+activate System
+System --> User: Apresenta mensagem de acesso negado
+deactivate System
+deactivate User
+
+@enduml

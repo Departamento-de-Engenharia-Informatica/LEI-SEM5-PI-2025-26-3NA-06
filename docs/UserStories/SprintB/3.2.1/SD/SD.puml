@@ -1,0 +1,168 @@
+@startuml US_3.2.1_Sequence_Diagram
+
+actor "User" as USER
+participant "<<UI>>\n:LoginComponent" as UI
+participant "<<Service>>\n:AuthService" as AuthService
+participant "<<External>>\n:Google OAuth2" as Google
+participant "<<Controller>>\n:AuthController" as Controller
+participant "<<Application>>\n:AuthService" as BackendAuth
+participant "<<Domain>>\n:User" as Domain
+participant "<<Repository>>\n:IUserRepository" as Repo
+participant "<<Service>>\n:JwtTokenGenerator" as JWT
+database "<<Database>>\n:SQL Server" as DB
+
+== Google OAuth2 Login ==
+
+USER -> UI : Clica em "Login com Google"
+activate UI
+
+UI -> AuthService : loginWithGoogle()
+activate AuthService
+
+AuthService -> Google : Redireciona para Google OAuth2\n/oauth2/authorize?client_id=...
+activate Google
+
+Google --> USER : Apresenta página de login Google
+
+USER -> Google : Autentica com credenciais Google\ne autoriza aplicação
+
+Google -> Google : Valida credenciais\nGera authorization code
+
+Google --> AuthService : Redireciona callback\ncom authorization code
+deactivate Google
+
+AuthService -> AuthService : Extrai authorization code
+
+AuthService -> Controller : POST /api/auth/google\n{code, redirectUri}
+activate Controller
+
+Controller -> BackendAuth : AuthenticateWithGoogleAsync(code, redirectUri)
+activate BackendAuth
+
+BackendAuth -> Google : POST /oauth2/token\n{code, client_secret}
+activate Google
+
+Google -> Google : Valida code\nGera access token
+
+Google --> BackendAuth : {access_token, id_token}
+deactivate Google
+
+BackendAuth -> Google : GET /oauth2/userinfo\nAuthorization: Bearer {access_token}
+activate Google
+
+Google --> BackendAuth : {email, name, googleId, picture}
+deactivate Google
+
+BackendAuth -> Repo : GetByGoogleIdAsync(googleId)
+activate Repo
+
+Repo -> DB : SELECT * FROM Users\nWHERE GoogleId = {googleId}
+activate DB
+DB --> Repo : User data or null
+deactivate DB
+
+Repo --> BackendAuth : User or null
+deactivate Repo
+
+alt User não existe
+    BackendAuth -> Domain : new User(\nemail, name, googleId,\ndefaultRole)
+    activate Domain
+    
+    Domain -> Domain : Valida Value Objects\n- Email (formato válido)\n- GoogleId (não vazio)\n- Status = Active
+    
+    Domain --> BackendAuth : User criado
+    deactivate Domain
+    
+    BackendAuth -> Repo : AddAsync(user)
+    activate Repo
+    Repo -> DB : INSERT INTO Users\nVALUES (...)
+    activate DB
+    DB --> Repo : User ID
+    deactivate DB
+    Repo --> BackendAuth : User persistido
+    deactivate Repo
+    
+    BackendAuth -> Repo : UnitOfWork.CommitAsync()
+    activate Repo
+    Repo -> DB : COMMIT
+    activate DB
+    DB --> Repo : Success
+    deactivate DB
+    Repo --> BackendAuth : Success
+    deactivate Repo
+else User já existe
+    BackendAuth -> Domain : UpdateLastLogin()
+    activate Domain
+    Domain --> BackendAuth : LastLoginAt atualizado
+    deactivate Domain
+    
+    BackendAuth -> Repo : UpdateAsync(user)
+    activate Repo
+    Repo -> DB : UPDATE Users\nSET LastLoginAt = NOW()
+    activate DB
+    DB --> Repo : Success
+    deactivate DB
+    Repo --> BackendAuth : Success
+    deactivate Repo
+end
+
+BackendAuth -> JWT : GenerateToken(user)
+activate JWT
+
+JWT -> JWT : Cria claims\n- UserId\n- Email\n- Roles\n- GoogleId
+
+JWT -> JWT : Assina com secret key
+
+JWT --> BackendAuth : JWT token
+deactivate JWT
+
+BackendAuth --> Controller : {token, user}
+deactivate BackendAuth
+
+Controller --> AuthService : 200 OK {token, userDTO}
+deactivate Controller
+
+AuthService -> AuthService : Armazena token\nem localStorage
+
+AuthService -> AuthService : Decodifica token\nExtrai user info
+
+AuthService --> UI : User authenticated
+deactivate AuthService
+
+UI --> USER : Redireciona para dashboard
+deactivate UI
+
+== Access Protected Resource ==
+
+USER -> UI : Navega para página protegida
+activate UI
+
+UI -> AuthService : getToken()
+activate AuthService
+
+AuthService -> AuthService : Lê localStorage
+
+AuthService --> UI : JWT token
+deactivate AuthService
+
+UI -> Controller : GET /api/vessels\nAuthorization: Bearer {token}
+activate Controller
+
+Controller -> Controller : Valida JWT token\n- Assinatura\n- Expiração\n- Claims
+
+alt Token válido
+    Controller --> UI : 200 OK {data}
+else Token inválido/expirado
+    Controller --> UI : 401 Unauthorized
+    UI -> AuthService : logout()
+    activate AuthService
+    AuthService -> AuthService : Remove token
+    AuthService --> UI : Logged out
+    deactivate AuthService
+    UI --> USER : Redireciona para login
+end
+
+deactivate Controller
+deactivate UI
+
+@enduml

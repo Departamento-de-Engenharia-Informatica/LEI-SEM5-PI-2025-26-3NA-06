@@ -1,0 +1,30 @@
+@startuml US_3.1.4_SSD
+autonumber
+
+actor "System\nUser" as User
+participant ":System" as System
+
+== Successful Action ==
+activate User
+User -> System: Executa uma ação com dados válidos
+activate System
+System --> User: Apresenta mensagem de sucesso
+deactivate System
+
+== Action with Validation Error ==
+User -> System: Submete formulário com dados inválidos
+activate System
+System --> User: Apresenta erros de validação destacados
+deactivate System
+
+== Action in Progress ==
+User -> System: Executa ação demorada (ex: processamento)
+activate System
+System --> User: Apresenta indicador de loading
+deactivate System
+activate System
+System --> User: Apresenta confirmação de conclusão
+deactivate System
+deactivate User
+
+@enduml

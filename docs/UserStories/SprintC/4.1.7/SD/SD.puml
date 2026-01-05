@@ -1,0 +1,67 @@
+@startuml US_4.1.7_Sequence_Diagram
+
+actor "Dock Operator" as OPER
+participant "<<UI>>\n:VVEComponent" as UI
+participant "<<Controller>>\n:VVEController" as Controller
+participant "<<Application>>\n:VVEService" as Service
+participant "<<Domain>>\n:VesselVisitExecution" as Domain
+participant "<<Repository>>\n:VVERepository" as Repo
+participant "<<External>>\n:BackendAPI" as BackendAPI
+database "<<Database>>\n:OEM SQL DB" as DB
+
+== Create Vessel Visit Execution ==
+
+OPER -> UI : Navio chega ao porto
+activate UI
+
+UI -> BackendAPI : GET /api/vvn/{vvnId}
+activate BackendAPI
+BackendAPI --> UI : VVN details (Approved)
+deactivate BackendAPI
+
+UI --> OPER : Apresenta VVN:\n- Vessel info\n- Planned dock\n- ETA
+
+OPER -> UI : Regista chegada real\n(Actual arrival time)
+
+UI -> Controller : POST /api/vve\n{vvnId, actualArrivalTime}
+activate Controller
+
+Controller -> Controller : Valida request\nauth: JWT token
+
+Controller -> Service : createVVE(vvnId, actualArrivalTime, userId)
+activate Service
+
+Service -> BackendAPI : Valida VVN approved
+activate BackendAPI
+BackendAPI --> Service : VVN valid
+deactivate BackendAPI
+
+Service -> Domain : new VesselVisitExecution(\nvvnId, actualArrivalTime,\nstatus: 'Arrived')
+activate Domain
+
+Domain -> Domain : Valida:\n- vvnId existe\n- actualArrivalTime válida\n- Status inicial = Arrived
+
+Domain --> Service : VVE criado
+deactivate Domain
+
+Service -> Repo : save(vve)
+activate Repo
+
+Repo -> DB : INSERT INTO VesselVisitExecutions\n(VvnId, ActualArrivalTime,\nStatus, CreatedBy)\nVALUES (..., 'Arrived', userId)
+activate DB
+DB --> Repo : Inserted ID
+deactivate DB
+
+Repo --> Service : VVE persistido
+deactivate Repo
+
+Service --> Controller : VVEDTO
+deactivate Service
+
+Controller --> UI : 201 Created {vve}
+deactivate Controller
+
+UI --> OPER : VVE criado:\n"Visita registada com sucesso"
+deactivate UI
+
+@enduml

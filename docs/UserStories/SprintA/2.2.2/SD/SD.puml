@@ -1,0 +1,220 @@
+@startuml US_2.2.2_Sequence_Diagram
+
+actor "Fleet Manager" as FM
+participant "<<UI>>\n:Angular\nComponent" as UI
+participant "<<Controller>>\n:VesselController" as Controller
+participant "<<Application>>\n:VesselService" as Service
+participant "<<Domain>>\n:Vessel" as Domain
+participant "<<Repository>>\n:IVesselRepository" as Repo
+participant "<<Repository>>\n:IVesselTypeRepository" as VTRepo
+database "<<Database>>\n:SQL Server" as DB
+
+== Register Vessel ==
+
+FM -> UI : Clica em "Registar Navio"
+activate UI
+UI --> FM : Apresenta formulário
+
+FM -> UI : Introduz dados e submete\n(IMOnumber, CallSign, VesselName, VesselTypeId)
+UI -> UI : Valida dados no frontend
+
+UI -> Controller : POST /api/vessels\n{vesselDTO}
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize(Roles = "FleetManager")]
+
+Controller -> Service : CreateVesselAsync(createVesselDTO)
+activate Service
+
+Service -> VTRepo : GetByIdAsync(vesselTypeId)
+activate VTRepo
+
+VTRepo -> DB : SELECT * FROM VesselTypes\nWHERE Id = {vesselTypeId}
+activate DB
+DB --> VTRepo : VesselType data
+deactivate DB
+
+VTRepo --> Service : VesselType
+deactivate VTRepo
+
+Service -> Service : Valida VesselType existe\nValida IMOnumber único
+
+Service -> Repo : GetByIMOAsync(imoNumber)
+activate Repo
+
+Repo -> DB : SELECT * FROM Vessels\nWHERE IMOnumber = {imo}
+activate DB
+DB --> Repo : null (não existe)
+deactivate DB
+
+Repo --> Service : null
+deactivate Repo
+
+Service -> Domain : new Vessel(\nIMOnumber, CallSign,\nVesselName, VesselTypeId)
+activate Domain
+
+Domain -> Domain : Valida Value Objects\n- IMOnumber (7 dígitos)\n- CallSign (não vazio)\n- VesselName (não vazio)
+
+Domain --> Service : Vessel criado
+deactivate Domain
+
+Service -> Repo : AddAsync(vessel)
+activate Repo
+
+Repo -> DB : INSERT INTO Vessels\nVALUES (...)
+activate DB
+DB --> Repo : Vessel ID
+deactivate DB
+
+Repo --> Service : Vessel persistido
+deactivate Repo
+
+Service -> Repo : UnitOfWork.CommitAsync()
+activate Repo
+Repo -> DB : COMMIT TRANSACTION
+activate DB
+DB --> Repo : Success
+deactivate DB
+Repo --> Service : Success
+deactivate Repo
+
+Service --> Controller : VesselDTO
+deactivate Service
+
+Controller --> UI : 201 Created {vesselDTO}
+deactivate Controller
+
+UI --> FM : Apresenta confirmação de sucesso
+deactivate UI
+
+== Update Vessel ==
+
+FM -> UI : Seleciona navio e clica "Editar"
+activate UI
+
+UI -> Controller : GET /api/vessels/{imo}
+activate Controller
+
+Controller -> Service : GetVesselByIMOAsync(imo)
+activate Service
+
+Service -> Repo : GetByIMOAsync(imo)
+activate Repo
+
+Repo -> DB : SELECT * FROM Vessels\nWHERE IMOnumber = {imo}
+activate DB
+DB --> Repo : Vessel data
+deactivate DB
+
+Repo --> Service : Vessel
+deactivate Repo
+
+Service --> Controller : VesselDTO
+deactivate Service
+
+Controller --> UI : 200 OK {vesselDTO}
+deactivate Controller
+
+UI --> FM : Apresenta formulário com dados atuais
+
+FM -> UI : Modifica dados e submete\n(CallSign, VesselName, VesselTypeId)
+
+UI -> Controller : PUT /api/vessels/{imo}\n{updateVesselDTO}
+activate Controller
+
+Controller -> Controller : Valida request\n[Authorize(Roles = "FleetManager")]
+
+Controller -> Service : UpdateVesselAsync(imo, updateVesselDTO)
+activate Service
+
+Service -> Repo : GetByIMOAsync(imo)
+activate Repo
+
+Repo -> DB : SELECT * FROM Vessels\nWHERE IMOnumber = {imo}
+activate DB
+DB --> Repo : Vessel data
+deactivate DB
+
+Repo --> Service : Vessel
+deactivate Repo
+
+alt VesselTypeId alterado
+    Service -> VTRepo : GetByIdAsync(newVesselTypeId)
+    activate VTRepo
+    VTRepo -> DB : SELECT * FROM VesselTypes\nWHERE Id = {newVesselTypeId}
+    activate DB
+    DB --> VTRepo : VesselType data
+    deactivate DB
+    VTRepo --> Service : VesselType
+    deactivate VTRepo
+end
+
+Service -> Domain : UpdateDetails(\nCallSign, VesselName,\nVesselTypeId)
+activate Domain
+
+Domain -> Domain : Valida Value Objects\n- CallSign (não vazio)\n- VesselName (não vazio)
+
+Domain --> Service : Vessel atualizado
+deactivate Domain
+
+Service -> Repo : UpdateAsync(vessel)
+activate Repo
+
+Repo -> DB : UPDATE Vessels\nSET ... WHERE IMOnumber = {imo}
+activate DB
+DB --> Repo : Success
+deactivate DB
+
+Repo --> Service : Success
+deactivate Repo
+
+Service -> Repo : UnitOfWork.CommitAsync()
+activate Repo
+Repo -> DB : COMMIT TRANSACTION
+activate DB
+DB --> Repo : Success
+deactivate DB
+Repo --> Service : Success
+deactivate Repo
+
+Service --> Controller : VesselDTO
+deactivate Service
+
+Controller --> UI : 200 OK {vesselDTO}
+deactivate Controller
+
+UI --> FM : Apresenta confirmação de atualização
+deactivate UI
+
+== Search Vessels ==
+
+FM -> UI : Acede à página de pesquisa
+activate UI
+
+UI -> Controller : GET /api/vessels?filters
+activate Controller
+
+Controller -> Service : SearchVesselsAsync(filters)
+activate Service
+
+Service -> Repo : SearchAsync(filters)
+activate Repo
+
+Repo -> DB : SELECT * FROM Vessels\nWHERE ... [filters]
+activate DB
+DB --> Repo : List of vessels
+deactivate DB
+
+Repo --> Service : List<Vessel>
+deactivate Repo
+
+Service --> Controller : List<VesselDTO>
+deactivate Service
+
+Controller --> UI : 200 OK {vessels[]}
+deactivate Controller
+
+UI --> FM : Apresenta lista de navios
+deactivate UI
+
+@enduml

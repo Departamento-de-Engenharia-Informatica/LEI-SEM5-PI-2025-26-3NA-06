@@ -1,0 +1,27 @@
+@startuml US_3.1.2_SSD
+autonumber
+
+actor "System\nUser" as User
+participant ":System" as System
+
+== Access Application ==
+activate User
+User -> System: Acede à aplicação web
+activate System
+System --> User: Apresenta layout unificado com header e menu de navegação
+deactivate System
+
+== Navigate Menu ==
+User -> System: Clica numa opção do menu (ex: "Vessels")
+activate System
+System --> User: Apresenta conteúdo da secção selecionada
+deactivate System
+
+== Change Language ==
+User -> System: Seleciona idioma no seletor (PT/EN)
+activate System
+System --> User: Apresenta interface atualizada no idioma selecionado
+deactivate System
+deactivate User
+
+@enduml

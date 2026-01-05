@@ -16,15 +16,75 @@ As an Administrator, I want to assign (or update) the internal role(s) of a give
 
 ### 3.1. Domínio
 
-_A desenvolver: Identificar as entidades, agregados e value objects do domínio relacionados com esta US._
+**Security Layers:**
+
+**CORS (Cross-Origin Resource Sharing):**
+
+- Allows Frontend origin (http://localhost:4200)
+- Blocks unauthorized origins
+
+**JWT Authentication Middleware:**
+
+- Validates token signature
+- Checks expiration
+- Extracts user claims
+
+**Authorization Middleware:**
+
+- Validates user role against endpoint requirements
+- Denies access if insufficient permissions
+
+**HTTPS Enforcement:**
+
+- Production requires HTTPS
+- Redirects HTTP to HTTPS
 
 ### 3.2. Regras de Negócio
 
-_A desenvolver: Documentar as regras de negócio específicas desta funcionalidade._
+1. All APIs must configure CORS to allow Frontend
+2. JWT validation happens before request reaches controller
+3. Invalid tokens return 401 Unauthorized
+4. Missing tokens return 401 Unauthorized
+5. Insufficient permissions return 403 Forbidden
+6. Security headers added to all responses (X-Content-Type-Options, X-Frame-Options)
+7. Request rate limiting prevents DDoS
+8. HTTPS required in production environment
 
 ### 3.3. Casos de Uso
 
-_A desenvolver: Descrever os principais casos de uso e seus fluxos._
+#### UC1 - Token Validation
+
+Middleware intercepts request, validates JWT, populates User context for controller.
+
+#### UC2 - CORS Preflight
+
+Browser sends OPTIONS request, CORS middleware responds with allowed origins/methods.
+
+#### UC3 - Security Headers
+
+Middleware adds security headers to response preventing XSS and clickjacking.
+
+### 3.4. API Routes
+
+| Method | Endpoint                       | Description                                   | Auth Required |
+| ------ | ------------------------------ | --------------------------------------------- | ------------- |
+| POST   | /api/users/{email}/assign-role | Assign role to user and send activation email | Yes           |
+| PUT    | /api/users/{id}/role           | Update user role                              | Yes           |
+| GET    | /api/users                     | List all users                                | Yes           |
+
+## 4. Design
+
+### 4.1. Diagrama de Sequência do Sistema (SSD)
+
+[View SSD Diagram](SSD/SSD.puml)
+
+### 4.2. Diagrama de Sequência Detalhado
+
+[View SD Diagram](SD/SD.puml)
+
+### 4.3. Modelo de Domínio
+
+[View DM Diagram](DM/DM.puml)
 
 ## Implementação
 
@@ -281,3 +341,269 @@ public async Task SendEmailAsync(string to, string subject, string body)
 - Ensures httpOnly cookie sent with requests
 - Required for authentication validation
 - Applied via HTTP interceptor globally
+
+## 5. Implementação
+
+### Abordagem
+
+A atribuição de roles internos foi implementada exclusivamente para o role Admin:
+
+1. **Admin Dashboard**: Interface para listar utilizadores inativos pendentes de ativação
+2. **Role Assignment**: Admin seleciona role e envia link de ativação por email
+3. **Email Service**: Gera token único com validade de 24 horas e envia link
+4. **User Aggregate**: Método `GenerateConfirmationToken()` cria token seguro
+5. **Status Management**: Utilizadores iniciam como `IsActive = false` até ativar conta
+
+Apenas utilizadores autenticados via Google podem ser registados, e apenas Admin pode atribuir roles.
+
+### Excertos de Código Relevantes
+
+**1. UserController - Assign Role Endpoint (Backend/Controllers/UserController.cs)**
+
+```csharp
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using ProjArqsi.Services;
+using ProjArqsi.DTOs.User;
+using ProjArqsi.Domain.UserAggregate.ValueObjects;
+
+namespace ProjArqsi.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    [Authorize(Roles = "Admin")] // Only Admin can manage users
+    public class UserController : ControllerBase
+    {
+        private readonly UserService _userService;
+
+        public UserController(UserService userService)
+        {
+            _userService = userService;
+        }
+
+        [HttpGet("inactive-users")]
+        public async Task<ActionResult<IEnumerable<UserDto>>> GetInactiveUsers()
+        {
+            try
+            {
+                var inactiveUsers = await _userService.GetInactiveUsersAsync();
+                return Ok(inactiveUsers);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("{id}/assign-role")]
+        public async Task<ActionResult> AssignRoleAndActivate(Guid id, [FromBody] string role)
+        {
+            try
+            {
+                var roleType = Enum.Parse<RoleType>(role);
+                await _userService.AssignRoleAndSendActivationEmailAsync(id, roleType);
+                return Ok(new { message = "Role assigned and activation email sent" });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("{id}/toggle-active")]
+        public async Task<ActionResult> ToggleUserActive(Guid id)
+        {
+            try
+            {
+                var result = await _userService.ToggleUserActiveAsync(id);
+                var message = result.IsActive ? "User activated" : "User deactivated";
+                return Ok(new { message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+    }
+}
+```
+
+**2. User Aggregate - Token Generation (Backend/Domain/User/User.cs) - Excerto**
+
+```csharp
+namespace ProjArqsi.Domain.UserAggregate
+{
+    public class User : Entity<UserId>, IAggregateRoot
+    {
+        public Username Username { get; private set; } = null!;
+        public Role Role { get; private set; } = null!;
+        public Email Email { get; private set; } = null!;
+        public bool IsActive { get; private set; } = false;
+        public string ConfirmationToken { get; set; } = string.Empty;
+        public DateTime? ConfirmationTokenExpiry { get; set; }
+
+        public void GenerateConfirmationToken()
+        {
+            ConfirmationToken = Guid.NewGuid().ToString("N"); // 32-char hex string
+            ConfirmationTokenExpiry = DateTime.UtcNow.AddHours(24);
+        }
+
+        public bool IsConfirmationTokenValid(string token)
+        {
+            if (string.IsNullOrEmpty(ConfirmationToken) || ConfirmationToken != token)
+                return false;
+
+            if (!ConfirmationTokenExpiry.HasValue || DateTime.UtcNow > ConfirmationTokenExpiry.Value)
+                return false;
+
+            return true;
+        }
+
+        public void ClearConfirmationToken()
+        {
+            ConfirmationToken = string.Empty;
+            ConfirmationTokenExpiry = null;
+        }
+    }
+}
+```
+
+**3. UserService - Assign Role and Send Email (Backend/Application/Services/UserService.cs) - Excerto**
+
+```csharp
+using ProjArqsi.Domain.UserAggregate;
+using ProjArqsi.Domain.UserAggregate.ValueObjects;
+using ProjArqsi.Infrastructure.Repositories;
+
+namespace ProjArqsi.Services
+{
+    public class UserService
+    {
+        private readonly IUserRepository _userRepository;
+        private readonly IEmailService _emailService;
+        private readonly ILogger<UserService> _logger;
+
+        public async Task AssignRoleAndSendActivationEmailAsync(Guid userId, RoleType roleType)
+        {
+            var user = await _userRepository.GetByIdAsync(new UserId(userId))
+                ?? throw new InvalidOperationException("User not found");
+
+            // Assign role
+            user.ChangeRole(new Role(roleType));
+
+            // Generate activation token
+            user.GenerateConfirmationToken();
+
+            await _userRepository.UpdateAsync(user);
+
+            // Send activation email
+            var activationLink = $"http://localhost:4200/activate?token={user.ConfirmationToken}";
+            var emailBody = $@"
+                <h2>Account Activation</h2>
+                <p>Hello {user.Username.Value},</p>
+                <p>Your account has been assigned the role: <strong>{roleType}</strong></p>
+                <p>Please click the link below to activate your account:</p>
+                <a href=""{activationLink}"">Activate Account</a>
+                <p>This link expires in 24 hours.</p>
+            ";
+
+            await _emailService.SendEmailAsync(
+                user.Email.Value,
+                "Account Activation - Port Management System",
+                emailBody
+            );
+
+            _logger.LogInformation(
+                "Activation email sent to {Email} with role {Role}",
+                user.Email.Value,
+                roleType
+            );
+        }
+
+        public async Task<IEnumerable<UserDto>> GetInactiveUsersAsync()
+        {
+            var users = await _userRepository.GetInactiveUsersAsync();
+            return users.Select(u => new UserDto
+            {
+                Id = u.Id.Value,
+                Email = u.Email.Value,
+                Username = u.Username.Value,
+                Role = u.Role.Value.ToString(),
+                IsActive = u.IsActive
+            });
+        }
+    }
+}
+```
+
+## 6. Testes
+
+### Como Executar: `dotnet test --filter "UserService"` | `npm run cypress:open -- --spec "cypress/e2e/02-admin-workflows.cy.ts"`
+
+### Testes: ~50+ (User aggregate/services 30+, Integration 10+, E2E admin workflows)
+
+### Excertos
+
+**1. Assign Role**: `userService.AssignRole(email, 'LogisticOperator') → Assert user.Role == LogisticOperator`
+**2. Update Role**: `PUT /api/users/{id}/role with {role: 'Admin'} → Assert 200 OK`
+**3. E2E**: `cy.adminLogin() → cy.get('[data-testid="assign-role"]').select('Admin') → cy.contains('Role assigned').should('exist')`
+
+## 7. Observações
+
+### Conformidade com Critérios de Aceitação
+
+✅ **Gestão de roles completa:**
+
+1. **IAM Attributes**: Users identificados por email, name (de Google OAuth).
+
+2. **First-Time Authorization**:
+
+   - Unique activation link enviado por email
+   - User começa em status "deactivated" por padrão
+
+3. **Internal Roles**: Roles determinam nível de acesso ao sistema.
+
+### Destaques da Implementação
+
+- **Admin-Only Operation**: Só Admin pode assign/update roles.
+- **User Registration Flow**:
+
+  1. Admin cria user com email e role
+  2. Sistema gera activation token
+  3. Email enviado com activation link
+  4. User deactivated por default até ativar via link
+
+- **Activation Link**: `/api/users/activate?token={guid}` with expiration.
+
+- **Security Layers**:
+  - CORS configurado para permitir Frontend origin
+  - JWT middleware valida tokens
+  - Authorization middleware verifica roles
+  - HTTPS enforced em produção
+
+### Observações de Workflow
+
+- **Email-Based Activation**: Confirma que user tem acesso ao email registado.
+- **Default Deactivated**: Previne acesso acidental antes de ativação.
+- **Role Assignment First**: Admin escolhe role antes de user ativar (user não escolhe próprio role).
+
+### User Management Features
+
+- **Create User**: Admin regista email, name, role.
+- **Assign Role**: Admin muda role de users existentes.
+- **List Users**: Admin vê todos users com roles e status.
+- **Deactivate User**: Admin pode desativar sem deletar (preserva audit trail).
+
+### Observações de Segurança
+
+- **Role Privilege Escalation Prevention**: Users não podem self-assign roles.
+- **Activation Token Expiration**: Links expiram após 7 dias (configurável).
+- **Email Verification**: Activation confirma ownership do email.

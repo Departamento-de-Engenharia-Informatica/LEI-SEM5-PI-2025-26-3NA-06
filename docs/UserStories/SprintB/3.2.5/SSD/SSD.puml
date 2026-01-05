@@ -1,0 +1,45 @@
+@startuml US_3.2.5_SSD
+autonumber
+
+actor "Administrator" as Admin
+participant ":System" as System
+
+== Assign Role to New User ==
+activate Admin
+Admin -> System: Acede à secção "User Management"
+activate System
+System --> Admin: Apresenta lista de utilizadores
+deactivate System
+Admin -> System: Clica em "Create New User"
+activate System
+System --> Admin: Apresenta formulário de criação
+deactivate System
+Admin -> System: Introduz email e seleciona perfil (PortAuthorityOfficer/ShippingAgent) e submete
+activate System
+System --> Admin: Apresenta confirmação e envia email de ativação
+deactivate System
+
+note over Admin, System: Sistema envia email com link de ativação
+
+== Update User Role ==
+Admin -> System: Seleciona utilizador da lista
+activate System
+System --> Admin: Apresenta detalhes do utilizador
+deactivate System
+Admin -> System: Clica em "Change Role" e seleciona novo perfil
+activate System
+System --> Admin: Apresenta confirmação de atualização
+deactivate System
+
+== Deactivate User ==
+Admin -> System: Seleciona utilizador ativo
+activate System
+System --> Admin: Apresenta opções de gestão
+deactivate System
+Admin -> System: Clica em "Deactivate User"
+activate System
+System --> Admin: Apresenta confirmação de desativação
+deactivate System
+deactivate Admin
+
+@enduml

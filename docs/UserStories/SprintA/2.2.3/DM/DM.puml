@@ -1,0 +1,71 @@
+@startuml US_2.2.3_Domain_Model
+
+!define AGGREGATE_ROOT_COLOR #FFDDAA
+!define VALUE_OBJECT_COLOR #E8F5E9
+
+class Dock <<Aggregate Root>> AGGREGATE_ROOT_COLOR {
+    - DockId id
+    - DockName name
+    - Location location
+    - DockLength length
+    - Depth depth
+    - Draft maxDraft
+    - List<VesselTypeId> allowedVesselTypes
+    + Dock(name, location, length, depth, maxDraft, allowedVesselTypes)
+    + UpdateDetails(name, location, length, depth, maxDraft, allowedVesselTypes)
+}
+
+class DockId <<Value Object>> VALUE_OBJECT_COLOR {
+    - Guid value
+    + DockId(value)
+}
+
+class DockName <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + DockName(value)
+}
+
+class Location <<Value Object>> VALUE_OBJECT_COLOR {
+    - string value
+    + Location(value)
+}
+
+class DockLength <<Value Object>> VALUE_OBJECT_COLOR {
+    - double value
+    + DockLength(value)
+}
+
+class Depth <<Value Object>> VALUE_OBJECT_COLOR {
+    - double value
+    + Depth(value)
+}
+
+class Draft <<Value Object>> VALUE_OBJECT_COLOR {
+    - double value
+    + Draft(value)
+}
+
+class VesselTypeId <<Value Object>> VALUE_OBJECT_COLOR {
+    - Guid value
+    + VesselTypeId(value)
+}
+
+Dock "1" *-- "1" DockId : id
+Dock "1" *-- "1" DockName : name
+Dock "1" *-- "1" Location : location
+Dock "1" *-- "1" DockLength : length
+Dock "1" *-- "1" Depth : depth
+Dock "1" *-- "1" Draft : maxDraft
+Dock "1" *-- "*" VesselTypeId : allowedVesselTypes
+
+note right of Dock
+  References VesselType aggregate
+  for allowed vessel types
+end note
+
+note bottom of Draft
+  MaxDraft constraint
+  for vessel compatibility
+end note
+
+@enduml

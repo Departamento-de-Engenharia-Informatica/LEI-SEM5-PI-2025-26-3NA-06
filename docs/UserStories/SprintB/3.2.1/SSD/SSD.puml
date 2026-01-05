@@ -1,0 +1,31 @@
+@startuml US_3.2.1_SSD
+autonumber
+
+actor "System\nUser" as User
+participant ":System" as System
+
+== Access System ==
+activate User
+User -> System: Acede à aplicação web
+activate System
+System --> User: Apresenta página de login com botão "Sign in with Google"
+deactivate System
+
+== Login via IAM ==
+User -> System: Clica em "Sign in with Google"
+activate System
+System --> User: Redireciona para página de autenticação Google
+deactivate System
+User -> System: Autentica-se no Google e autoriza a aplicação
+activate System
+System --> User: Redireciona de volta com access token
+deactivate System
+
+== Logout ==
+User -> System: Clica em "Logout"
+activate System
+System --> User: Apresenta confirmação de logout
+deactivate System
+deactivate User
+
+@enduml
